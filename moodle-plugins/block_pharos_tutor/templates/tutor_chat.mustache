@@ -1,0 +1,53 @@
+{{!
+    Template: block_pharos_tutor/tutor_chat
+    Context:
+      proxy_url   - URL of the Moodle AJAX proxy (ajax.php)
+      user_id     - Moodle user ID (string)
+      user_level  - Itinerary level (1, 2 or 3)
+      lang        - 'es' or 'it'
+      sesskey     - Moodle session key for CSRF protection
+      strings     - Object with localised UI strings
+}}
+<div class="pharos-tutor"
+     data-proxy-url="{{proxy_url}}"
+     data-user-id="{{user_id}}"
+     data-level="{{user_level}}"
+     data-lang="{{lang}}"
+     data-sesskey="{{sesskey}}"
+     role="region"
+     aria-label="{{strings.pluginname}}">
+
+    <div class="pharos-tutor__messages"
+         id="pharos-tutor-messages"
+         role="log"
+         aria-live="polite"
+         aria-atomic="false">
+        <div class="pharos-tutor__message pharos-tutor__message--assistant">
+            <span class="pharos-tutor__avatar" aria-hidden="true"></span>
+            <div class="pharos-tutor__bubble">{{strings.welcome}}</div>
+        </div>
+    </div>
+
+    <div class="pharos-tutor__status pharos-tutor__status--hidden"
+         id="pharos-tutor-status"
+         aria-live="polite">
+        {{strings.thinking}}
+    </div>
+
+    <form class="pharos-tutor__form" id="pharos-tutor-form" novalidate>
+        <label for="pharos-tutor-input" class="sr-only">{{strings.placeholder}}</label>
+        <textarea
+            id="pharos-tutor-input"
+            class="pharos-tutor__input form-control"
+            name="message"
+            rows="2"
+            placeholder="{{strings.placeholder}}"
+            maxlength="4000"
+            aria-required="true"></textarea>
+        <button type="submit"
+                class="pharos-tutor__send btn btn-primary"
+                aria-label="{{strings.send}}">
+            {{strings.send}}
+        </button>
+    </form>
+</div>
