@@ -1,0 +1,12 @@
+<?php
+// This file is part of the PHAROS-AI Moodle theme.
+// License: GPL-3.0 https://www.gnu.org/licenses/gpl-3.0.html
+
+defined('MOODLE_INTERNAL') || die();
+
+$plugin->component = 'theme_pharos';
+$plugin->version   = 2025052800;
+$plugin->requires  = 2023100900; // Moodle 4.3
+$plugin->dependencies = ['theme_boost' => 2023100900];
+$plugin->maturity  = MATURITY_ALPHA;
+$plugin->release   = '0.1.0';

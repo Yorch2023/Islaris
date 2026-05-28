@@ -1,0 +1,164 @@
+// PHAROS-AI theme — main SCSS
+// Appended after the Boost parent SCSS. Mobile-first, Bootstrap 4 compatible.
+
+// === Navbar ===
+.navbar {
+    background-color: $pharos-navy !important;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.18);
+}
+
+.navbar-brand {
+    font-weight: 700;
+    letter-spacing: 0.02em;
+    color: #fff !important;
+
+    &::before {
+        content: '🔦 ';
+    }
+}
+
+// === Sidebar / drawers ===
+#nav-drawer {
+    background: darken($pharos-navy, 4%);
+
+    .list-group-item {
+        background: transparent;
+        color: rgba(255, 255, 255, 0.82);
+        border-color: rgba(255, 255, 255, 0.08);
+
+        &:hover,
+        &:focus {
+            background: rgba(255, 255, 255, 0.08);
+            color: #fff;
+        }
+
+        &.active {
+            background: $pharos-red;
+            color: #fff;
+            border-color: $pharos-red;
+        }
+    }
+}
+
+// === Course cards ===
+.card {
+    border-color: $pharos-border;
+    box-shadow: 0 1px 4px rgba(0, 0, 0, 0.06);
+    transition: box-shadow 0.15s ease;
+
+    &:hover {
+        box-shadow: 0 4px 16px rgba(0, 0, 0, 0.1);
+    }
+}
+
+.card-header {
+    font-weight: 600;
+    border-bottom-color: $pharos-border;
+}
+
+// === Buttons ===
+.btn-primary {
+    background-color: $pharos-navy;
+    border-color: $pharos-navy;
+
+    &:hover,
+    &:focus {
+        background-color: lighten($pharos-navy, 8%);
+        border-color: lighten($pharos-navy, 8%);
+    }
+}
+
+.btn-danger,
+.btn-pharos-red {
+    background-color: $pharos-red;
+    border-color: $pharos-red;
+    color: #fff;
+
+    &:hover,
+    &:focus {
+        background-color: darken($pharos-red, 8%);
+        border-color: darken($pharos-red, 8%);
+        color: #fff;
+    }
+}
+
+// === Itinerary level badges ===
+.pharos-level-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.35rem;
+    padding: 0.25rem 0.65rem;
+    border-radius: 2rem;
+    font-size: 0.8rem;
+    font-weight: 600;
+
+    &--n1 { background: #e8f4fd; color: #1565c0; }
+    &--n2 { background: #fdf3e8; color: #a0520c; }
+    &--n3 { background: #f3e8fd; color: #6a0dad; }
+
+    &--locked {
+        background: #ebebeb;
+        color: #888;
+    }
+}
+
+// === XP / progress ===
+.pharos-xp-bar {
+    height: 8px;
+    border-radius: 4px;
+    background: $pharos-border;
+
+    &__fill {
+        height: 100%;
+        border-radius: 4px;
+        background: linear-gradient(90deg, $pharos-navy, $pharos-red);
+        transition: width 0.4s ease;
+    }
+}
+
+.pharos-xp-label {
+    font-size: 0.82rem;
+    color: #6c757d;
+    margin-top: 0.2rem;
+}
+
+// === Badges / microcredentials ===
+.pharos-badge-card {
+    text-align: center;
+    padding: 1.25rem 1rem;
+    border-radius: $border-radius-lg;
+    border: 2px solid $pharos-border;
+
+    &--earned {
+        border-color: $pharos-gold;
+        background: lighten($pharos-gold, 40%);
+    }
+
+    img {
+        width: 72px;
+        height: 72px;
+        margin-bottom: 0.5rem;
+    }
+}
+
+// === Dashboard alerts ===
+.pharos-alert-inactive {
+    border-left: 4px solid $pharos-red;
+    background: lighten($pharos-red, 48%);
+    padding: 0.65rem 1rem;
+    border-radius: 0 $border-radius $border-radius 0;
+    font-size: 0.9rem;
+}
+
+// === Responsive helpers ===
+@media (max-width: 767.98px) {
+    .pharos-hide-mobile {
+        display: none !important;
+    }
+}
+
+@media (min-width: 768px) {
+    .pharos-hide-desktop {
+        display: none !important;
+    }
+}
