@@ -37,5 +37,23 @@
         <INDEX NAME="itinerary_user" UNIQUE="true" FIELDS="itineraryid, userid"/>
       </INDEXES>
     </TABLE>
+    <TABLE NAME="pharos_itinerary_activity" COMMENT="Assigns course modules to itinerary levels">
+      <FIELDS>
+        <FIELD NAME="id"           TYPE="int" LENGTH="10" NOTNULL="true" SEQUENCE="true"/>
+        <FIELD NAME="itineraryid"  TYPE="int" LENGTH="10" NOTNULL="true"/>
+        <FIELD NAME="cmid"         TYPE="int" LENGTH="10" NOTNULL="true"/>
+        <FIELD NAME="level"        TYPE="int" LENGTH="1"  NOTNULL="true" DEFAULT="1"/>
+        <FIELD NAME="sortorder"    TYPE="int" LENGTH="4"  NOTNULL="true" DEFAULT="0"/>
+      </FIELDS>
+      <KEYS>
+        <KEY NAME="primary"     TYPE="primary" FIELDS="id"/>
+        <KEY NAME="itineraryid" TYPE="foreign" FIELDS="itineraryid" REFTABLE="pharos_itinerary" REFFIELDS="id"/>
+        <KEY NAME="cmid"        TYPE="foreign" FIELDS="cmid"        REFTABLE="course_modules"   REFFIELDS="id"/>
+      </KEYS>
+      <INDEXES>
+        <INDEX NAME="itinerary_level" UNIQUE="false" FIELDS="itineraryid, level, sortorder"/>
+        <INDEX NAME="cmid_unique"     UNIQUE="true"  FIELDS="itineraryid, cmid"/>
+      </INDEXES>
+    </TABLE>
   </TABLES>
 </XMLDB>

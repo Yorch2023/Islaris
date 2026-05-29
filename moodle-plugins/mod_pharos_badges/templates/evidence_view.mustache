@@ -6,11 +6,10 @@
       can_submit  - bool
       levels      - Array of { level, level_label, count, threshold, percent, badge_earned, evidence_items[] }
       types       - Array of { value, label }
-      strings     - Object with localised UI strings
 }}
 <div class="pharos-badges" role="region" aria-labelledby="pharos-badges-heading">
 
-    <h2 id="pharos-badges-heading" class="h4 mb-4">{{strings.pageheading}}</h2>
+    <h2 id="pharos-badges-heading" class="h4 mb-4">{{#str}}pageheading, mod_pharos_badges{{/str}}</h2>
 
     {{#levels}}
     <div class="card mb-4">

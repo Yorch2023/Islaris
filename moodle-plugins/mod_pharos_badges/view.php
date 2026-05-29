@@ -92,6 +92,7 @@ foreach ([1, 2, 3] as $lvl) {
             'type'        => $e->type,
             'description' => format_string($e->description),
             'date'        => userdate($e->timecreated, get_string('strftimedatefullshort', 'langconfig')),
+            'date_iso'    => date('Y-m-d', $e->timecreated),
         ], $items)),
     ];
 }

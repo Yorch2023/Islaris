@@ -6,18 +6,19 @@
       level_label   - "N1 — Fundamentos" etc.
       xp_current    - XP earned
       xp_next       - XP needed for next level threshold
-      xp_percent    - Integer 0-100
+      xp_percent       - Integer 0-100
+      xp_aria_label    - Pre-formatted accessible label for the XP bar (passed from PHP)
+      level_aria_label - Pre-formatted accessible label for the level badge (passed from PHP)
       levels        - Array of {
                         level, level_label, is_current (bool), is_locked (bool),
                         description,
                         activities: [{ cmid, name, url, completed (bool) }]
                       }
       badges_url    - URL to mod_pharos_badges view
-      strings       - Object with localised UI strings
 }}
 {{! Skip link for keyboard users }}
 <a href="#pharos-itinerary-levels" class="sr-only sr-only-focusable">
-    {{strings.skip_to_levels}}
+    {{#str}}skip_to_levels, mod_pharos_itinerary{{/str}}
 </a>
 
 <div class="pharos-itinerary"
@@ -30,7 +31,7 @@
             {{#str}}mi_itinerario, mod_pharos_itinerary{{/str}}
         </h2>
         <span class="pharos-level-badge pharos-level-badge--n{{level}}"
-              aria-label="{{strings.current_level}}: {{level_label}}">{{level_label}}</span>
+              aria-label="{{level_aria_label}}">{{level_label}}</span>
     </div>
 
     {{! XP progress bar }}
@@ -40,7 +41,7 @@
              aria-valuenow="{{xp_percent}}"
              aria-valuemin="0"
              aria-valuemax="100"
-             aria-label="{{strings.xp_progress}}: {{xp_current}} / {{xp_next}} XP ({{xp_percent}}%)"
+             aria-label="{{xp_aria_label}}"
              aria-describedby="pharos-itinerary-xp-label">
             <div class="pharos-xp-bar__fill" data-target-width="{{xp_percent}}%"></div>
         </div>
@@ -60,7 +61,7 @@
                         id="pharos-level-{{level}}-btn"
                         data-itinerary-toggle="pharos-level-{{level}}"
                         aria-expanded="{{#is_current}}true{{/is_current}}{{^is_current}}false{{/is_current}}"
-                        aria-controls="pharos-level-{{level}}-panel"
+                        aria-controls="pharos-level-{{level}}"
                         {{#is_locked}}disabled aria-disabled="true"{{/is_locked}}>
                     <span class="pharos-level-badge pharos-level-badge--n{{level}} mr-2"
                           aria-hidden="true">{{level_label}}</span>
@@ -80,7 +81,7 @@
                 {{/is_locked}}
             </div>
 
-            <div id="pharos-level-{{level}}-panel"
+            <div id="pharos-level-{{level}}"
                  role="region"
                  aria-labelledby="pharos-level-{{level}}-btn"
                  {{^is_current}}hidden{{/is_current}}>

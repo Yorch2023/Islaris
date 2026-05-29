@@ -17,21 +17,70 @@ require_capability('mod/pharos_itinerary:view', $context);
 $completion = new completion_info($course);
 $completion->set_module_viewed($cm);
 
-$progress = pharos_itinerary_get_or_create_progress($itinerary->id, $USER->id);
+$progress  = pharos_itinerary_get_or_create_progress($itinerary->id, $USER->id);
 
-$thresholds  = [1 => 100, 2 => 250, 3 => 250];
-$xpNext      = $thresholds[$progress->level] ?? 250;
-$xpPercent   = (int) min(100, round($progress->xp / $xpNext * 100));
+$thresholds = [1 => 100, 2 => 250, 3 => 250];
+$xpNext     = $thresholds[$progress->level] ?? 250;
+$xpPercent  = (int) min(100, round($progress->xp / $xpNext * 100));
 
 $levelMeta = [
-    1 => ['label' => 'N1 — Fundamentos',        'desc' => get_string('level1_desc', 'mod_pharos_itinerary')],
-    2 => ['label' => 'N2 — IA en la práctica',  'desc' => get_string('level2_desc', 'mod_pharos_itinerary')],
-    3 => ['label' => 'N3 — Facilitación crítica','desc' => get_string('level3_desc', 'mod_pharos_itinerary')],
+    1 => ['label' => 'N1 — Fundamentos',         'desc' => get_string('level1_desc', 'mod_pharos_itinerary')],
+    2 => ['label' => 'N2 — IA en la práctica',   'desc' => get_string('level2_desc', 'mod_pharos_itinerary')],
+    3 => ['label' => 'N3 — Facilitación crítica', 'desc' => get_string('level3_desc', 'mod_pharos_itinerary')],
 ];
 
-// Build level data: activities from course modules tagged per level.
-// In the full implementation this queries pharos_itinerary_activity;
-// here we provide the data shape with an empty activities list.
+// Fetch activity assignments from pharos_itinerary_activity for this instance.
+$activityRows = $DB->get_records_sql(
+    "SELECT pia.cmid, pia.level, pia.sortorder, cm.module, cm.instance
+       FROM {pharos_itinerary_activity} pia
+       JOIN {course_modules} cm ON cm.id = pia.cmid
+      WHERE pia.itineraryid = :itineraryid
+      ORDER BY pia.level ASC, pia.sortorder ASC",
+    ['itineraryid' => $itinerary->id]
+);
+
+// Map module ids → names once to avoid N+1 queries.
+$moduleNames = [];
+if ($activityRows) {
+    $modids = array_unique(array_column((array) $activityRows, 'module'));
+    foreach ($DB->get_records_list('modules', 'id', $modids, '', 'id,name') as $mod) {
+        $moduleNames[$mod->id] = $mod->name;
+    }
+}
+
+// Fetch completion data for this user in the course.
+$completionData = [];
+if ($activityRows) {
+    $cmids = array_column((array) $activityRows, 'cmid');
+    $completionRecords = $DB->get_records_select(
+        'course_modules_completion',
+        'userid = :userid AND coursemoduleid ' . $DB->sql_in($cmids),
+        ['userid' => $USER->id],
+        '',
+        'coursemoduleid, completionstate'
+    );
+    foreach ($completionRecords as $cr) {
+        $completionData[$cr->coursemoduleid] = ($cr->completionstate >= COMPLETION_COMPLETE);
+    }
+}
+
+// Group activities by level and build view data.
+$activitiesByLevel = [1 => [], 2 => [], 3 => []];
+foreach ($activityRows as $row) {
+    $modName   = $moduleNames[$row->module] ?? 'activity';
+    $instance  = $DB->get_record($modName, ['id' => $row->instance], 'id,name');
+    $actName   = $instance ? format_string($instance->name) : get_string('activity');
+    $actUrl    = (new moodle_url("/mod/{$modName}/view.php", ['id' => $row->cmid]))->out(false);
+    $done      = $completionData[$row->cmid] ?? false;
+
+    $activitiesByLevel[$row->level][] = [
+        'cmid'      => $row->cmid,
+        'name'      => $actName,
+        'url'       => $actUrl,
+        'completed' => $done,
+    ];
+}
+
 $levelsData = [];
 foreach ([1, 2, 3] as $lvl) {
     $levelsData[] = [
@@ -40,12 +89,12 @@ foreach ([1, 2, 3] as $lvl) {
         'description' => $levelMeta[$lvl]['desc'],
         'is_current'  => $lvl === $progress->level,
         'is_locked'   => $lvl > $progress->level,
-        'activities'  => [],
+        'activities'  => $activitiesByLevel[$lvl],
     ];
 }
 
-// URL to the badges module in this course (first instance found, or fallback).
-$badgesCm = null;
+// URL to the badges module in this course.
+$badgesCm   = null;
 $badgesMods = get_coursemodules_in_course('pharos_badges', $course->id);
 if ($badgesMods) {
     $badgesCm = reset($badgesMods);
@@ -62,15 +111,20 @@ $PAGE->set_context($context);
 echo $OUTPUT->header();
 echo $OUTPUT->heading(format_string($itinerary->name));
 
+$currentLevelLabel = $levelMeta[$progress->level]['label'];
+
 $templateData = [
-    'fullname'    => fullname($USER),
-    'level'       => $progress->level,
-    'level_label' => $levelMeta[$progress->level]['label'],
-    'xp_current'  => $progress->xp,
-    'xp_next'     => $xpNext,
-    'xp_percent'  => $xpPercent,
-    'levels'      => $levelsData,
-    'badges_url'  => $badgesUrl,
+    'fullname'        => fullname($USER),
+    'level'           => $progress->level,
+    'level_label'     => $currentLevelLabel,
+    'level_aria_label'=> get_string('current_level', 'mod_pharos_itinerary') . ': ' . $currentLevelLabel,
+    'xp_current'      => $progress->xp,
+    'xp_next'         => $xpNext,
+    'xp_percent'      => $xpPercent,
+    'xp_aria_label'   => get_string('xp_progress', 'mod_pharos_itinerary') . ': '
+                         . $progress->xp . ' / ' . $xpNext . ' XP (' . $xpPercent . '%)',
+    'levels'          => $levelsData,
+    'badges_url'      => $badgesUrl,
 ];
 
 echo $OUTPUT->render_from_template('mod_pharos_itinerary/itinerary_view', $templateData);
