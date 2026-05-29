@@ -22,3 +22,4 @@ $string['middleware_not_configured']   = 'El bloque Tutor IA no está configurad
 $string['chat_skip_to_input']         = 'Saltar al campo de texto del tutor';
 $string['chat_messages_label']        = 'Mensajes del tutor IA';
 $string['chat_form_label']            = 'Formulario de pregunta al tutor';
+$string['privacy:metadata']           = 'El bloque Tutor IA PHAROS no almacena datos personales. Las conversaciones no se persisten en la base de datos de Moodle.';

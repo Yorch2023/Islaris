@@ -233,7 +233,7 @@ if ($available) {
     // Level selector.
     $levelOptions = [1 => 'N1', 2 => 'N2', 3 => 'N3'];
     echo html_writer::start_tag('div', ['class' => 'form-group col-md-3 mb-2']);
-    echo html_writer::label(get_string('nivel', 'mod_pharos_badges'), 'assign-level', true, ['class' => 'sr-only']);
+    echo html_writer::label(get_string('nivel', 'mod_pharos_itinerary'), 'assign-level', true, ['class' => 'sr-only']);
     echo html_writer::select($levelOptions, 'level', 1, false, ['id' => 'assign-level', 'class' => 'form-control']);
     echo html_writer::end_tag('div');
 
