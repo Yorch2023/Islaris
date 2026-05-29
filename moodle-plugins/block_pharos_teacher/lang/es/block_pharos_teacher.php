@@ -36,3 +36,4 @@ $string['export_html']                       = 'Descargar HTML';
 $string['export_html_aria']                  = 'Descargar actividad como página HTML para imprimir';
 $string['export_docx']                       = 'Descargar DOCX';
 $string['export_docx_aria']                  = 'Descargar actividad como documento Word';
+$string['student_list']                      = 'Lista de alumnos';
