@@ -115,7 +115,40 @@ Gestiona la recogida de evidencias de los alumnos y la emisión automática de O
 
 ---
 
-## 5. ai-layer — Middleware Node.js
+## 5. block_pharos_teacher — Panel docente + Generador IA
+
+**Ruta**: `moodle-plugins/block_pharos_teacher/`
+**Tipo**: Block plugin (Moodle 4.3)
+
+Panel de seguimiento del docente y acceso al Generador de actividades IA. El bloque muestra progreso individual del alumnado, alertas de inactividad y un enlace directo al generador.
+
+### Flujo técnico del generador
+
+```
+generator.php → AMD activity-generator.js → ajax-generator.php → ai-layer/routes/generator.js
+                                           ↘ ajax-export.php   → ai-layer/routes/generator.js (export)
+```
+
+### Archivos clave
+
+| Archivo | Función |
+|---------|---------|
+| `block_pharos_teacher.php` | Clase del bloque; consulta progreso del alumnado desde DB |
+| `generator.php` | Página dedicada al generador (requiere `block/pharos_teacher:view`) |
+| `ajax-generator.php` | Proxy: valida sesskey, fuerza userId, llama al middleware generador |
+| `ajax-export.php` | Proxy: reenvía la respuesta binaria (HTML/DOCX) del middleware |
+| `amd/src/activity-generator.js` | Gestión del formulario, fetch de actividad, descarga de exportación |
+| `amd/src/teacher-dashboard.js` | Interactividad del panel: filtros, tablas de progreso |
+| `templates/teacher_dashboard.mustache` | Vista del panel con tabla de alumnos y alertas |
+| `templates/generator_view.mustache` | Formulario del generador con ARIA live regions |
+
+### Niveles y exportación
+
+El docente selecciona nivel (N1/N2/N3), tema e idioma (es/it). La actividad generada se puede exportar como HTML imprimible o DOCX (`docx@^8.5.0`).
+
+---
+
+## 6. ai-layer — Middleware Node.js
 
 **Ruta**: `ai-layer/`
 **Tipo**: Servidor Express independiente
@@ -127,7 +160,9 @@ Proxy entre Moodle y la Claude API de Anthropic. Añade autenticación, rate lim
 | Ruta | Descripción |
 |------|-------------|
 | `POST /api/tutor/chat` | Turno de conversación con el Tutor IA |
+| `POST /api/tutor/stream` | Streaming SSE del tutor (respuesta parcial en tiempo real) |
 | `POST /api/generator/activity` | Generación de actividad pedagógica para docentes |
+| `POST /api/generator/export` | Exportación de la actividad generada (HTML / DOCX) |
 | `GET /health` | Health check |
 
 Ver `docs/api.md` para la especificación completa.
