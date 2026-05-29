@@ -78,6 +78,7 @@ foreach ($activityRows as $row) {
         'name'      => $actName,
         'url'       => $actUrl,
         'completed' => $done,
+        'is_locked' => $row->level > $progress->level,
     ];
 }
 

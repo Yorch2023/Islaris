@@ -94,7 +94,7 @@
                                    class="mr-2"
                                    data-cmid="{{cmid}}"
                                    {{#completed}}checked{{/completed}}
-                                   {{#../is_locked}}disabled aria-disabled="true"{{/../is_locked}}
+                                   {{#is_locked}}disabled aria-disabled="true"{{/is_locked}}
                                    aria-label="{{name}}">
                             <label for="activity-{{cmid}}" class="mb-0 {{#completed}}text-muted{{/completed}}">
                                 <a href="{{url}}">{{name}}</a>
