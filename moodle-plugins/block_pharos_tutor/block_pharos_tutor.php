@@ -30,7 +30,7 @@ class block_pharos_tutor extends block_base {
     }
 
     public function get_content(): ?stdClass {
-        global $USER, $COURSE, $PAGE;
+        global $USER, $COURSE, $PAGE, $DB;
 
         if ($this->content !== null) {
             return $this->content;
@@ -51,10 +51,19 @@ class block_pharos_tutor extends block_base {
             return $this->content;
         }
 
-        // Determine the itinerary level for this user (default 1).
-        // In a full implementation this would query mod_pharos_itinerary.
-        $userLevel = (int) ($USER->profile['pharos_level'] ?? 1);
-        $userLevel = max(1, min(3, $userLevel));
+        // Determine the itinerary level for this user by querying the DB.
+        $userLevel = 1;
+        $itinerary = $DB->get_record_sql(
+            "SELECT pp.level
+               FROM {pharos_itinerary_progress} pp
+               JOIN {pharos_itinerary} pi ON pi.id = pp.itineraryid
+              WHERE pi.course = :course AND pp.userid = :userid
+              LIMIT 1",
+            ['course' => $COURSE->id, 'userid' => $USER->id]
+        );
+        if ($itinerary) {
+            $userLevel = max(1, min(3, (int) $itinerary->level));
+        }
 
         // Derive language ('es' or 'it') from Moodle's current language.
         $lang = current_language();

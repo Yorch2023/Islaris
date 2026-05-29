@@ -132,6 +132,7 @@ class block_pharos_teacher extends block_base {
 
         $templateData = [
             'students'       => $studentsData,
+            'student_count'  => count($studentsData),
             'inactive_count' => $inactiveCount,
             'pending_count'  => $pendingCount,
             'generator_url'  => $generatorPageUrl,
