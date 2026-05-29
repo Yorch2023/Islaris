@@ -88,12 +88,23 @@ class block_pharos_teacher extends block_base {
                 $inactiveCount++;
             }
 
-            // Count pending evidence: submitted but count < threshold.
-            $evidenceCount = (int) $DB->count_records('pharos_badges_evidence', [
-                'userid'   => $student->id,
-                'courseid' => $COURSE->id,
-            ]);
-            $hasPending = $evidenceCount > 0 && $evidenceCount < array_sum([3, 4, 5]);
+            // Count pending evidence per level: started but threshold not yet reached.
+            $evidenceThresholds = [1 => 3, 2 => 4, 3 => 5];
+            $evidenceRows = $DB->get_records_sql(
+                "SELECT level, COUNT(*) AS cnt
+                   FROM {pharos_badges_evidence}
+                  WHERE userid = :userid AND courseid = :courseid
+                  GROUP BY level",
+                ['userid' => $student->id, 'courseid' => $COURSE->id]
+            );
+            $hasPending = false;
+            foreach ($evidenceRows as $row) {
+                $threshold = $evidenceThresholds[(int) $row->level] ?? PHP_INT_MAX;
+                if ($row->cnt > 0 && $row->cnt < $threshold) {
+                    $hasPending = true;
+                    break;
+                }
+            }
             if ($hasPending) {
                 $pendingCount++;
             }
