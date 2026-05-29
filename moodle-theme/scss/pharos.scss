@@ -68,6 +68,19 @@
     }
 }
 
+.btn-pharos-primary {
+    background-color: $pharos-navy;
+    border-color: $pharos-navy;
+    color: #fff;
+
+    &:hover,
+    &:focus {
+        background-color: lighten($pharos-navy, 8%);
+        border-color: lighten($pharos-navy, 8%);
+        color: #fff;
+    }
+}
+
 .btn-danger,
 .btn-pharos-red {
     background-color: $pharos-red;
@@ -170,6 +183,32 @@
         color: $text-muted;
     }
 }
+
+// === Activity Generator ===
+.pharos-generator {
+    &__back { padding-left: 0; }
+
+    &__title { color: $pharos-navy; }
+
+    &__output {
+        white-space: pre-wrap;
+        word-break: break-word;
+        font-family: $font-family-sans-serif;
+        font-size: 0.9rem;
+        line-height: 1.65;
+        background: $pharos-light;
+        border: 1px solid $pharos-border;
+        border-radius: $border-radius;
+        padding: 1rem;
+        max-height: 600px;
+        overflow-y: auto;
+    }
+
+    &__spinner { font-size: 0.9rem; }
+}
+
+// === Teacher dashboard row state ===
+.pharos-row-inactive td { background: lighten($pharos-red, 48%); }
 
 // === Responsive helpers ===
 @media (max-width: 767.98px) {
