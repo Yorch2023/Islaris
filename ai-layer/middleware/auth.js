@@ -24,9 +24,9 @@ function validateMoodleToken(req, res, next) {
 function timingSafeEqual(a, b) {
     if (a.length !== b.length) {
         // Prevent short-circuit; still iterate to consume constant time
-        let diff = 0;
+        let _diff = 0;
         for (let i = 0; i < b.length; i++) {
-            diff |= (a.charCodeAt(i % a.length) ^ b.charCodeAt(i));
+            _diff |= (a.charCodeAt(i % a.length) ^ b.charCodeAt(i));
         }
         return false;
     }

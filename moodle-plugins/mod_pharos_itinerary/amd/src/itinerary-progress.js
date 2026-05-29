@@ -56,7 +56,7 @@ define(['core/ajax', 'core/notification'], function (Ajax, Notification) {
     }
 
     // Activity completion checkboxes: POST to Moodle's completion webservice.
-    function wireCompletionToggles(container, contextId) {
+    function wireCompletionToggles(container, _contextId) {
         container.addEventListener('change', function (e) {
             const checkbox = e.target.closest('input[data-cmid]');
             if (!checkbox) return;

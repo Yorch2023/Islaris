@@ -52,13 +52,6 @@ const validBody = {
     messages: [{ role: 'user', content: '¿Qué es la IA?' }],
 };
 
-// Helper: collect a full SSE response into an array of parsed data payloads.
-async function collectSse(res) {
-    const text   = res.text;
-    const lines  = text.split('\n').filter(l => l.startsWith('data: '));
-    return lines.map(l => l.slice(6).trim());
-}
-
 describe('POST /api/tutor/stream', () => {
     test('streams text deltas and ends with [DONE]', async () => {
         const res = await request(app)
