@@ -26,7 +26,11 @@ class mod_pharos_itinerary_mod_form extends moodleform_mod {
             'select',
             'startlevel',
             get_string('startlevel', 'mod_pharos_itinerary'),
-            [1 => 'N1 — Fundamentos', 2 => 'N2 — IA en la práctica', 3 => 'N3 — Facilitación crítica']
+            [
+                1 => 'N1 — ' . get_string('level1_desc', 'mod_pharos_itinerary'),
+                2 => 'N2 — ' . get_string('level2_desc', 'mod_pharos_itinerary'),
+                3 => 'N3 — ' . get_string('level3_desc', 'mod_pharos_itinerary'),
+            ]
         );
         $mform->setDefault('startlevel', 1);
 

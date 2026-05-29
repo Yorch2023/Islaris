@@ -211,6 +211,8 @@
 .pharos-row-inactive td { background: lighten($pharos-red, 48%); }
 
 // === Responsive helpers ===
+// !important is intentional here: matches Bootstrap's own .d-none pattern so
+// these utility classes can reliably override component-level display rules.
 @media (max-width: 767.98px) {
     .pharos-hide-mobile {
         display: none !important;
