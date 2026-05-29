@@ -19,6 +19,11 @@ $string['submit_evidence']          = 'Enviar evidencia';
 $string['nivel']                    = 'Nivel';
 $string['tipo_evidencia']           = 'Tipo de evidencia';
 $string['descripcion_evidencia']    = 'Descripción de la evidencia';
+$string['descripcion_evidencia_hint'] = 'Máximo 1000 caracteres. Describe qué aprendiste, creaste o aplicaste.';
+$string['evidencias_enviadas']      = 'Evidencias enviadas';
+$string['tipo']                     = 'Tipo';
+$string['de']                       = 'de';
+$string['pageheading']              = 'Mis evidencias y microcredenciales';
 
 // Privacy API
 $string['privacy:metadata']                                      = 'El módulo Badges PHAROS almacena evidencias enviadas por los estudiantes.';

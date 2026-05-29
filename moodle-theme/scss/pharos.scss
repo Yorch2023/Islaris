@@ -150,6 +150,27 @@
     font-size: 0.9rem;
 }
 
+// === Itinerary view ===
+.pharos-itinerary {
+    &__level--locked {
+        opacity: 0.55;
+        pointer-events: none; // clicks fall through to the disabled button
+
+        // Restore pointer events on the header so the button is still reachable
+        // by AT (aria-disabled conveys the locked state).
+        .card-header {
+            pointer-events: auto;
+        }
+    }
+}
+
+.pharos-activity-item {
+    &--done > .d-flex > a {
+        text-decoration: line-through;
+        color: $text-muted;
+    }
+}
+
 // === Responsive helpers ===
 @media (max-width: 767.98px) {
     .pharos-hide-mobile {

@@ -44,6 +44,16 @@ define([], function () {
                 ui.form.dispatchEvent(new Event('submit'));
             }
         });
+
+        // Live character count for WCAG 2.1 (SC 1.3.1).
+        const charCount = root.querySelector('#pharos-tutor-char-count');
+        const maxLen    = parseInt(ui.input.getAttribute('maxlength'), 10) || 4000;
+        if (charCount) {
+            ui.input.addEventListener('input', function () {
+                const remaining = maxLen - ui.input.value.length;
+                charCount.textContent = remaining + ' / ' + maxLen;
+            });
+        }
     }
 
     async function handleSend(text, config, ui, history) {
@@ -69,6 +79,9 @@ define([], function () {
             history.push({ role: 'assistant', content: finalText });
             trimHistory(history);
             bubble.classList.remove('pharos-tutor__bubble--streaming');
+            // Move focus to the reply so keyboard/screen-reader users are aware of it.
+            bubble.setAttribute('tabindex', '-1');
+            bubble.focus();
 
         } catch (_err) {
             bubble.textContent = ui.status.dataset.errorText || 'Error de conexión.';

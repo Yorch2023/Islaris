@@ -16,6 +16,10 @@ $string['level1_desc']             = 'Concetti di base sull\'IA, strumenti quoti
 $string['level2_desc']             = 'Applicazioni professionali, uso critico e valutazione degli strumenti IA.';
 $string['level3_desc']             = 'Progettazione di attività, leadership pedagogica e impatto sulla politica educativa.';
 $string['nivel_bloqueado']         = 'Livello bloccato — completa prima il livello precedente';
+$string['nivel_actual']            = 'Livello attuale';
+$string['skip_to_levels']          = 'Vai ai livelli dell\'itinerario';
+$string['current_level']           = 'Livello attuale';
+$string['xp_progress']             = 'Progresso XP';
 $string['no_activities']           = 'Nessuna attività assegnata a questo livello.';
 $string['ver_microcredenciales']   = 'Visualizza le mie microcredenziali';
 

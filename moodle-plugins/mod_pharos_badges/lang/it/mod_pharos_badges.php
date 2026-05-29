@@ -19,6 +19,11 @@ $string['submit_evidence']          = 'Invia prova';
 $string['nivel']                    = 'Livello';
 $string['tipo_evidencia']           = 'Tipo di prova';
 $string['descripcion_evidencia']    = 'Descrizione della prova';
+$string['descripcion_evidencia_hint'] = 'Massimo 1000 caratteri. Descrivi cosa hai imparato, creato o applicato.';
+$string['evidencias_enviadas']      = 'Prove inviate';
+$string['tipo']                     = 'Tipo';
+$string['de']                       = 'di';
+$string['pageheading']              = 'Le mie prove e microcredenziali';
 
 // Privacy API
 $string['privacy:metadata']                                      = 'Il modulo Badge PHAROS memorizza le prove inviate dagli studenti.';
