@@ -1,0 +1,87 @@
+{{!
+    Template: mod_pharos_itinerary/itinerary_view
+    Context:
+      fullname      - Student name
+      level         - Current level (1/2/3)
+      level_label   - "N1 — Fundamentos" etc.
+      xp_current    - XP earned
+      xp_next       - XP needed for next level threshold
+      xp_percent    - Integer 0-100
+      levels        - Array of {
+                        level, level_label, is_current (bool), is_locked (bool),
+                        description,
+                        activities: [{ cmid, name, url, completed (bool) }]
+                      }
+      badges_url    - URL to mod_pharos_badges view
+}}
+<div class="pharos-itinerary">
+
+    {{! Header }}
+    <div class="d-flex align-items-center justify-content-between mb-3 flex-wrap gap-2">
+        <h2 class="h5 mb-0">{{#str}}mi_itinerario, mod_pharos_itinerary{{/str}}</h2>
+        <span class="pharos-level-badge pharos-level-badge--n{{level}}">{{level_label}}</span>
+    </div>
+
+    {{! XP progress bar }}
+    <div class="mb-4">
+        <div class="pharos-xp-bar" role="progressbar"
+             aria-valuenow="{{xp_percent}}" aria-valuemin="0" aria-valuemax="100"
+             aria-label="Progreso XP: {{xp_current}} de {{xp_next}}">
+            <div class="pharos-xp-bar__fill" data-target-width="{{xp_percent}}%"></div>
+        </div>
+        <p class="pharos-xp-label">{{xp_current}} / {{xp_next}} XP</p>
+    </div>
+
+    {{! Level panels }}
+    {{#levels}}
+    <div class="card mb-3 {{#is_locked}}opacity-50{{/is_locked}}">
+        <div class="card-header d-flex align-items-center justify-content-between">
+            <button class="btn btn-link p-0 text-left font-weight-bold"
+                    type="button"
+                    data-itinerary-toggle="pharos-level-{{level}}"
+                    aria-expanded="{{#is_current}}true{{/is_current}}{{^is_current}}false{{/is_current}}"
+                    aria-controls="pharos-level-{{level}}"
+                    {{#is_locked}}disabled aria-disabled="true"{{/is_locked}}>
+                <span class="pharos-level-badge pharos-level-badge--n{{level}} mr-2">{{level_label}}</span>
+                {{description}}
+            </button>
+            {{#is_locked}}
+            <span class="ml-2" aria-label="{{#str}}nivel_bloqueado, mod_pharos_itinerary{{/str}}">
+                &#128274;
+            </span>
+            {{/is_locked}}
+        </div>
+
+        <div id="pharos-level-{{level}}" {{^is_current}}hidden{{/is_current}}>
+            <ul class="list-group list-group-flush">
+                {{#activities}}
+                <li class="list-group-item pharos-activity-item {{#completed}}pharos-activity-item--done{{/completed}}">
+                    <div class="d-flex align-items-center">
+                        <input type="checkbox"
+                               class="mr-2"
+                               data-cmid="{{cmid}}"
+                               {{#completed}}checked{{/completed}}
+                               {{#../is_locked}}disabled{{/../is_locked}}
+                               aria-label="{{name}}">
+                        <a href="{{url}}" class="{{#completed}}text-muted{{/completed}}">{{name}}</a>
+                    </div>
+                </li>
+                {{/activities}}
+                {{^activities}}
+                <li class="list-group-item text-muted small">
+                    {{#str}}no_activities, mod_pharos_itinerary{{/str}}
+                </li>
+                {{/activities}}
+            </ul>
+        </div>
+    </div>
+    {{/levels}}
+
+    {{! Link to badges }}
+    <div class="text-right mt-3">
+        <a href="{{badges_url}}" class="btn btn-outline-secondary btn-sm">
+            {{#str}}ver_microcredenciales, mod_pharos_itinerary{{/str}}
+        </a>
+    </div>
+
+</div>
