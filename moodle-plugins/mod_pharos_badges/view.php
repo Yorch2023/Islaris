@@ -44,14 +44,9 @@ if ($canSubmit && data_submitted() && confirm_sesskey()) {
 
         // Award XP in the itinerary module for this course.
         if ($hasItinerary) {
-            $itinerary = $DB->get_record_sql(
-                "SELECT pi.id FROM {pharos_itinerary} pi
-                   JOIN {course_modules} cm ON cm.instance = pi.id
-                  WHERE pi.course = :course LIMIT 1",
-                ['course' => $course->id]
-            );
+            $itinerary = $DB->get_record('pharos_itinerary', ['course' => $course->id], 'id, xp_per_evidence');
             if ($itinerary) {
-                $xpPerEvidence = (int) ($itinerary->xp_per_evidence ?? 10);
+                $xpPerEvidence = (int) ($itinerary->xp_per_evidence ?: 10);
                 pharos_itinerary_award_xp($itinerary->id, $USER->id, $xpPerEvidence);
             }
         }

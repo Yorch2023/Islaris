@@ -5,9 +5,10 @@
 /**
  * Teacher UI: assign course modules to itinerary levels.
  *
- * GET  ?id=<cmid>              — show the assignment form
- * POST action=add    cmid level — assign a CM to a level
- * POST action=remove assign_id  — remove an assignment
+ * GET  ?id=<cmid>                        — show the assignment form
+ * POST action=add    cmid level           — assign a CM to a level
+ * POST action=remove assign_id            — remove an assignment
+ * POST action=move   assign_id direction  — reorder (direction: 'up'|'down')
  */
 
 require_once(__DIR__ . '/../../config.php');
@@ -149,11 +150,44 @@ foreach ([1, 2, 3] as $lvl) {
             html_writer::tag('em', get_string('no_activities', 'mod_pharos_itinerary'), ['class' => 'text-muted small']),
             ['class' => 'list-group-item']);
     } else {
-        foreach ($byLevel[$lvl] as $item) {
-            $removeForm = html_writer::start_tag('form', [
-                'method' => 'post', 'action' => '', 'class' => 'd-inline',
-            ]);
-            $removeForm .= html_writer::empty_tag('input', ['type' => 'hidden', 'name' => 'sesskey', 'value' => sesskey()]);
+        $levelItems = array_values($byLevel[$lvl]);
+        $totalItems = count($levelItems);
+        foreach ($levelItems as $idx => $item) {
+            $controls = '';
+
+            // Up button (hidden for first item).
+            $upForm = html_writer::start_tag('form', ['method' => 'post', 'action' => '', 'class' => 'd-inline']);
+            $upForm .= html_writer::empty_tag('input', ['type' => 'hidden', 'name' => 'sesskey',   'value' => sesskey()]);
+            $upForm .= html_writer::empty_tag('input', ['type' => 'hidden', 'name' => 'action',    'value' => 'move']);
+            $upForm .= html_writer::empty_tag('input', ['type' => 'hidden', 'name' => 'assign_id', 'value' => $item['assign_id']]);
+            $upForm .= html_writer::empty_tag('input', ['type' => 'hidden', 'name' => 'direction', 'value' => 'up']);
+            $upAttrs = ['type' => 'submit', 'class' => 'btn btn-link btn-sm p-0 mr-1',
+                        'aria-label' => get_string('move_up', 'mod_pharos_itinerary')];
+            if ($idx === 0) {
+                $upAttrs['disabled'] = 'disabled';
+                $upAttrs['aria-disabled'] = 'true';
+            }
+            $upForm .= html_writer::tag('button', '&#8593;', $upAttrs);
+            $upForm .= html_writer::end_tag('form');
+
+            // Down button (hidden for last item).
+            $downForm = html_writer::start_tag('form', ['method' => 'post', 'action' => '', 'class' => 'd-inline']);
+            $downForm .= html_writer::empty_tag('input', ['type' => 'hidden', 'name' => 'sesskey',   'value' => sesskey()]);
+            $downForm .= html_writer::empty_tag('input', ['type' => 'hidden', 'name' => 'action',    'value' => 'move']);
+            $downForm .= html_writer::empty_tag('input', ['type' => 'hidden', 'name' => 'assign_id', 'value' => $item['assign_id']]);
+            $downForm .= html_writer::empty_tag('input', ['type' => 'hidden', 'name' => 'direction', 'value' => 'down']);
+            $downAttrs = ['type' => 'submit', 'class' => 'btn btn-link btn-sm p-0 mr-2',
+                          'aria-label' => get_string('move_down', 'mod_pharos_itinerary')];
+            if ($idx === $totalItems - 1) {
+                $downAttrs['disabled'] = 'disabled';
+                $downAttrs['aria-disabled'] = 'true';
+            }
+            $downForm .= html_writer::tag('button', '&#8595;', $downAttrs);
+            $downForm .= html_writer::end_tag('form');
+
+            // Remove button.
+            $removeForm = html_writer::start_tag('form', ['method' => 'post', 'action' => '', 'class' => 'd-inline']);
+            $removeForm .= html_writer::empty_tag('input', ['type' => 'hidden', 'name' => 'sesskey',   'value' => sesskey()]);
             $removeForm .= html_writer::empty_tag('input', ['type' => 'hidden', 'name' => 'action',    'value' => 'remove']);
             $removeForm .= html_writer::empty_tag('input', ['type' => 'hidden', 'name' => 'assign_id', 'value' => $item['assign_id']]);
             $removeForm .= html_writer::tag('button',
@@ -161,10 +195,12 @@ foreach ([1, 2, 3] as $lvl) {
                 ['type' => 'submit', 'class' => 'btn btn-link btn-sm text-danger p-0']);
             $removeForm .= html_writer::end_tag('form');
 
+            $controls = $upForm . $downForm . $removeForm;
+
             echo html_writer::tag('li',
                 html_writer::tag('div',
                     html_writer::tag('span', format_string($item['name']), ['class' => 'flex-grow-1']) .
-                    $removeForm,
+                    $controls,
                     ['class' => 'd-flex align-items-center justify-content-between']),
                 ['class' => 'list-group-item']);
         }
