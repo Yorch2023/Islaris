@@ -224,3 +224,53 @@
         display: none !important;
     }
 }
+
+// === AI Recommendation widget ===
+// .border-primary (Bootstrap 4) sets border-color with !important on all sides;
+// we reinforce only the left edge to create a clear visual accent.
+.pharos-recommend-card {
+    border-left-width: 4px !important;
+    background: lighten($pharos-navy, 72%);
+
+    .card-title {
+        font-size: 0.875rem;
+    }
+}
+
+// === Community block ===
+.pharos-community {
+    font-size: 0.9rem;
+}
+
+.pharos-section-title {
+    display: flex;
+    align-items: center;
+    gap: 0.4rem;
+    font-size: 0.78rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    color: $pharos-navy;
+    padding-bottom: 0.4rem;
+    border-bottom: 2px solid $pharos-border;
+    margin-bottom: 0.65rem;
+}
+
+.pharos-community {
+    &__level { margin-bottom: 0.5rem; }
+
+    &__forum-item,
+    &__webinar-item,
+    &__resource-item {
+        padding: 0.3rem 0;
+        border-bottom: 1px solid $pharos-border;
+
+        &:last-child { border-bottom: 0; }
+    }
+
+    &__flag {
+        min-width: 1.5rem;
+        text-align: center;
+        line-height: 1;
+    }
+}

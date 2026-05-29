@@ -94,9 +94,9 @@
         </div>
 
         {{! Status + submit }}
-        <div class="d-flex align-items-center gap-3 mt-2">
-            <button type="submit" class="btn btn-pharos-primary">
-                <span class="pharos-generator__btn-icon" aria-hidden="true">&#10024;</span>
+        <div class="d-flex align-items-center mt-2">
+            <button type="submit" class="btn btn-pharos-primary mr-3">
+                <span class="pharos-generator__btn-icon mr-1" aria-hidden="true">&#10024;</span>
                 {{#str}}generate_activity, block_pharos_teacher{{/str}}
             </button>
             <div id="pharos-generator-status"
@@ -132,10 +132,10 @@
                  aria-label="{{#str}}generated_activity, block_pharos_teacher{{/str}}"></pre>
         </div>
 
-        <div id="pharos-generator-actions" class="card-footer d-flex gap-2" hidden>
+        <div id="pharos-generator-actions" class="card-footer d-flex" hidden>
             <button id="pharos-export-html"
                     type="button"
-                    class="btn btn-outline-primary"
+                    class="btn btn-outline-primary mr-2"
                     disabled
                     aria-label="{{#str}}export_html_aria, block_pharos_teacher{{/str}}">
                 <span aria-hidden="true">&#128196;</span>
