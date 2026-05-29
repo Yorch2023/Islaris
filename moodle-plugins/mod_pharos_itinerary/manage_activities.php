@@ -228,9 +228,13 @@ function pharos_itinerary_reorder_activity(int $itineraryId, int $assignId, bool
     $current = $DB->get_record('pharos_itinerary_activity',
         ['id' => $assignId, 'itineraryid' => $itineraryId], '*', MUST_EXIST);
 
-    $neighbour = $DB->get_record_select(
-        'pharos_itinerary_activity',
-        'itineraryid = :id AND level = :level AND sortorder ' . ($moveUp ? '< :ord' : '> :ord') . ' ORDER BY sortorder ' . ($moveUp ? 'DESC' : 'ASC') . ' LIMIT 1',
+    $direction = $moveUp ? '<' : '>';
+    $order     = $moveUp ? 'DESC' : 'ASC';
+    $neighbour = $DB->get_record_sql(
+        "SELECT * FROM {pharos_itinerary_activity}
+          WHERE itineraryid = :id AND level = :level AND sortorder {$direction} :ord
+          ORDER BY sortorder {$order}
+          LIMIT 1",
         ['id' => $itineraryId, 'level' => $current->level, 'ord' => $current->sortorder]
     );
 
