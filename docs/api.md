@@ -102,6 +102,45 @@ Título · Nivel · Duración · Modalidad · Materiales · Objetivos · Desarro
 
 ---
 
+### POST /api/generator/export
+
+Exporta una actividad ya generada a formato HTML o DOCX.
+
+**Rate limit**: ninguno (opera sobre contenido ya generado; el rate limit se aplica en `/activity`).
+
+**Body (JSON)**:
+
+| Campo      | Tipo   | Requerido | Descripción |
+|------------|--------|-----------|-------------|
+| `userId`   | string | Sí        | ID Moodle del usuario |
+| `activity` | string | Sí        | Texto completo de la actividad generada |
+| `format`   | string | Sí        | `"html"` o `"docx"` |
+| `lang`     | string | Sí        | `"es"` o `"it"` |
+
+**Respuesta `format=html`** (200):
+
+- `Content-Type: text/html; charset=utf-8`
+- `Content-Disposition: attachment; filename="pharos-activity.html"`
+- Página HTML imprimible con botón `window.print()`, XSS escaping, `lang` correcto.
+
+**Respuesta `format=docx`** (200):
+
+- `Content-Type: application/vnd.openxmlformats-officedocument.wordprocessingml.document`
+- `Content-Disposition: attachment; filename="pharos-activity.docx"`
+- Documento Word con secciones para cada campo de la actividad.
+
+**Errores**:
+
+| Código | Causa |
+|--------|-------|
+| 400    | `activity`, `format` o `lang` inválidos |
+| 401    | Token incorrecto o ausente |
+| 500    | Error interno del servidor |
+
+**Proxy Moodle**: `ajax-export.php` en `block_pharos_teacher` — inyecta `MOODLE_SECRET`, valida `sesskey` y devuelve el fichero directamente al navegador como descarga.
+
+---
+
 ### GET /health
 
 Verificación de estado del servidor.

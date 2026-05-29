@@ -113,22 +113,10 @@ class block_pharos_teacher extends block_base {
             ];
         }
 
-        // Generator URL: link to the first mod_pharos_badges instance.
-        $generatorUrl = '#';
-        $badgesCm = $DB->get_record_sql(
-            "SELECT cm.id FROM {course_modules} cm
-               JOIN {modules} m ON m.id = cm.module AND m.name = 'pharos_badges'
-              WHERE cm.course = :course LIMIT 1",
-            ['course' => $COURSE->id]
-        );
-        if ($badgesCm) {
-            $generatorUrl = (new moodle_url('/mod/pharos_badges/view.php', ['id' => $badgesCm->id]))->out(false);
-        }
-
-        $middlewareUrl = rtrim(get_config('block_pharos_tutor', 'middleware_url') ?: '#', '/');
-        $generatorPageUrl = $middlewareUrl !== '#'
-            ? $middlewareUrl . '/generator'
-            : $generatorUrl;
+        $generatorPageUrl = (new moodle_url(
+            '/blocks/pharos_teacher/generator.php',
+            ['courseid' => $COURSE->id]
+        ))->out(false);
 
         // Manage activities URL: only expose when an itinerary CM exists.
         $manageUrl = '';

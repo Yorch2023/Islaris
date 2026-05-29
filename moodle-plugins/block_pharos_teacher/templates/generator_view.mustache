@@ -1,0 +1,155 @@
+{{!
+    Template: block_pharos_teacher/generator_view
+    Context: courseid, sesskey, back_url, ajax_url, export_url
+}}
+<div class="pharos-generator" role="main" aria-labelledby="pharos-generator-heading">
+
+    <a href="{{back_url}}" class="btn btn-link pharos-generator__back mb-3">
+        &larr; {{#str}}back_to_course, block_pharos_teacher{{/str}}
+    </a>
+
+    <h2 id="pharos-generator-heading" class="pharos-generator__title">
+        {{#str}}generator_title, block_pharos_teacher{{/str}}
+    </h2>
+    <p class="text-muted mb-4">{{#str}}generator_subtitle, block_pharos_teacher{{/str}}</p>
+
+    {{! ARIA live region for screen-reader announcements }}
+    <div id="pharos-generator-live" role="status" aria-live="polite" class="sr-only"></div>
+
+    <form id="pharos-generator-form"
+          class="pharos-generator__form card card-body mb-4"
+          novalidate>
+
+        <div class="form-row">
+            {{! Level }}
+            <div class="form-group col-md-4">
+                <label for="pharos-gen-level">
+                    {{#str}}level, block_pharos_teacher{{/str}}
+                    <span aria-hidden="true" class="text-danger">*</span>
+                </label>
+                <select id="pharos-gen-level"
+                        name="level"
+                        class="form-control"
+                        required
+                        aria-required="true">
+                    <option value="1">N1 — {{#str}}level_n1, block_pharos_teacher{{/str}}</option>
+                    <option value="2">N2 — {{#str}}level_n2, block_pharos_teacher{{/str}}</option>
+                    <option value="3">N3 — {{#str}}level_n3, block_pharos_teacher{{/str}}</option>
+                </select>
+            </div>
+
+            {{! Language }}
+            <div class="form-group col-md-4">
+                <label for="pharos-gen-lang">
+                    {{#str}}lang, block_pharos_teacher{{/str}}
+                    <span aria-hidden="true" class="text-danger">*</span>
+                </label>
+                <select id="pharos-gen-lang"
+                        name="lang"
+                        class="form-control"
+                        required
+                        aria-required="true">
+                    <option value="es">Español</option>
+                    <option value="it">Italiano</option>
+                </select>
+            </div>
+        </div>
+
+        {{! Topic }}
+        <div class="form-group">
+            <label for="pharos-gen-topic">
+                {{#str}}topic, block_pharos_teacher{{/str}}
+                <span aria-hidden="true" class="text-danger">*</span>
+            </label>
+            <input id="pharos-gen-topic"
+                   name="topic"
+                   type="text"
+                   class="form-control"
+                   maxlength="500"
+                   required
+                   aria-required="true"
+                   aria-describedby="pharos-gen-topic-hint"
+                   placeholder="{{#str}}topic_placeholder, block_pharos_teacher{{/str}}">
+            <small id="pharos-gen-topic-hint" class="form-text text-muted">
+                {{#str}}topic_hint, block_pharos_teacher{{/str}}
+            </small>
+        </div>
+
+        {{! Optional objective }}
+        <div class="form-group">
+            <label for="pharos-gen-objective">
+                {{#str}}objective, block_pharos_teacher{{/str}}
+                <span class="text-muted small">({{#str}}optional, block_pharos_teacher{{/str}})</span>
+            </label>
+            <input id="pharos-gen-objective"
+                   name="objective"
+                   type="text"
+                   class="form-control"
+                   maxlength="300"
+                   aria-describedby="pharos-gen-objective-hint"
+                   placeholder="{{#str}}objective_placeholder, block_pharos_teacher{{/str}}">
+            <small id="pharos-gen-objective-hint" class="form-text text-muted">
+                {{#str}}objective_hint, block_pharos_teacher{{/str}}
+            </small>
+        </div>
+
+        {{! Status + submit }}
+        <div class="d-flex align-items-center gap-3 mt-2">
+            <button type="submit" class="btn btn-pharos-primary">
+                <span class="pharos-generator__btn-icon" aria-hidden="true">&#10024;</span>
+                {{#str}}generate_activity, block_pharos_teacher{{/str}}
+            </button>
+            <div id="pharos-generator-status"
+                 class="pharos-generator__spinner text-muted"
+                 role="status"
+                 aria-live="polite"
+                 hidden>
+                <span class="spinner-border spinner-border-sm" aria-hidden="true"></span>
+                {{#str}}generating, block_pharos_teacher{{/str}}
+            </div>
+        </div>
+
+        {{! Inline error }}
+        <div id="pharos-generator-error"
+             class="alert alert-danger mt-3"
+             role="alert"
+             hidden></div>
+    </form>
+
+    {{! Result panel }}
+    <section id="pharos-generator-result"
+             class="pharos-generator__result card"
+             aria-labelledby="pharos-generator-result-heading"
+             hidden>
+        <div class="card-header d-flex align-items-center justify-content-between">
+            <h3 id="pharos-generator-result-heading" class="h5 mb-0">
+                {{#str}}generated_activity, block_pharos_teacher{{/str}}
+            </h3>
+        </div>
+        <div class="card-body">
+            <pre id="pharos-generator-output"
+                 class="pharos-generator__output"
+                 aria-label="{{#str}}generated_activity, block_pharos_teacher{{/str}}"></pre>
+        </div>
+
+        <div id="pharos-generator-actions" class="card-footer d-flex gap-2" hidden>
+            <button id="pharos-export-html"
+                    type="button"
+                    class="btn btn-outline-primary"
+                    disabled
+                    aria-label="{{#str}}export_html_aria, block_pharos_teacher{{/str}}">
+                <span aria-hidden="true">&#128196;</span>
+                {{#str}}export_html, block_pharos_teacher{{/str}}
+            </button>
+            <button id="pharos-export-docx"
+                    type="button"
+                    class="btn btn-outline-secondary"
+                    disabled
+                    aria-label="{{#str}}export_docx_aria, block_pharos_teacher{{/str}}">
+                <span aria-hidden="true">&#128196;</span>
+                {{#str}}export_docx, block_pharos_teacher{{/str}}
+            </button>
+        </div>
+    </section>
+
+</div>
