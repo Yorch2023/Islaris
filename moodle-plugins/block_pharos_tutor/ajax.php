@@ -42,12 +42,20 @@ $data['level'] = max(1, min(3, $level));
 $allowedLangs = ['es', 'it'];
 $data['lang']  = in_array($data['lang'] ?? '', $allowedLangs, true) ? $data['lang'] : 'es';
 
+// Whitelist keys before forwarding — never relay unknown browser-supplied fields.
+$payload = [
+    'userId'   => $data['userId'],
+    'level'    => $data['level'],
+    'lang'     => $data['lang'],
+    'messages' => is_array($data['messages'] ?? null) ? $data['messages'] : [],
+];
+
 // Forward to middleware.
 $ch = curl_init(rtrim($middlewareUrl, '/') . '/api/tutor/chat');
 curl_setopt_array($ch, [
     CURLOPT_RETURNTRANSFER => true,
     CURLOPT_POST           => true,
-    CURLOPT_POSTFIELDS     => json_encode($data),
+    CURLOPT_POSTFIELDS     => json_encode($payload),
     CURLOPT_HTTPHEADER     => [
         'Content-Type: application/json',
         'Authorization: Bearer ' . $secret,

@@ -64,14 +64,15 @@
     <div class="card">
         <div class="card-header">{{#str}}seguimiento_alumnado, theme_pharos{{/str}}</div>
         <div class="table-responsive">
-            <table class="table table-hover mb-0">
+            <table class="table table-hover mb-0"
+                   aria-label="{{#str}}seguimiento_alumnado, theme_pharos{{/str}}">
                 <thead>
                     <tr>
-                        <th>{{#str}}alumno, theme_pharos{{/str}}</th>
-                        <th>{{#str}}nivel, theme_pharos{{/str}}</th>
-                        <th class="pharos-hide-mobile">{{#str}}progreso, theme_pharos{{/str}}</th>
-                        <th>{{#str}}actividad, theme_pharos{{/str}}</th>
-                        <th>{{#str}}evidencias, theme_pharos{{/str}}</th>
+                        <th scope="col">{{#str}}alumno, theme_pharos{{/str}}</th>
+                        <th scope="col">{{#str}}nivel, theme_pharos{{/str}}</th>
+                        <th scope="col" class="pharos-hide-mobile">{{#str}}progreso, theme_pharos{{/str}}</th>
+                        <th scope="col">{{#str}}actividad, theme_pharos{{/str}}</th>
+                        <th scope="col">{{#str}}evidencias, theme_pharos{{/str}}</th>
                     </tr>
                 </thead>
                 <tbody>
@@ -86,7 +87,13 @@
                             </span>
                         </td>
                         <td class="pharos-hide-mobile" style="min-width:100px">
-                            <div class="pharos-xp-bar" style="width:100px">
+                            <div class="pharos-xp-bar"
+                                 style="width:100px"
+                                 role="progressbar"
+                                 aria-valuenow="{{xp_percent}}"
+                                 aria-valuemin="0"
+                                 aria-valuemax="100"
+                                 aria-label="XP {{xp_percent}}%">
                                 <div class="pharos-xp-bar__fill" style="width:{{xp_percent}}%"></div>
                             </div>
                         </td>
