@@ -20,8 +20,8 @@ function pharos_badges_update_instance(stdClass $data, ?moodleform_mod $form = n
 
 function pharos_badges_delete_instance(int $id): bool {
     global $DB;
-    $instance = $DB->get_record('pharos_badges_instance', ['id' => $id], 'id, courseid', MUST_EXIST);
-    $DB->delete_records('pharos_badges_evidence', ['courseid' => $instance->courseid]);
+    $instance = $DB->get_record('pharos_badges_instance', ['id' => $id], 'id, course', MUST_EXIST);
+    $DB->delete_records('pharos_badges_evidence', ['courseid' => $instance->course]);
     return $DB->delete_records('pharos_badges_instance', ['id' => $id]);
 }
 
