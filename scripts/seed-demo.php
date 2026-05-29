@@ -46,17 +46,47 @@ $course = create_course($courseRecord);
 echo "Curso creado: id={$course->id}\n";
 
 // ---- Module instances -------------------------------------------------------
-// mod_pharos_itinerary
-$itineraryData = (object) [
+// mod_pharos_itinerary (created via generator so a course_modules row exists)
+$itinerary = $generator->create_module('pharos_itinerary', [
     'course'          => $course->id,
     'name'            => 'Mi itinerario PHAROS',
     'startlevel'      => 1,
     'xp_per_evidence' => 10,
-    'timecreated'     => time(),
-    'timemodified'    => time(),
+]);
+$itineraryId = $itinerary->id;
+echo "Itinerario creado: id=$itineraryId (cmid={$itinerary->cmid})\n";
+
+// Create page activities for each level and assign them.
+$levelActivities = [
+    1 => [
+        'Actividad N1.1 — ¿Qué es la IA? Reconoce la IA en tu vida cotidiana',
+        'Actividad N1.2 — Privacidad y datos personales: qué dejas en la red',
+        'Actividad N1.3 — Tu primera conversación con una IA generativa',
+    ],
+    2 => [
+        'Actividad N2.1 — Sesgos algorítmicos: los prejuicios de la IA',
+        'Actividad N2.2 — Evalúa una herramienta IA: criterios y evidencias',
+        'Actividad N2.3 — IA y mercado laboral: impacto en tu sector',
+    ],
+    3 => [
+        'Actividad N3.1 — Diseña una actividad de alfabetización en IA',
+        'Actividad N3.2 — Gobernanza de la IA: participación ciudadana',
+        'Actividad N3.3 — Facilita un taller: evidencia de liderazgo pedagógico',
+    ],
 ];
-$itineraryId = $DB->insert_record('pharos_itinerary', $itineraryData);
-echo "Itinerario creado: id=$itineraryId\n";
+
+foreach ($levelActivities as $lvl => $names) {
+    foreach ($names as $sort => $name) {
+        $page = $generator->create_module('page', ['course' => $course->id, 'name' => $name]);
+        $DB->insert_record('pharos_itinerary_activity', (object) [
+            'itineraryid' => $itineraryId,
+            'cmid'        => $page->cmid,
+            'level'       => $lvl,
+            'sortorder'   => $sort + 1,
+        ]);
+        echo "  Actividad N{$lvl} asignada: $name\n";
+    }
+}
 
 // ---- Users ------------------------------------------------------------------
 $generator = new testing_data_generator();

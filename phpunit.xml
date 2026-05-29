@@ -37,6 +37,7 @@
         <testsuite name="all">
             <directory>moodle-plugins</directory>
             <exclude>moodle-plugins/block_pharos_tutor/amd</exclude>
+            <exclude>moodle-plugins/block_pharos_teacher/amd</exclude>
             <exclude>moodle-plugins/mod_pharos_itinerary/amd</exclude>
             <exclude>moodle-plugins/mod_pharos_badges/amd</exclude>
         </testsuite>

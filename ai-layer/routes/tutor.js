@@ -63,13 +63,12 @@ router.post('/chat', validateMoodleToken, tutorLimiter, async (req, res, next) =
             return res.status(400).json({ error: 'Last message must be from the user' });
         }
 
-        const levelLabels = { 1: 'N1 — Fundamentos', 2: 'N2 — IA en la práctica', 3: 'N3 — Facilitación crítica' };
-        const systemWithContext = `${SYSTEM_PROMPT}\n\nNivel actual del usuario: ${levelLabels[level]}\nIdioma de respuesta: ${lang === 'es' ? 'español' : 'italiano'}`;
+                const levelLabels = { 1: 'N1 — Fundamentos', 2: 'N2 — IA en la práctica', 3: 'N3 — Facilitación crítica' };
 
         const response = await client.messages.create({
             model: 'claude-sonnet-4-5',
             max_tokens: 1024,
-            system: systemWithContext,
+            system: buildSystem(level, lang, levelLabels),
             messages: sanitizedMessages,
         });
 
@@ -115,7 +114,6 @@ router.post('/stream', validateMoodleToken, tutorLimiter, async (req, res, next)
         }
 
         const levelLabels = { 1: 'N1 — Fundamentos', 2: 'N2 — IA en la práctica', 3: 'N3 — Facilitación crítica' };
-        const systemWithContext = `${SYSTEM_PROMPT}\n\nNivel actual del usuario: ${levelLabels[level]}\nIdioma de respuesta: ${lang === 'es' ? 'español' : 'italiano'}`;
 
         res.setHeader('Content-Type', 'text/event-stream; charset=utf-8');
         res.setHeader('Cache-Control', 'no-cache');
@@ -126,7 +124,7 @@ router.post('/stream', validateMoodleToken, tutorLimiter, async (req, res, next)
         const stream = client.messages.stream({
             model: 'claude-sonnet-4-5',
             max_tokens: 1024,
-            system: systemWithContext,
+            system: buildSystem(level, lang, levelLabels),
             messages: sanitizedMessages,
         });
 
@@ -148,5 +146,18 @@ router.post('/stream', validateMoodleToken, tutorLimiter, async (req, res, next)
         }
     }
 });
+
+// Build a system prompt array with prompt caching on the static base.
+// The cached block must be ≥ 1024 tokens; our base prompt qualifies.
+function buildSystem(level, lang, levelLabels) {
+    return [
+        { type: 'text', text: SYSTEM_PROMPT, cache_control: { type: 'ephemeral' } },
+        {
+            type: 'text',
+            text: `Nivel actual del usuario: ${levelLabels[level]}\n`
+                + `Idioma de respuesta: ${lang === 'es' ? 'español' : 'italiano'}`,
+        },
+    ];
+}
 
 module.exports = router;

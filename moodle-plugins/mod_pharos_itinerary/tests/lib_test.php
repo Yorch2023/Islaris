@@ -92,4 +92,38 @@ class mod_pharos_itinerary_lib_test extends advanced_testcase {
 
         $this->assertEquals(3, $progress->level);
     }
+
+    public function test_delete_instance_removes_progress_and_activities(): void {
+        global $DB;
+
+        $generator = $this->getDataGenerator();
+        $user      = $generator->create_user();
+        $itinerary = $this->createItinerary();
+
+        pharos_itinerary_get_or_create_progress($itinerary->id, $user->id);
+
+        // A minimal course_modules row to satisfy the FK.
+        $fakeCmId = $DB->insert_record('course_modules', (object) [
+            'course'    => $itinerary->course,
+            'module'    => 1,
+            'instance'  => 0,
+            'section'   => 0,
+            'visible'   => 1,
+            'groupmode' => 0,
+            'added'     => time(),
+        ]);
+
+        $DB->insert_record('pharos_itinerary_activity', (object) [
+            'itineraryid' => $itinerary->id,
+            'cmid'        => $fakeCmId,
+            'level'       => 1,
+            'sortorder'   => 1,
+        ]);
+
+        pharos_itinerary_delete_instance($itinerary->id);
+
+        $this->assertFalse($DB->record_exists('pharos_itinerary',          ['id'           => $itinerary->id]));
+        $this->assertFalse($DB->record_exists('pharos_itinerary_progress',  ['itineraryid'  => $itinerary->id]));
+        $this->assertFalse($DB->record_exists('pharos_itinerary_activity',  ['itineraryid'  => $itinerary->id]));
+    }
 }

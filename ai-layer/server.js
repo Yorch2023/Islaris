@@ -10,6 +10,7 @@ const winston = require('winston');
 
 const tutorRoutes = require('./routes/tutor');
 const generatorRoutes = require('./routes/generator');
+const exportRoutes = require('./routes/export');
 
 const logger = winston.createLogger({
     level: process.env.NODE_ENV === 'production' ? 'warn' : 'info',
@@ -43,6 +44,7 @@ app.use(morgan('combined', {
 
 app.use('/api/tutor', tutorRoutes);
 app.use('/api/generator', generatorRoutes);
+app.use('/api/generator', exportRoutes);
 
 app.get('/health', (_req, res) => res.json({ status: 'ok', version: '0.1.0' }));
 
