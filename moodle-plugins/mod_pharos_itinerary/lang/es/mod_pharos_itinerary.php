@@ -8,6 +8,7 @@ $string['modulename_help']     = 'El módulo Itinerario PHAROS muestra el recorr
 $string['pharos_itinerary:view']         = 'Ver itinerario';
 $string['pharos_itinerary:addinstance']  = 'Añadir itinerario';
 $string['startlevel']          = 'Nivel inicial';
+$string['nivel']               = 'Nivel';
 $string['xp_per_evidence']     = 'XP por evidencia';
 $string['mi_itinerario']       = 'Mi itinerario';
 $string['actividades']         = 'Actividades';
