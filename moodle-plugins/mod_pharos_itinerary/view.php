@@ -129,6 +129,15 @@ $templateData = [
 
 echo $OUTPUT->render_from_template('mod_pharos_itinerary/itinerary_view', $templateData);
 
+if (has_capability('mod/pharos_itinerary:addinstance', $context)) {
+    $manageUrl = new moodle_url('/mod/pharos_itinerary/manage_activities.php', ['id' => $cm->id]);
+    echo html_writer::div(
+        html_writer::link($manageUrl, '⚙ ' . get_string('manage_activities_link', 'mod_pharos_itinerary'),
+            ['class' => 'btn btn-outline-secondary btn-sm']),
+        'text-right mt-2'
+    );
+}
+
 $PAGE->requires->js_call_amd(
     'mod_pharos_itinerary/itinerary-progress',
     'init',

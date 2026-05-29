@@ -23,6 +23,7 @@ function pharos_itinerary_update_instance(stdClass $data, ?mod_pharos_itinerary_
 function pharos_itinerary_delete_instance(int $id): bool {
     global $DB;
     $DB->delete_records('pharos_itinerary_progress', ['itineraryid' => $id]);
+    $DB->delete_records('pharos_itinerary_activity', ['itineraryid' => $id]);
     return $DB->delete_records('pharos_itinerary', ['id' => $id]);
 }
 

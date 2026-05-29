@@ -22,6 +22,15 @@ $string['current_level']           = 'Livello attuale';
 $string['xp_progress']             = 'Progresso XP';
 $string['no_activities']           = 'Nessuna attività assegnata a questo livello.';
 $string['ver_microcredenciales']   = 'Visualizza le mie microcredenziali';
+$string['manage_activities']           = 'Gestisci le attività dell\'itinerario';
+$string['manage_activities_intro']     = 'Assegna le attività del corso a ciascun livello dell\'itinerario. Le attività assegnate appariranno nell\'itinerario dello studente.';
+$string['available_activities']        = 'Attività disponibili da assegnare';
+$string['no_available_activities']     = 'Tutte le attività del corso sono già assegnate all\'itinerario.';
+$string['assign_to_level']             = 'Assegna al livello';
+$string['remove']                      = 'Rimuovi';
+$string['activity_assigned']           = 'Attività aggiunta all\'itinerario.';
+$string['activity_removed']            = 'Attività rimossa dall\'itinerario.';
+$string['manage_activities_link']      = 'Gestisci attività';
 
 // Privacy API
 $string['privacy:metadata']                                   = 'Il modulo Itinerario PHAROS memorizza i dati di avanzamento dell\'utente.';

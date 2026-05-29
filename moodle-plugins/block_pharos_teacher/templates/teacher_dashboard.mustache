@@ -1,26 +1,41 @@
 {{!
     Template: block_pharos_teacher/teacher_dashboard
     Context:
-      students       - Array of { name, profile_url, level, level_label,
-                         xp_percent, days_inactive, is_inactive, evidence_pending }
-      inactive_count - Students inactive > 7 days
-      pending_count  - Students with pending evidence
-      generator_url  - URL to the activity generator
+      students         - Array of { name, profile_url, level, level_label,
+                           xp_percent, xp_aria_label,
+                           days_inactive, is_inactive, evidence_pending }
+      inactive_count   - Students inactive > 7 days
+      pending_count    - Students with pending evidence
+      generator_url    - URL to the activity generator
+      manage_url       - URL to manage_activities.php (teachers only, may be empty)
 }}
-<div class="pharos-teacher-dashboard">
+<div class="pharos-teacher-dashboard"
+     role="region"
+     aria-labelledby="pharos-teacher-heading">
+
+    <h3 id="pharos-teacher-heading" class="sr-only">{{#str}}pluginname, block_pharos_teacher{{/str}}</h3>
 
     {{! Summary strip }}
-    <div class="row mb-3 text-center">
-        <div class="col-4">
-            <p class="h4 mb-0 {{#inactive_count}}text-danger{{/inactive_count}}">{{inactive_count}}</p>
+    <div class="row mb-3 text-center" role="list" aria-label="{{#str}}pluginname, block_pharos_teacher{{/str}}">
+        <div class="col-4" role="listitem">
+            <p class="h4 mb-0 {{#inactive_count}}text-danger{{/inactive_count}}"
+               aria-label="{{inactive_count}} {{#str}}inactivos_7d, block_pharos_teacher{{/str}}">
+                {{inactive_count}}
+            </p>
             <small class="text-muted">{{#str}}inactivos_7d, block_pharos_teacher{{/str}}</small>
         </div>
-        <div class="col-4">
-            <p class="h4 mb-0 {{#pending_count}}text-warning{{/pending_count}}">{{pending_count}}</p>
+        <div class="col-4" role="listitem">
+            <p class="h4 mb-0 {{#pending_count}}text-warning{{/pending_count}}"
+               aria-label="{{pending_count}} {{#str}}pendientes, block_pharos_teacher{{/str}}">
+                {{pending_count}}
+            </p>
             <small class="text-muted">{{#str}}pendientes, block_pharos_teacher{{/str}}</small>
         </div>
-        <div class="col-4">
-            <a href="{{generator_url}}" class="btn btn-danger btn-sm btn-block mt-1" target="_blank" rel="noopener">
+        <div class="col-4" role="listitem">
+            <a href="{{generator_url}}"
+               class="btn btn-danger btn-sm btn-block mt-1"
+               target="_blank"
+               rel="noopener noreferrer">
                 {{#str}}generar_ia, block_pharos_teacher{{/str}}
             </a>
         </div>
@@ -28,39 +43,62 @@
 
     {{! Inactive alert }}
     {{#inactive_count}}
-    <div class="pharos-alert-inactive mb-2" role="alert">
-        {{inactive_count}} {{#str}}alumnos_inactivos_aviso, block_pharos_teacher{{/str}}
+    <div class="pharos-alert-inactive mb-2" role="alert" aria-live="polite">
+        <strong>{{inactive_count}}</strong> {{#str}}alumnos_inactivos_aviso, block_pharos_teacher{{/str}}
     </div>
     {{/inactive_count}}
 
     {{! Student list }}
-    <ul class="list-group list-group-flush">
+    <ul class="list-group list-group-flush" aria-label="{{#str}}no_students, block_pharos_teacher{{/str}}">
         {{#students}}
         <li class="list-group-item px-0 py-2 {{#is_inactive}}list-group-item-warning{{/is_inactive}}">
             <div class="d-flex justify-content-between align-items-start">
                 <div>
-                    <a href="{{profile_url}}" class="font-weight-bold d-block">{{name}}</a>
-                    <span class="pharos-level-badge pharos-level-badge--n{{level}} small">{{level_label}}</span>
+                    <a href="{{profile_url}}" class="font-weight-bold d-block text-truncate"
+                       style="max-width:120px">{{name}}</a>
+                    <span class="pharos-level-badge pharos-level-badge--n{{level}} small"
+                          aria-hidden="true">{{level_label}}</span>
                 </div>
                 <div class="text-right ml-2 flex-shrink-0">
-                    {{#days_inactive}}
-                    <small class="text-muted d-block">{{days_inactive}}d</small>
-                    {{/days_inactive}}
+                    {{#is_inactive}}
+                    <small class="text-muted d-block"
+                           aria-label="{{days_inactive}} {{#str}}days_inactive, block_pharos_teacher{{/str}}">
+                        {{days_inactive}}d
+                    </small>
+                    {{/is_inactive}}
                     {{#evidence_pending}}
-                    <span class="badge badge-warning">{{#str}}evidencia, block_pharos_teacher{{/str}}</span>
+                    <span class="badge badge-warning" aria-label="{{#str}}evidencia, block_pharos_teacher{{/str}}">
+                        {{#str}}evidencia, block_pharos_teacher{{/str}}
+                    </span>
                     {{/evidence_pending}}
                 </div>
             </div>
-            <div class="pharos-xp-bar mt-1" style="height:4px">
-                <div class="pharos-xp-bar__fill" style="width:{{xp_percent}}%"></div>
+            <div class="pharos-xp-bar mt-1"
+                 style="height:4px"
+                 role="progressbar"
+                 aria-valuenow="{{xp_percent}}"
+                 aria-valuemin="0"
+                 aria-valuemax="100"
+                 aria-label="{{xp_aria_label}}"
+                 data-xp-target="{{xp_percent}}">
+                <div class="pharos-xp-bar__fill" style="width:0%"></div>
             </div>
         </li>
         {{/students}}
         {{^students}}
-        <li class="list-group-item px-0 text-muted small">
+        <li class="list-group-item px-0 text-muted small" role="status">
             {{#str}}no_students, block_pharos_teacher{{/str}}
         </li>
         {{/students}}
     </ul>
+
+    {{! Link to manage activities (teachers only) }}
+    {{#manage_url}}
+    <div class="mt-3 text-right">
+        <a href="{{manage_url}}" class="small text-muted">
+            {{#str}}manage_activities, block_pharos_teacher{{/str}}
+        </a>
+    </div>
+    {{/manage_url}}
 
 </div>

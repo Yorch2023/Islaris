@@ -106,6 +106,7 @@ class block_pharos_teacher extends block_base {
                 'level'            => $level,
                 'level_label'      => $levelLabels[$level] ?? 'N1',
                 'xp_percent'       => $xpPercent,
+                'xp_aria_label'    => get_string('xp_progress_label', 'block_pharos_teacher', $xpPercent),
                 'days_inactive'    => $daysSince,
                 'is_inactive'      => $isInactive,
                 'evidence_pending' => $hasPending,
@@ -129,15 +130,30 @@ class block_pharos_teacher extends block_base {
             ? $middlewareUrl . '/generator'
             : $generatorUrl;
 
+        // Manage activities URL: only expose when an itinerary CM exists.
+        $manageUrl = '';
+        $itineraryCm = $DB->get_record_sql(
+            "SELECT cm.id FROM {course_modules} cm
+               JOIN {modules} m ON m.id = cm.module AND m.name = 'pharos_itinerary'
+              WHERE cm.course = :course LIMIT 1",
+            ['course' => $COURSE->id]
+        );
+        if ($itineraryCm && has_capability('mod/pharos_itinerary:addinstance', context_course::instance($COURSE->id))) {
+            $manageUrl = (new moodle_url('/mod/pharos_itinerary/manage_activities.php', ['id' => $itineraryCm->id]))->out(false);
+        }
+
         $templateData = [
             'students'       => $studentsData,
             'inactive_count' => $inactiveCount,
             'pending_count'  => $pendingCount,
             'generator_url'  => $generatorPageUrl,
+            'manage_url'     => $manageUrl,
         ];
 
         $this->content->text = $PAGE->get_renderer('core')
             ->render_from_template('block_pharos_teacher/teacher_dashboard', $templateData);
+
+        $PAGE->requires->js_call_amd('block_pharos_teacher/teacher-dashboard', 'init');
 
         return $this->content;
     }
