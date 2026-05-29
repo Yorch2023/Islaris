@@ -28,9 +28,7 @@ jobs:
         run: npm ci
 
       - name: Run ESLint
-        run: |
-          npx eslint ai-layer/**/*.js --max-warnings 0
-          npx eslint moodle-plugins/**/amd/src/*.js --max-warnings 0
+        run: npx eslint "ai-layer/**/*.js" "tests/**/*.js" "moodle-plugins/**/amd/src/*.js" --max-warnings 0
 
       - name: Run Jest tests
         run: npm test -- --forceExit --ci --coverage
@@ -72,8 +70,6 @@ jobs:
       - uses: actions/checkout@v4
       - name: Validate package.json
         run: node -e "JSON.parse(require('fs').readFileSync('package.json','utf8'))"
-      - name: Validate .eslintrc.json
-        run: node -e "JSON.parse(require('fs').readFileSync('.eslintrc.json','utf8'))"
 
   validate-xmldb:
     name: Validate XMLDB schemas

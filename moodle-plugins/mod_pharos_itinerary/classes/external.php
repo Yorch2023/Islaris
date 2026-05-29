@@ -105,13 +105,17 @@ class external extends \external_api {
         self::validate_context($context);
         require_capability('mod/pharos_itinerary:addinstance', $context);
 
+        // Capture level before awarding so we can detect a level-up.
+        $before   = pharos_itinerary_get_or_create_progress($cm->instance, $userid);
+        $levelBefore = $before->level;
+
         $progress = pharos_itinerary_award_xp($cm->instance, $userid, $amount);
 
         return [
-            'userid'    => $userid,
-            'level'     => $progress->level,
-            'xp'        => $progress->xp,
-            'levelled_up' => $progress->level > (pharos_itinerary_get_or_create_progress($cm->instance, $userid)->level - 0),
+            'userid'      => $userid,
+            'level'       => $progress->level,
+            'xp'          => $progress->xp,
+            'levelled_up' => $progress->level > $levelBefore,
         ];
     }
 
