@@ -30,4 +30,7 @@ function theme_pharos_get_pre_scss($theme): string {
 
 function theme_pharos_page_init(moodle_page $page): void {
     $page->requires->js('/theme/pharos/js/pharos-main.js', true);
+    // itinerary.js animates XP bars in the student dashboard (theme template).
+    // Self-terminates if .pharos-itinerary is not present on the page.
+    $page->requires->js('/theme/pharos/js/itinerary.js', true);
 }

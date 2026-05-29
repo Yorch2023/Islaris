@@ -13,15 +13,20 @@ PHAROS-AI se articula en cuatro capas físicas independientes que se comunican m
 ┌────────────────────────────▼─────────────────────────────────────┐
 │  Moodle 4.3 (PHP 8.1 + Apache/Nginx)                            │
 │  ├── theme_pharos (Boost child)                                  │
-│  ├── block_pharos_tutor    → ajax.php (proxy seguro)            │
-│  ├── mod_pharos_itinerary  → XP + niveles                       │
-│  └── mod_pharos_badges     → evidencias + Open Badges 3.0       │
+│  ├── block_pharos_tutor      → ajax.php + ajax-stream.php       │
+│  │                             + ajax-recommend.php (proxies)   │
+│  ├── block_pharos_teacher    → ajax-generator.php + ajax-export │
+│  ├── block_pharos_community  → foros + webinars BBB + recursos  │
+│  ├── mod_pharos_itinerary    → XP + niveles + backup/restore    │
+│  └── mod_pharos_badges       → evidencias + Open Badges 3.0    │
+│                                + backup/restore                  │
 └────────────────────────────┬─────────────────────────────────────┘
                              │ HTTP interno + Bearer token
 ┌────────────────────────────▼─────────────────────────────────────┐
 │  Middleware IA (Node.js 20 + Express)                            │
 │  ├── POST /api/tutor/chat                                        │
-│  ├── POST /api/tutor/stream   (SSE)                              │
+│  ├── POST /api/tutor/stream      (SSE)                           │
+│  ├── POST /api/tutor/recommend   (recomendaciones personalizadas)│
 │  ├── POST /api/generator/activity                                │
 │  ├── POST /api/generator/export  (HTML / DOCX download)         │
 │  ├── Auth: MOODLE_SECRET (timing-safe compare)                   │
@@ -75,6 +80,7 @@ Evidencias enviadas por los alumnos. Índice compuesto `(userid, courseid, level
 | CSRF en envío de evidencias | `sesskey` de Moodle obligatorio en todos los formularios |
 | Timing attack en validación del token | Comparación en tiempo constante en `auth.js` |
 | Prompt injection en el tutor | Historial sanitizado (whitelist de roles, truncado por longitud) |
+| Falsificación de progreso en el recomendador | `ajax-recommend.php` consulta XP/evidencias de la BD; el browser solo envía `lang` y `cmid` |
 | Rate abuse de la Claude API | Rate limiter por userId: 20/h tutor, 10/h generador |
 | XSS en la respuesta del tutor | `textContent` (no `innerHTML`) en el AMD JS |
 | SQL injection | Solo métodos de la API Moodle (`$DB->get_records`) |

@@ -61,6 +61,64 @@ Envía un turno de conversación al Tutor IA.
 
 ---
 
+### POST /api/tutor/stream
+
+Igual que `/api/tutor/chat` pero devuelve la respuesta en tiempo real como **Server-Sent Events (SSE)**.
+
+**Rate limit**: comparte el límite de 20 llamadas/hora con `/api/tutor/chat`.
+
+**Body (JSON)**: idéntico a `/api/tutor/chat`.
+
+**Respuesta 200** — `Content-Type: text/event-stream`:
+
+```
+data: {"type":"delta","text":"Un "}
+data: {"type":"delta","text":"algoritmo"}
+data: {"type":"end"}
+```
+
+Cada evento `delta` contiene un fragmento de texto. El evento `end` indica fin de la respuesta. Los errores se envían como `data: {"type":"error","message":"..."}`.
+
+**Proxy Moodle**: `ajax-stream.php` en `block_pharos_tutor` — inyecta `MOODLE_SECRET`, valida `sesskey` y hace streaming pass-through al navegador.
+
+---
+
+### POST /api/tutor/recommend
+
+Analiza el progreso del alumno y devuelve una recomendación personalizada de próximos pasos.
+
+**Rate limit**: comparte el límite de 20 llamadas/hora con `/api/tutor/chat`.
+
+**Body (JSON)**:
+
+| Campo           | Tipo   | Requerido | Descripción |
+|-----------------|--------|-----------|-------------|
+| `userId`        | string | Sí        | ID Moodle del usuario |
+| `userName`      | string | No        | Nombre del alumno (personalización) |
+| `level`         | number | Sí        | Nivel actual: `1`, `2` o `3` |
+| `xp`            | number | Sí        | XP acumulados en el nivel actual (`≥ 0`) |
+| `evidenceCount` | number | Sí        | Evidencias enviadas en el nivel actual (`≥ 0`) |
+| `lang`          | string | Sí        | `"es"` o `"it"` |
+
+**Respuesta 200**:
+
+```json
+{
+  "recommendation_type": "next_activity",
+  "message": "¡Buen trabajo, Ana! Llevas 60 XP. El siguiente paso recomendado es...",
+  "suggested_activities": [
+    { "title": "Sesgo en algoritmos de contratación", "reason": "Conecta con tu perfil laboral", "estimated_minutes": 45 }
+  ],
+  "next_level_hint": "Necesitas una evidencia más para acceder al N2."
+}
+```
+
+`recommendation_type` puede ser: `next_activity` | `consolidation` | `level_up_ready` | `resources`.
+
+**Proxy Moodle**: `ajax-recommend.php` en `block_pharos_tutor` — consulta XP y evidencias reales desde la BD de Moodle antes de llamar al middleware; el navegador solo envía `lang` y `cmid`.
+
+---
+
 ### POST /api/generator/activity
 
 Genera una actividad pedagógica estructurada para docentes.
@@ -152,8 +210,12 @@ Verificación de estado del servidor.
 ## Integración con Moodle
 
 ```
-Browser  →  ajax.php (Moodle)  →  /api/tutor/chat (Node.js)  →  Claude API
-                ↑ inyecta MOODLE_SECRET
+Browser  →  ajax.php (Moodle)         →  /api/tutor/chat        →  Claude API
+Browser  →  ajax-stream.php (Moodle)  →  /api/tutor/stream      →  Claude API (SSE)
+Browser  →  ajax-recommend.php        →  /api/tutor/recommend   →  Claude API
+Browser  →  ajax-generator.php        →  /api/generator/activity→  Claude API
+Browser  →  ajax-export.php           →  /api/generator/export  →  (sin Claude)
+                ↑ todos inyectan MOODLE_SECRET
 ```
 
-El bloque `block_pharos_tutor` llama a `ajax.php` con el `sesskey` de Moodle para CSRF. El proxy verifica la sesión, fuerza `userId` al usuario autenticado, y añade el `Authorization` header antes de reenviar al middleware.
+Todos los proxies validan `sesskey` (CSRF), fuerzan `userId` al usuario Moodle autenticado, y validan/filtran los campos del body antes de reenviarlos. El `MOODLE_SECRET` nunca llega al navegador.

@@ -23,14 +23,19 @@
         }, 6000);
     });
 
-    // Mark external links with rel="noopener" and a visual indicator.
+    // Mark external links with rel="noopener" and a screen-reader indicator.
+    const isItalian = document.documentElement.lang.startsWith('it');
+    const externalLinkSr = isItalian
+        ? ' (si apre in una nuova scheda)'
+        : ' (abre en nueva pestaña)';
+
     document.querySelectorAll('a[href^="http"]').forEach(function (a) {
         if (!a.hostname || a.hostname === location.hostname) return;
         a.rel = (a.rel ? a.rel + ' ' : '') + 'noopener noreferrer';
         if (!a.querySelector('.sr-only')) {
             const sr = document.createElement('span');
             sr.className = 'sr-only';
-            sr.textContent = ' (abre en nueva pestaña)';
+            sr.textContent = externalLinkSr;
             a.appendChild(sr);
         }
     });
