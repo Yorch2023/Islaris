@@ -11,6 +11,8 @@ const { generatorLimiter } = require('../middleware/rateLimit');
 const router = express.Router();
 const client = new Anthropic();
 
+const LEVEL_LABELS = { 1: 'N1 — Fundamentos', 2: 'N2 — IA en la práctica', 3: 'N3 — Facilitación crítica' };
+
 const SYSTEM_PROMPT = fs.readFileSync(
     path.join(__dirname, '../prompts/generator-system.txt'),
     'utf8'
@@ -49,10 +51,8 @@ router.post('/activity', validateMoodleToken, generatorLimiter, async (req, res,
             return res.status(400).json({ error: 'lang must be "es" or "it"' });
         }
 
-        const levelLabels = { 1: 'N1 — Fundamentos', 2: 'N2 — IA en la práctica', 3: 'N3 — Facilitación crítica' };
-
         const userMessage = [
-            `Genera una actividad pedagógica para el nivel ${levelLabels[level]}.`,
+            `Genera una actividad pedagógica para el nivel ${LEVEL_LABELS[level]}.`,
             `Tema: ${topic.slice(0, 500)}`,
             objective ? `Objetivo específico: ${String(objective).slice(0, 300)}` : null,
             `Idioma de la actividad: ${lang === 'es' ? 'español' : 'italiano'}`,
