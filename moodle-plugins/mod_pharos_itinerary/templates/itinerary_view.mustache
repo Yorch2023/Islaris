@@ -15,6 +15,8 @@
                         activities: [{ cmid, name, url, completed (bool) }]
                       }
       badges_url    - URL to mod_pharos_badges view
+      cmid          - Course module ID (used by JS for AJAX calls)
+      lang          - 'es' or 'it'
 }}
 {{! Skip link for keyboard users }}
 <a href="#pharos-itinerary-levels" class="sr-only sr-only-focusable">
@@ -23,7 +25,9 @@
 
 <div class="pharos-itinerary"
      role="region"
-     aria-labelledby="pharos-itinerary-heading">
+     aria-labelledby="pharos-itinerary-heading"
+     data-cmid="{{cmid}}"
+     data-lang="{{lang}}">
 
     {{! Header }}
     <div class="d-flex align-items-center justify-content-between mb-3 flex-wrap gap-2">
@@ -48,6 +52,15 @@
         <p id="pharos-itinerary-xp-label" class="pharos-xp-label" aria-hidden="true">
             {{xp_current}} / {{xp_next}} XP
         </p>
+    </div>
+
+    {{! AI recommendation widget — filled asynchronously by itinerary-progress.js }}
+    <div id="pharos-recommend-widget"
+         class="mb-4"
+         role="status"
+         aria-live="polite"
+         aria-atomic="false"
+         aria-label="{{#str}}recommend_heading, mod_pharos_itinerary{{/str}}">
     </div>
 
     {{! Level panels }}

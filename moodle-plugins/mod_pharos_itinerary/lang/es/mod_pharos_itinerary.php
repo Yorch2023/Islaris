@@ -50,3 +50,8 @@ $string['ws_award_xp']                = 'Conceder XP al usuario en el itinerario
 // Events
 $string['event_xp_awarded']           = 'XP concedido';
 $string['event_level_up']             = 'Subida de nivel';
+
+// Recommendation widget
+$string['recommend_heading']          = '¿Qué hacer a continuación?';
+$string['recommend_loading']          = 'Cargando recomendación…';
+$string['recommend_error']            = 'No se pudo cargar la recomendación.';

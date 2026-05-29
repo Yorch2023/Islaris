@@ -50,3 +50,8 @@ $string['event_level_up']             = 'Aumento di livello';
 // Web service
 $string['ws_get_user_progress']       = 'Ottieni il progresso dell\'utente nell\'itinerario';
 $string['ws_award_xp']                = 'Assegna XP all\'utente nell\'itinerario';
+
+// Recommendation widget
+$string['recommend_heading']          = 'Cosa fare dopo?';
+$string['recommend_loading']          = 'Caricamento raccomandazione…';
+$string['recommend_error']            = 'Impossibile caricare la raccomandazione.';

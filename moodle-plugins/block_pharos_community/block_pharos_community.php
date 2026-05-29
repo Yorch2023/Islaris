@@ -197,16 +197,22 @@ class block_pharos_community extends block_base {
             return [];
         }
 
+        $allowedTypes = ['doc', 'video', 'link'];
         $result = [];
         foreach ($items as $item) {
             if (!isset($item['title'], $item['url'])) {
                 continue;
             }
+            $type = clean_param($item['type'] ?? 'link', PARAM_ALPHA);
+            if (!in_array($type, $allowedTypes, true)) {
+                $type = 'link';
+            }
             $result[] = [
-                'title' => clean_param($item['title'], PARAM_TEXT),
-                'url'   => clean_param($item['url'], PARAM_URL),
-                'type'  => clean_param($item['type'] ?? 'link', PARAM_ALPHA),
-                'lang'  => clean_param($item['lang'] ?? 'es', PARAM_ALPHA),
+                'title'      => clean_param($item['title'], PARAM_TEXT),
+                'url'        => clean_param($item['url'], PARAM_URL),
+                'type'       => $type,
+                'type_label' => get_string('resource_type_' . $type, 'block_pharos_community'),
+                'lang'       => clean_param($item['lang'] ?? 'es', PARAM_ALPHA),
             ];
         }
         return array_slice($result, 0, 10);

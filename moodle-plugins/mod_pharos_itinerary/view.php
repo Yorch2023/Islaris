@@ -115,6 +115,8 @@ echo $OUTPUT->heading(format_string($itinerary->name));
 
 $currentLevelLabel = $levelMeta[$progress->level]['label'];
 
+$userLang = in_array(current_language(), ['it'], true) ? 'it' : 'es';
+
 $templateData = [
     'fullname'        => fullname($USER),
     'level'           => $progress->level,
@@ -127,6 +129,8 @@ $templateData = [
                          . $progress->xp . ' / ' . $xpNext . ' XP (' . $xpPercent . '%)',
     'levels'          => $levelsData,
     'badges_url'      => $badgesUrl,
+    'cmid'            => $cm->id,
+    'lang'            => $userLang,
 ];
 
 echo $OUTPUT->render_from_template('mod_pharos_itinerary/itinerary_view', $templateData);
@@ -143,7 +147,7 @@ if (has_capability('mod/pharos_itinerary:addinstance', $context)) {
 $PAGE->requires->js_call_amd(
     'mod_pharos_itinerary/itinerary-progress',
     'init',
-    [$context->id]
+    [$context->id, $cm->id, $userLang]
 );
 
 echo $OUTPUT->footer();
