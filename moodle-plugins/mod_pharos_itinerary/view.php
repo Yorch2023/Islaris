@@ -51,11 +51,12 @@ if ($activityRows) {
 // Fetch completion data for this user in the course.
 $completionData = [];
 if ($activityRows) {
-    $cmids = array_column((array) $activityRows, 'cmid');
+    $cmids = array_values(array_column((array) $activityRows, 'cmid'));
+    [$insql, $inparams] = $DB->get_in_or_equal($cmids, SQL_PARAMS_NAMED, 'cmid');
     $completionRecords = $DB->get_records_select(
         'course_modules_completion',
-        'userid = :userid AND coursemoduleid ' . $DB->sql_in($cmids),
-        ['userid' => $USER->id],
+        "userid = :userid AND coursemoduleid $insql",
+        array_merge(['userid' => $USER->id], $inparams),
         '',
         'coursemoduleid, completionstate'
     );
