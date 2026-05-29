@@ -11,6 +11,8 @@ const { tutorLimiter } = require('../middleware/rateLimit');
 const router = express.Router();
 const client = new Anthropic();
 
+const LEVEL_LABELS = { 1: 'N1 — Fundamentos', 2: 'N2 — IA en la práctica', 3: 'N3 — Facilitación crítica' };
+
 const SYSTEM_PROMPT = fs.readFileSync(
     path.join(__dirname, '../prompts/tutor-system.txt'),
     'utf8'
@@ -63,12 +65,10 @@ router.post('/chat', validateMoodleToken, tutorLimiter, async (req, res, next) =
             return res.status(400).json({ error: 'Last message must be from the user' });
         }
 
-                const levelLabels = { 1: 'N1 — Fundamentos', 2: 'N2 — IA en la práctica', 3: 'N3 — Facilitación crítica' };
-
         const response = await client.messages.create({
             model: 'claude-sonnet-4-5',
             max_tokens: 1024,
-            system: buildSystem(level, lang, levelLabels),
+            system: buildSystem(level, lang, LEVEL_LABELS),
             messages: sanitizedMessages,
         });
 
@@ -113,8 +113,6 @@ router.post('/stream', validateMoodleToken, tutorLimiter, async (req, res, next)
             return res.status(400).json({ error: 'Last message must be from the user' });
         }
 
-        const levelLabels = { 1: 'N1 — Fundamentos', 2: 'N2 — IA en la práctica', 3: 'N3 — Facilitación crítica' };
-
         res.setHeader('Content-Type', 'text/event-stream; charset=utf-8');
         res.setHeader('Cache-Control', 'no-cache');
         res.setHeader('Connection', 'keep-alive');
@@ -124,7 +122,7 @@ router.post('/stream', validateMoodleToken, tutorLimiter, async (req, res, next)
         const stream = client.messages.stream({
             model: 'claude-sonnet-4-5',
             max_tokens: 1024,
-            system: buildSystem(level, lang, levelLabels),
+            system: buildSystem(level, lang, LEVEL_LABELS),
             messages: sanitizedMessages,
         });
 
