@@ -102,6 +102,11 @@ $templateData = [
         ['value' => 'process', 'label' => get_string('evidence_process', 'mod_pharos_badges')],
         ['value' => 'impact',  'label' => get_string('evidence_impact',  'mod_pharos_badges')],
     ],
+    'form_levels' => [
+        ['value' => 1, 'label' => 'N1 — ' . get_string('level1_desc', 'mod_pharos_badges')],
+        ['value' => 2, 'label' => 'N2 — ' . get_string('level2_desc', 'mod_pharos_badges')],
+        ['value' => 3, 'label' => 'N3 — ' . get_string('level3_desc', 'mod_pharos_badges')],
+    ],
 ];
 
 echo $OUTPUT->header();

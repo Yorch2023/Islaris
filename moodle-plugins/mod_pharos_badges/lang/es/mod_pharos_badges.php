@@ -24,6 +24,9 @@ $string['evidencias_enviadas']      = 'Evidencias enviadas';
 $string['tipo']                     = 'Tipo';
 $string['de']                       = 'de';
 $string['pageheading']              = 'Mis evidencias y microcredenciales';
+$string['level1_desc']              = 'Fundamentos';
+$string['level2_desc']              = 'IA en la práctica';
+$string['level3_desc']              = 'Facilitación crítica';
 
 // Privacy API
 $string['privacy:metadata']                                      = 'El módulo Badges PHAROS almacena evidencias enviadas por los estudiantes.';

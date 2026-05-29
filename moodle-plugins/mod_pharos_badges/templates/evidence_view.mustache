@@ -22,7 +22,7 @@
             </span>
             {{/badge_earned}}
             {{^badge_earned}}
-            <small class="text-muted" aria-label="{{count}} de {{threshold}} {{#str}}evidencias_requeridas, mod_pharos_badges{{/str}}">
+            <small class="text-muted" aria-label="{{count}} {{#str}}de, mod_pharos_badges{{/str}} {{threshold}} {{#str}}evidencias_requeridas, mod_pharos_badges{{/str}}">
                 <span aria-hidden="true">{{count}} / {{threshold}}</span>
                 {{#str}}evidencias_requeridas, mod_pharos_badges{{/str}}
             </small>
@@ -81,9 +81,9 @@
                             class="form-control"
                             required
                             aria-required="true">
-                        <option value="1">N1 — Fundamentos</option>
-                        <option value="2">N2 — IA en la práctica</option>
-                        <option value="3">N3 — Facilitación crítica</option>
+                        {{#form_levels}}
+                        <option value="{{value}}">{{label}}</option>
+                        {{/form_levels}}
                     </select>
                 </div>
 
