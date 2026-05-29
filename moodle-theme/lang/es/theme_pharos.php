@@ -16,3 +16,5 @@ $string['evidencias']              = 'Evidencias';
 $string['hoy']                     = 'Hoy';
 $string['pendiente']               = 'Pendiente';
 $string['alumnos_sin_actividad']   = 'alumnos sin actividad en los últimos 7 días';
+$string['completed_activity']      = 'completada';
+$string['xp_progress']             = 'Progreso XP';

@@ -20,6 +20,7 @@ require_once($moodleRoot . '/config.php');
 require_once($CFG->dirroot . '/mod/pharos_itinerary/lib.php');
 require_once($CFG->dirroot . '/course/lib.php');
 require_once($CFG->libdir  . '/enrollib.php');
+require_once($CFG->libdir  . '/testing/generator/lib.php');
 
 use mod_pharos_badges\badge_issuer;
 
@@ -44,6 +45,9 @@ $courseRecord = (object) [
 ];
 $course = create_course($courseRecord);
 echo "Curso creado: id={$course->id}\n";
+
+// Moodle data generator — used to create modules and users with proper DB rows.
+$generator = new testing_data_generator();
 
 // ---- Module instances -------------------------------------------------------
 // mod_pharos_itinerary (created via generator so a course_modules row exists)
@@ -89,8 +93,6 @@ foreach ($levelActivities as $lvl => $names) {
 }
 
 // ---- Users ------------------------------------------------------------------
-$generator = new testing_data_generator();
-
 $roles       = $DB->get_records_menu('role', null, '', 'shortname, id');
 $studentRole = $roles['student'];
 $teacherRole = $roles['editingteacher'];

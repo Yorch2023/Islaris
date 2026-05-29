@@ -148,7 +148,33 @@ El docente selecciona nivel (N1/N2/N3), tema e idioma (es/it). La actividad gene
 
 ---
 
-## 6. ai-layer — Middleware Node.js
+## 6. block_pharos_community — Bloque de comunidad transnacional
+
+**Ruta**: `moodle-plugins/block_pharos_community/`
+**Tipo**: Block plugin (Moodle 4.3)
+
+Centraliza la comunidad de práctica transnacional España-Italia. Muestra foros por nivel (convención `[PHAROS-N{nivel}]`), próximos webinars BigBlueButton y recursos compartidos del consorcio.
+
+### Configuración de administración
+
+En *Administración del sitio > Plugins > Bloques > Comunidad PHAROS*:
+- **webinars_json**: array JSON con `title`, `date_iso`, `url`, `country`
+- **resources_json**: array JSON con `title`, `url`, `type` (doc/video/link), `lang`
+- **consortium_url**: URL del portal Erasmus+ del proyecto
+- **forum_url**: enlace al foro general del consorcio
+
+### Archivos clave
+
+| Archivo | Función |
+|---------|---------|
+| `block_pharos_community.php` | Clase del bloque; filtra foros por tag de nivel, parsea JSON de webinars y recursos |
+| `templates/community_view.mustache` | Secciones de foros, webinars y recursos (ARIA completo) |
+| `settings.php` | Ajustes admin: URLs y JSON de contenido |
+| `classes/privacy/provider.php` | RGPD: null_provider (solo lectura, sin datos personales) |
+
+---
+
+## 7. ai-layer — Middleware Node.js
 
 **Ruta**: `ai-layer/`
 **Tipo**: Servidor Express independiente
@@ -161,6 +187,7 @@ Proxy entre Moodle y la Claude API de Anthropic. Añade autenticación, rate lim
 |------|-------------|
 | `POST /api/tutor/chat` | Turno de conversación con el Tutor IA |
 | `POST /api/tutor/stream` | Streaming SSE del tutor (respuesta parcial en tiempo real) |
+| `POST /api/tutor/recommend` | Recomendación personalizada de próximos pasos según progreso |
 | `POST /api/generator/activity` | Generación de actividad pedagógica para docentes |
 | `POST /api/generator/export` | Exportación de la actividad generada (HTML / DOCX) |
 | `GET /health` | Health check |

@@ -57,7 +57,7 @@
                     {{^completed}}<span aria-hidden="true">&#9675;&nbsp;</span>{{/completed}}
                     <a href="{{url}}"
                        class="{{#completed}}text-muted text-decoration-line-through{{/completed}}"
-                       {{#completed}}aria-label="{{name}} (completada)"{{/completed}}>
+                       {{#completed}}aria-label="{{name}} ({{#str}}completed_activity, theme_pharos{{/str}})"{{/completed}}>
                         {{name}}
                     </a>
                 </span>
