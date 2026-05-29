@@ -58,6 +58,6 @@ class block_pharos_tutor_test extends advanced_testcase {
         $block->_init();
 
         $content = $block->get_content();
-        $this->assertStringContainsString('middleware_not_configured', strip_tags($content->text ?? ''));
+        $this->assertStringContainsString('pharos-tutor-error', $content->text ?? '');
     }
 }
