@@ -1,0 +1,153 @@
+{{!
+    Template: block_pharos_community/community_view
+    Context:
+      user_level       - int 1|2|3
+      user_level_label - translated level name
+      forums           - Array of { id, name, url, es, it }
+      webinars         - Array of { title, date, url, country }
+      resources        - Array of { title, url, type, lang }
+      has_forums       - bool
+      has_webinars     - bool
+      has_resources    - bool
+      forum_url        - string (general forum link, may be empty)
+      consortium_url   - string (consortium portal link, may be empty)
+}}
+<div class="pharos-community"
+     role="region"
+     aria-labelledby="pharos-community-heading">
+
+    <h3 id="pharos-community-heading" class="sr-only">
+        {{#str}}community_heading, block_pharos_community{{/str}}
+    </h3>
+
+    {{! Current level badge }}
+    <p class="pharos-community__level small mb-3">
+        <span class="badge badge-pill badge-primary" aria-label="{{#str}}your_level, block_pharos_community, {{user_level_label}}{{/str}}">
+            {{user_level_label}}
+        </span>
+    </p>
+
+    {{! ---- FORUMS ---- }}
+    <section class="pharos-community__section mb-4"
+             aria-labelledby="pharos-community-forums-heading">
+        <h4 id="pharos-community-forums-heading" class="h6 pharos-section-title">
+            <span aria-hidden="true">💬</span>
+            {{#str}}forums_heading, block_pharos_community{{/str}}
+        </h4>
+
+        {{#has_forums}}
+        <ul class="list-unstyled mb-0"
+            aria-label="{{#str}}forums_heading, block_pharos_community{{/str}}">
+            {{#forums}}
+            <li class="pharos-community__forum-item d-flex align-items-start mb-2">
+                <span class="pharos-community__flag small mr-2" aria-hidden="true">
+                    {{#es}}{{#it}}🌍{{/it}}{{/es}}
+                    {{#es}}{{^it}}🇪🇸{{/it}}{{/es}}
+                    {{^es}}{{#it}}🇮🇹{{/it}}{{/es}}
+                </span>
+                <a href="{{url}}" class="flex-grow-1">{{name}}</a>
+            </li>
+            {{/forums}}
+        </ul>
+        {{/has_forums}}
+
+        {{^has_forums}}
+        <p class="text-muted small mb-0">
+            {{#str}}no_forums, block_pharos_community{{/str}}
+        </p>
+        {{/has_forums}}
+
+        {{#forum_url}}
+        <a href="{{forum_url}}"
+           class="btn btn-outline-primary btn-sm mt-2 btn-block"
+           aria-label="{{#str}}view_all_forums, block_pharos_community{{/str}}">
+            {{#str}}view_all_forums, block_pharos_community{{/str}}
+        </a>
+        {{/forum_url}}
+    </section>
+
+    {{! ---- WEBINARS ---- }}
+    <section class="pharos-community__section mb-4"
+             aria-labelledby="pharos-community-webinars-heading">
+        <h4 id="pharos-community-webinars-heading" class="h6 pharos-section-title">
+            <span aria-hidden="true">🎥</span>
+            {{#str}}webinars_heading, block_pharos_community{{/str}}
+        </h4>
+
+        {{#has_webinars}}
+        <ul class="list-unstyled mb-0"
+            aria-label="{{#str}}webinars_heading, block_pharos_community{{/str}}">
+            {{#webinars}}
+            <li class="pharos-community__webinar-item mb-2">
+                <div class="d-flex align-items-center justify-content-between">
+                    <span class="badge badge-secondary mr-1" aria-label="{{country}}">
+                        {{country}}
+                    </span>
+                    <span class="flex-grow-1 small font-weight-bold">{{title}}</span>
+                </div>
+                <div class="d-flex align-items-center justify-content-between mt-1">
+                    <small class="text-muted">{{date}}</small>
+                    <a href="{{url}}"
+                       class="btn btn-sm btn-primary"
+                       target="_blank"
+                       rel="noopener noreferrer"
+                       aria-label="{{#str}}webinar_join, block_pharos_community{{/str}} — {{title}}">
+                        {{#str}}webinar_join, block_pharos_community{{/str}}
+                    </a>
+                </div>
+            </li>
+            {{/webinars}}
+        </ul>
+        {{/has_webinars}}
+
+        {{^has_webinars}}
+        <p class="text-muted small mb-0">
+            {{#str}}no_webinars, block_pharos_community{{/str}}
+        </p>
+        {{/has_webinars}}
+    </section>
+
+    {{! ---- RESOURCES ---- }}
+    <section class="pharos-community__section mb-3"
+             aria-labelledby="pharos-community-resources-heading">
+        <h4 id="pharos-community-resources-heading" class="h6 pharos-section-title">
+            <span aria-hidden="true">📚</span>
+            {{#str}}resources_heading, block_pharos_community{{/str}}
+        </h4>
+
+        {{#has_resources}}
+        <ul class="list-unstyled mb-0"
+            aria-label="{{#str}}resources_heading, block_pharos_community{{/str}}">
+            {{#resources}}
+            <li class="pharos-community__resource-item d-flex align-items-start mb-2">
+                <span class="badge badge-light border mr-2 small" aria-hidden="true">
+                    {{#str}}resource_type_{{type}}, block_pharos_community{{/str}}
+                </span>
+                <a href="{{url}}"
+                   target="_blank"
+                   rel="noopener noreferrer"
+                   aria-label="{{#str}}resource_open, block_pharos_community{{/str}} — {{title}} ({{lang}})">
+                    {{title}}
+                </a>
+            </li>
+            {{/resources}}
+        </ul>
+        {{/has_resources}}
+
+        {{^has_resources}}
+        <p class="text-muted small mb-0">
+            {{#str}}no_resources, block_pharos_community{{/str}}
+        </p>
+        {{/has_resources}}
+
+        {{#consortium_url}}
+        <a href="{{consortium_url}}"
+           class="btn btn-outline-secondary btn-sm mt-2 btn-block"
+           target="_blank"
+           rel="noopener noreferrer">
+            PHAROS-AI Erasmus+ →
+        </a>
+        {{/consortium_url}}
+    </section>
+
+</div>

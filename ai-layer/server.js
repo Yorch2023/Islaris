@@ -11,6 +11,7 @@ const winston = require('winston');
 const tutorRoutes = require('./routes/tutor');
 const generatorRoutes = require('./routes/generator');
 const exportRoutes = require('./routes/export');
+const recommenderRoutes = require('./routes/recommender');
 
 const logger = winston.createLogger({
     level: process.env.NODE_ENV === 'production' ? 'warn' : 'info',
@@ -43,6 +44,7 @@ app.use(morgan('combined', {
 }));
 
 app.use('/api/tutor', tutorRoutes);
+app.use('/api/tutor', recommenderRoutes);
 app.use('/api/generator', generatorRoutes);
 app.use('/api/generator', exportRoutes);
 
