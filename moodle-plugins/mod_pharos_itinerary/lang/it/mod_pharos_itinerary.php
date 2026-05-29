@@ -18,3 +18,15 @@ $string['level3_desc']             = 'Progettazione di attività, leadership ped
 $string['nivel_bloqueado']         = 'Livello bloccato — completa prima il livello precedente';
 $string['no_activities']           = 'Nessuna attività assegnata a questo livello.';
 $string['ver_microcredenciales']   = 'Visualizza le mie microcredenziali';
+
+// Privacy API
+$string['privacy:metadata']                                   = 'Il modulo Itinerario PHAROS memorizza i dati di avanzamento dell\'utente.';
+$string['privacy:metadata:pharos_itinerary_progress']         = 'Avanzamento dell\'utente nell\'itinerario (livello e XP accumulati).';
+$string['privacy:metadata:pharos_itinerary_progress:userid']  = 'ID utente Moodle.';
+$string['privacy:metadata:pharos_itinerary_progress:level']   = 'Livello attuale dell\'itinerario (1, 2 o 3).';
+$string['privacy:metadata:pharos_itinerary_progress:xp']      = 'Punti esperienza (XP) accumulati.';
+$string['privacy:metadata:pharos_itinerary_progress:timemodified'] = 'Data e ora dell\'ultimo aggiornamento dell\'avanzamento.';
+
+// Events
+$string['event_xp_awarded']           = 'XP assegnati';
+$string['event_level_up']             = 'Aumento di livello';

@@ -9,6 +9,11 @@
       sesskey          - Moodle session key for CSRF protection
       strings          - Object with localised UI strings
 }}
+{{! Skip link — allows keyboard users to jump straight to the input }}
+<a href="#pharos-tutor-input" class="sr-only sr-only-focusable">
+    {{strings.skip_to_input}}
+</a>
+
 <div class="pharos-tutor"
      data-proxy-url="{{proxy_url}}"
      data-stream-proxy-url="{{stream_proxy_url}}"
@@ -17,26 +22,38 @@
      data-lang="{{lang}}"
      data-sesskey="{{sesskey}}"
      role="region"
-     aria-label="{{strings.pluginname}}">
+     aria-labelledby="pharos-tutor-heading">
 
+    <h3 id="pharos-tutor-heading" class="sr-only">{{strings.pluginname}}</h3>
+
+    {{! Message log — aria-live so screen readers announce new messages }}
     <div class="pharos-tutor__messages"
          id="pharos-tutor-messages"
          role="log"
          aria-live="polite"
-         aria-atomic="false">
+         aria-atomic="false"
+         aria-label="{{strings.messages_label}}"
+         tabindex="0">
         <div class="pharos-tutor__message pharos-tutor__message--assistant">
             <span class="pharos-tutor__avatar" aria-hidden="true"></span>
             <div class="pharos-tutor__bubble">{{strings.welcome}}</div>
         </div>
     </div>
 
+    {{! Visually hidden status for screen readers }}
     <div class="pharos-tutor__status pharos-tutor__status--hidden"
          id="pharos-tutor-status"
-         aria-live="polite">
+         role="status"
+         aria-live="polite"
+         aria-atomic="true"
+         data-error-text="{{strings.error}}">
         {{strings.thinking}}
     </div>
 
-    <form class="pharos-tutor__form" id="pharos-tutor-form" novalidate>
+    <form class="pharos-tutor__form"
+          id="pharos-tutor-form"
+          novalidate
+          aria-label="{{strings.form_label}}">
         <label for="pharos-tutor-input" class="sr-only">{{strings.placeholder}}</label>
         <textarea
             id="pharos-tutor-input"
@@ -45,11 +62,15 @@
             rows="2"
             placeholder="{{strings.placeholder}}"
             maxlength="4000"
-            aria-required="true"></textarea>
+            aria-required="true"
+            aria-describedby="pharos-tutor-char-count"></textarea>
+        <div id="pharos-tutor-char-count"
+             class="pharos-tutor__char-count sr-only"
+             aria-live="polite"></div>
         <button type="submit"
                 class="pharos-tutor__send btn btn-primary"
                 aria-label="{{strings.send}}">
-            {{strings.send}}
+            <span aria-hidden="true">&#9658;</span> {{strings.send}}
         </button>
     </form>
 </div>

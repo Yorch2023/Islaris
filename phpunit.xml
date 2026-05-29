@@ -1,0 +1,57 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+  PHPUnit configuration for PHAROS-AI Moodle plugins.
+
+  Usage (from Moodle root, with plugins symlinked or copied):
+    php admin/tool/phpunit/cli/init.php
+    vendor/bin/phpunit --configuration /path/to/pharos/phpunit.xml
+
+  Or to run a single suite:
+    vendor/bin/phpunit --testsuite block_pharos_tutor
+-->
+<phpunit
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xsi:noNamespaceSchemaLocation="https://schema.phpunit.de/10.0/phpunit.xsd"
+    bootstrap="vendor/autoload.php"
+    colors="true"
+    stopOnFailure="false">
+
+    <testsuites>
+
+        <testsuite name="block_pharos_tutor">
+            <directory>moodle-plugins/block_pharos_tutor/tests</directory>
+        </testsuite>
+
+        <testsuite name="block_pharos_teacher">
+            <directory>moodle-plugins/block_pharos_teacher/tests</directory>
+        </testsuite>
+
+        <testsuite name="mod_pharos_itinerary">
+            <directory>moodle-plugins/mod_pharos_itinerary/tests</directory>
+        </testsuite>
+
+        <testsuite name="mod_pharos_badges">
+            <directory>moodle-plugins/mod_pharos_badges/tests</directory>
+        </testsuite>
+
+        <testsuite name="all">
+            <directory>moodle-plugins</directory>
+            <exclude>moodle-plugins/block_pharos_tutor/amd</exclude>
+            <exclude>moodle-plugins/mod_pharos_itinerary/amd</exclude>
+        </testsuite>
+
+    </testsuites>
+
+    <coverage>
+        <include>
+            <directory suffix=".php">moodle-plugins</directory>
+        </include>
+        <exclude>
+            <directory>moodle-plugins/*/amd</directory>
+            <directory>moodle-plugins/*/templates</directory>
+            <directory>moodle-plugins/*/lang</directory>
+            <directory>moodle-plugins/*/db</directory>
+        </exclude>
+    </coverage>
+
+</phpunit>

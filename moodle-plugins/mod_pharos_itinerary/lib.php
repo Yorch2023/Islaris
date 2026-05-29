@@ -68,11 +68,14 @@ function pharos_itinerary_get_or_create_progress(int $itineraryId, int $userId):
 
 /**
  * Awards XP to a user and handles level-up logic.
+ * Fires xp_awarded event and, when the threshold is crossed, level_up event.
  */
 function pharos_itinerary_award_xp(int $itineraryId, int $userId, int $amount): stdClass {
     global $DB;
 
-    $progress = pharos_itinerary_get_or_create_progress($itineraryId, $userId);
+    $progress   = pharos_itinerary_get_or_create_progress($itineraryId, $userId);
+    $prevLevel  = $progress->level;
+
     $progress->xp           += $amount;
     $progress->timemodified  = time();
 
@@ -84,5 +87,30 @@ function pharos_itinerary_award_xp(int $itineraryId, int $userId, int $amount): 
     }
 
     $DB->update_record('pharos_itinerary_progress', $progress);
+
+    // Dispatch events (only when Moodle context is available).
+    if (defined('MOODLE_INTERNAL')) {
+        $cm = get_coursemodule_from_instance('pharos_itinerary', $itineraryId);
+        if ($cm) {
+            $context = \context_module::instance($cm->id);
+
+            \mod_pharos_itinerary\event\xp_awarded::create([
+                'context'    => $context,
+                'objectid'   => $progress->id,
+                'userid'     => $userId,
+                'other'      => ['xp_amount' => $amount],
+            ])->trigger();
+
+            if ($progress->level > $prevLevel) {
+                \mod_pharos_itinerary\event\level_up::create([
+                    'context'  => $context,
+                    'objectid' => $progress->id,
+                    'userid'   => $userId,
+                    'other'    => ['new_level' => $progress->level],
+                ])->trigger();
+            }
+        }
+    }
+
     return $progress;
 }

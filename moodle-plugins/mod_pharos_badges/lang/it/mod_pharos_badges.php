@@ -19,3 +19,12 @@ $string['submit_evidence']          = 'Invia prova';
 $string['nivel']                    = 'Livello';
 $string['tipo_evidencia']           = 'Tipo di prova';
 $string['descripcion_evidencia']    = 'Descrizione della prova';
+
+// Privacy API
+$string['privacy:metadata']                                      = 'Il modulo Badge PHAROS memorizza le prove inviate dagli studenti.';
+$string['privacy:metadata:pharos_badges_evidence']               = 'Prove inviate dall\'utente per ottenere microcredenziali.';
+$string['privacy:metadata:pharos_badges_evidence:userid']        = 'ID utente Moodle.';
+$string['privacy:metadata:pharos_badges_evidence:level']         = 'Livello dell\'itinerario a cui corrisponde la prova.';
+$string['privacy:metadata:pharos_badges_evidence:type']          = 'Tipo di prova (prodotto, processo o impatto).';
+$string['privacy:metadata:pharos_badges_evidence:description']   = 'Descrizione testuale della prova fornita dall\'utente.';
+$string['privacy:metadata:pharos_badges_evidence:timecreated']   = 'Data e ora di invio della prova.';
