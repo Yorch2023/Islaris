@@ -1,0 +1,66 @@
+{{!
+    Template: block_pharos_teacher/teacher_dashboard
+    Context:
+      students       - Array of { name, profile_url, level, level_label,
+                         xp_percent, days_inactive, is_inactive, evidence_pending }
+      inactive_count - Students inactive > 7 days
+      pending_count  - Students with pending evidence
+      generator_url  - URL to the activity generator
+}}
+<div class="pharos-teacher-dashboard">
+
+    {{! Summary strip }}
+    <div class="row mb-3 text-center">
+        <div class="col-4">
+            <p class="h4 mb-0 {{#inactive_count}}text-danger{{/inactive_count}}">{{inactive_count}}</p>
+            <small class="text-muted">{{#str}}inactivos_7d, block_pharos_teacher{{/str}}</small>
+        </div>
+        <div class="col-4">
+            <p class="h4 mb-0 {{#pending_count}}text-warning{{/pending_count}}">{{pending_count}}</p>
+            <small class="text-muted">{{#str}}pendientes, block_pharos_teacher{{/str}}</small>
+        </div>
+        <div class="col-4">
+            <a href="{{generator_url}}" class="btn btn-danger btn-sm btn-block mt-1" target="_blank" rel="noopener">
+                {{#str}}generar_ia, block_pharos_teacher{{/str}}
+            </a>
+        </div>
+    </div>
+
+    {{! Inactive alert }}
+    {{#inactive_count}}
+    <div class="pharos-alert-inactive mb-2" role="alert">
+        {{inactive_count}} {{#str}}alumnos_inactivos_aviso, block_pharos_teacher{{/str}}
+    </div>
+    {{/inactive_count}}
+
+    {{! Student list }}
+    <ul class="list-group list-group-flush">
+        {{#students}}
+        <li class="list-group-item px-0 py-2 {{#is_inactive}}list-group-item-warning{{/is_inactive}}">
+            <div class="d-flex justify-content-between align-items-start">
+                <div>
+                    <a href="{{profile_url}}" class="font-weight-bold d-block">{{name}}</a>
+                    <span class="pharos-level-badge pharos-level-badge--n{{level}} small">{{level_label}}</span>
+                </div>
+                <div class="text-right ml-2 flex-shrink-0">
+                    {{#days_inactive}}
+                    <small class="text-muted d-block">{{days_inactive}}d</small>
+                    {{/days_inactive}}
+                    {{#evidence_pending}}
+                    <span class="badge badge-warning">{{#str}}evidencia, block_pharos_teacher{{/str}}</span>
+                    {{/evidence_pending}}
+                </div>
+            </div>
+            <div class="pharos-xp-bar mt-1" style="height:4px">
+                <div class="pharos-xp-bar__fill" style="width:{{xp_percent}}%"></div>
+            </div>
+        </li>
+        {{/students}}
+        {{^students}}
+        <li class="list-group-item px-0 text-muted small">
+            {{#str}}no_students, block_pharos_teacher{{/str}}
+        </li>
+        {{/students}}
+    </ul>
+
+</div>

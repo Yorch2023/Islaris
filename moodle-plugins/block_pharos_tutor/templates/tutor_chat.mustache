@@ -1,15 +1,17 @@
 {{!
     Template: block_pharos_tutor/tutor_chat
     Context:
-      proxy_url   - URL of the Moodle AJAX proxy (ajax.php)
-      user_id     - Moodle user ID (string)
-      user_level  - Itinerary level (1, 2 or 3)
-      lang        - 'es' or 'it'
-      sesskey     - Moodle session key for CSRF protection
-      strings     - Object with localised UI strings
+      proxy_url        - URL of the Moodle AJAX proxy (ajax.php)
+      stream_proxy_url - URL of the SSE streaming proxy (ajax-stream.php)
+      user_id          - Moodle user ID (string)
+      user_level       - Itinerary level (1, 2 or 3)
+      lang             - 'es' or 'it'
+      sesskey          - Moodle session key for CSRF protection
+      strings          - Object with localised UI strings
 }}
 <div class="pharos-tutor"
      data-proxy-url="{{proxy_url}}"
+     data-stream-proxy-url="{{stream_proxy_url}}"
      data-user-id="{{user_id}}"
      data-level="{{user_level}}"
      data-lang="{{lang}}"

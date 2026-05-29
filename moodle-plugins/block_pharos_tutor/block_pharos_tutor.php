@@ -60,13 +60,15 @@ class block_pharos_tutor extends block_base {
         $lang = current_language();
         $lang = str_starts_with($lang, 'it') ? 'it' : 'es';
 
-        // Proxy URL: Moodle AJAX endpoint that forwards requests to the middleware.
-        $proxyUrl = new moodle_url('/blocks/pharos_tutor/ajax.php');
+        // Proxy URLs: non-streaming and SSE streaming.
+        $proxyUrl       = new moodle_url('/blocks/pharos_tutor/ajax.php');
+        $streamProxyUrl = new moodle_url('/blocks/pharos_tutor/ajax-stream.php');
 
         $templateData = [
-            'proxy_url'   => $proxyUrl->out(false),
-            'user_id'     => (string) $USER->id,
-            'user_level'  => $userLevel,
+            'proxy_url'        => $proxyUrl->out(false),
+            'stream_proxy_url' => $streamProxyUrl->out(false),
+            'user_id'          => (string) $USER->id,
+            'user_level'       => $userLevel,
             'lang'        => $lang,
             'sesskey'     => sesskey(),
             'strings'     => [

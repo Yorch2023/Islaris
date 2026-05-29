@@ -5,6 +5,13 @@
 require_once(__DIR__ . '/../../config.php');
 require_once($CFG->dirroot . '/mod/pharos_badges/lib.php');
 
+// Award XP in mod_pharos_itinerary when evidence is submitted.
+$itineraryLibPath = $CFG->dirroot . '/mod/pharos_itinerary/lib.php';
+$hasItinerary     = file_exists($itineraryLibPath);
+if ($hasItinerary) {
+    require_once($itineraryLibPath);
+}
+
 use mod_pharos_badges\badge_issuer;
 
 $id     = required_param('id', PARAM_INT);       // Course module ID.
@@ -34,6 +41,20 @@ if ($canSubmit && data_submitted() && confirm_sesskey()) {
             $type,
             $description
         );
+
+        // Award XP in the itinerary module for this course.
+        if ($hasItinerary) {
+            $itinerary = $DB->get_record_sql(
+                "SELECT pi.id FROM {pharos_itinerary} pi
+                   JOIN {course_modules} cm ON cm.instance = pi.id
+                  WHERE pi.course = :course LIMIT 1",
+                ['course' => $course->id]
+            );
+            if ($itinerary) {
+                $xpPerEvidence = (int) ($itinerary->xp_per_evidence ?? 10);
+                pharos_itinerary_award_xp($itinerary->id, $USER->id, $xpPerEvidence);
+            }
+        }
 
         if ($issued) {
             \core\notification::success(get_string('badge_issued', 'mod_pharos_badges'));

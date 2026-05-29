@@ -55,6 +55,13 @@ app.use((err, _req, res, _next) => {
 });
 
 const PORT = parseInt(process.env.PORT || '3001', 10);
-app.listen(PORT, () => logger.info(`PHAROS-AI middleware listening on port ${PORT}`));
+
+// Only bind the port when running as the main process, not when imported by tests.
+if (require.main === module) {
+    app.listen(PORT, () => logger.info(`PHAROS-AI middleware listening on port ${PORT}`));
+} else {
+    // In test mode log startup anyway (supertest spins up its own ephemeral server).
+    logger.info(`PHAROS-AI middleware listening on port ${PORT}`);
+}
 
 module.exports = app;

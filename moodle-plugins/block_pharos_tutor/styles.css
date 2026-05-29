@@ -125,6 +125,24 @@
     cursor: not-allowed;
 }
 
+/* Streaming state: blinking cursor while text arrives */
+.pharos-tutor__bubble--streaming::after {
+    content: '▋';
+    display: inline-block;
+    animation: pharos-blink 0.7s step-end infinite;
+    margin-left: 1px;
+    opacity: 1;
+}
+
+@keyframes pharos-blink {
+    50% { opacity: 0; }
+}
+
+.pharos-tutor__bubble--error {
+    color: #dc3545;
+    font-style: italic;
+}
+
 .pharos-tutor-error {
     font-size: 0.9rem;
 }
