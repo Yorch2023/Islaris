@@ -21,7 +21,9 @@ PHAROS-AI se articula en cuatro capas físicas independientes que se comunican m
 ┌────────────────────────────▼─────────────────────────────────────┐
 │  Middleware IA (Node.js 20 + Express)                            │
 │  ├── POST /api/tutor/chat                                        │
+│  ├── POST /api/tutor/stream   (SSE)                              │
 │  ├── POST /api/generator/activity                                │
+│  ├── POST /api/generator/export  (HTML / DOCX download)         │
 │  ├── Auth: MOODLE_SECRET (timing-safe compare)                   │
 │  └── Rate limit: 20/h tutor · 10/h generador por usuario        │
 └────────────────────────────┬─────────────────────────────────────┘
