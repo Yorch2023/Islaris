@@ -43,3 +43,7 @@ $string['privacy:metadata:pharos_itinerary_progress:timemodified'] = 'Data e ora
 // Events
 $string['event_xp_awarded']           = 'XP assegnati';
 $string['event_level_up']             = 'Aumento di livello';
+
+// Web service
+$string['ws_get_user_progress']       = 'Ottieni il progresso dell\'utente nell\'itinerario';
+$string['ws_award_xp']                = 'Assegna XP all\'utente nell\'itinerario';

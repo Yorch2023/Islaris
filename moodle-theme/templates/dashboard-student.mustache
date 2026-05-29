@@ -7,58 +7,95 @@
       xp_current      - XP earned
       xp_next         - XP needed for next level
       xp_percent      - Integer 0-100
+      xp_aria_label   - Pre-formatted accessible label: "Progreso XP: 40 / 100 XP (40%)"
       badges          - Array of { name, image_url, earned (bool) }
       activities      - Array of { name, url, completed (bool), due_date }
       days_inactive   - Days since last activity (0 = active today)
 }}
-<div class="pharos-itinerary">
+<div class="pharos-itinerary"
+     role="region"
+     aria-labelledby="pharos-student-heading">
 
     {{! Header }}
     <div class="d-flex align-items-center justify-content-between mb-3">
-        <h2 class="h5 mb-0">{{#str}}mi_itinerario, mod_pharos_itinerary{{/str}}</h2>
-        <span class="pharos-level-badge pharos-level-badge--n{{level}}">
+        <h2 id="pharos-student-heading" class="h5 mb-0">
+            {{#str}}mi_itinerario, mod_pharos_itinerary{{/str}}
+        </h2>
+        <span class="pharos-level-badge pharos-level-badge--n{{level}}"
+              aria-label="{{#str}}current_level, mod_pharos_itinerary{{/str}}: {{level_label}}">
             {{level_label}}
         </span>
     </div>
 
     {{! XP Progress }}
     <div class="mb-4">
-        <div class="pharos-xp-bar" role="progressbar"
-             aria-valuenow="{{xp_percent}}" aria-valuemin="0" aria-valuemax="100"
-             aria-label="Progreso XP">
+        <div class="pharos-xp-bar"
+             role="progressbar"
+             aria-valuenow="{{xp_percent}}"
+             aria-valuemin="0"
+             aria-valuemax="100"
+             aria-label="{{xp_aria_label}}"
+             aria-describedby="pharos-student-xp-label">
             <div class="pharos-xp-bar__fill" data-target-width="{{xp_percent}}%"></div>
         </div>
-        <p class="pharos-xp-label">{{xp_current}} / {{xp_next}} XP</p>
+        <p id="pharos-student-xp-label" class="pharos-xp-label" aria-hidden="true">
+            {{xp_current}} / {{xp_next}} XP
+        </p>
     </div>
 
     {{! Activity list }}
     <div class="card mb-4">
-        <div class="card-header">{{#str}}actividades, mod_pharos_itinerary{{/str}}</div>
-        <ul class="list-group list-group-flush">
+        <div class="card-header" id="pharos-student-activities-heading">
+            {{#str}}actividades, mod_pharos_itinerary{{/str}}
+        </div>
+        <ul class="list-group list-group-flush"
+            aria-labelledby="pharos-student-activities-heading">
             {{#activities}}
             <li class="list-group-item d-flex justify-content-between align-items-center">
                 <span class="{{#completed}}text-muted{{/completed}}">
                     {{#completed}}<span aria-hidden="true">&#10003;&nbsp;</span>{{/completed}}
                     {{^completed}}<span aria-hidden="true">&#9675;&nbsp;</span>{{/completed}}
-                    <a href="{{url}}" class="{{#completed}}text-muted text-decoration-line-through{{/completed}}">
+                    <a href="{{url}}"
+                       class="{{#completed}}text-muted text-decoration-line-through{{/completed}}"
+                       {{#completed}}aria-label="{{name}} (completada)"{{/completed}}>
                         {{name}}
                     </a>
                 </span>
-                {{#due_date}}<small class="text-muted ml-2">{{due_date}}</small>{{/due_date}}
+                {{#due_date}}
+                <small class="text-muted ml-2">
+                    <time>{{due_date}}</time>
+                </small>
+                {{/due_date}}
+            </li>
+            {{/activities}}
+            {{^activities}}
+            <li class="list-group-item text-muted small" role="status">
+                {{#str}}no_activities, mod_pharos_itinerary{{/str}}
             </li>
             {{/activities}}
         </ul>
     </div>
 
     {{! Badges }}
-    <h3 class="h6 mb-3">{{#str}}microcredenciales, mod_pharos_badges{{/str}}</h3>
-    <div class="row">
+    <h3 class="h6 mb-3" id="pharos-student-badges-heading">
+        {{#str}}microcredenciales, mod_pharos_badges{{/str}}
+    </h3>
+    <div class="row" role="list" aria-labelledby="pharos-student-badges-heading">
         {{#badges}}
-        <div class="col-4">
+        <div class="col-4" role="listitem">
             <div class="pharos-badge-card {{#earned}}pharos-badge-card--earned{{/earned}}">
-                <img src="{{image_url}}" alt="{{name}}" loading="lazy">
+                <img src="{{image_url}}"
+                     alt="{{name}}{{#earned}} — obtenido{{/earned}}{{^earned}} — pendiente{{/earned}}"
+                     loading="lazy">
                 <p class="mb-0 small">{{name}}</p>
             </div>
+        </div>
+        {{/badges}}
+        {{^badges}}
+        <div class="col-12" role="listitem">
+            <p class="text-muted small">
+                {{#str}}no_evidence_yet, mod_pharos_badges{{/str}}
+            </p>
         </div>
         {{/badges}}
     </div>
