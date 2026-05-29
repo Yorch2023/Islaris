@@ -1,0 +1,72 @@
+version: '3.8'
+
+# PHAROS-AI · Entorno local completo
+# Uso: docker-compose up -d
+# Acceso: http://localhost  (admin / PharosAdmin2024!)
+
+services:
+
+  # ── Base de datos ────────────────────────────────────────────────────────────
+  db:
+    image: bitnami/mariadb:10.11
+    environment:
+      MARIADB_ROOT_PASSWORD: pharos_root
+      MARIADB_DATABASE: pharos_moodle
+      MARIADB_USER: pharos
+      MARIADB_PASSWORD: pharos_db
+    volumes:
+      - db_data:/bitnami/mariadb
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-upharos", "-ppharos_db"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+
+  # ── Moodle 4.3 + plugins PHAROS ──────────────────────────────────────────────
+  moodle:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    ports:
+      - "80:8080"
+    environment:
+      MOODLE_DATABASE_TYPE: mariadb
+      MOODLE_DATABASE_HOST: db
+      MOODLE_DATABASE_PORT_NUMBER: 3306
+      MOODLE_DATABASE_NAME: pharos_moodle
+      MOODLE_DATABASE_USER: pharos
+      MOODLE_DATABASE_PASSWORD: pharos_db
+      MOODLE_USERNAME: admin
+      MOODLE_PASSWORD: PharosAdmin2024!
+      MOODLE_EMAIL: admin@pharos-ai.local
+      MOODLE_SITE_NAME: "PHAROS-AI"
+      MOODLE_LANG: es
+      # Desactiva envío de correos en local
+      MOODLE_SMTP_HOST: ""
+    volumes:
+      - moodle_data:/bitnami/moodle
+      - moodledata:/bitnami/moodledata
+    depends_on:
+      db:
+        condition: service_healthy
+    restart: unless-stopped
+
+  # ── Middleware IA (Node.js → Claude API) ─────────────────────────────────────
+  middleware:
+    build:
+      context: .
+      dockerfile: Dockerfile.middleware
+    ports:
+      - "3001:3001"
+    env_file:
+      - .env
+    environment:
+      NODE_ENV: production
+      PORT: 3001
+      ALLOWED_ORIGINS: "http://localhost,http://localhost:80"
+    restart: unless-stopped
+
+volumes:
+  db_data:
+  moodle_data:
+  moodledata:
