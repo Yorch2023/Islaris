@@ -19,3 +19,6 @@ $string['chat_thinking']               = 'El tutor está pensando…';
 $string['chat_error']                  = 'No se pudo conectar con el tutor. Inténtalo de nuevo.';
 $string['chat_welcome']                = '¡Hola! Soy tu tutor de PHAROS-AI. ¿En qué puedo ayudarte hoy sobre inteligencia artificial?';
 $string['middleware_not_configured']   = 'El bloque Tutor IA no está configurado. Contacta con el administrador.';
+$string['chat_skip_to_input']         = 'Saltar al campo de texto del tutor';
+$string['chat_messages_label']        = 'Mensajes del tutor IA';
+$string['chat_form_label']            = 'Formulario de pregunta al tutor';

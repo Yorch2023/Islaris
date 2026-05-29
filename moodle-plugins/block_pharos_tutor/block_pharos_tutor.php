@@ -78,14 +78,18 @@ class block_pharos_tutor extends block_base {
             'stream_proxy_url' => $streamProxyUrl->out(false),
             'user_id'          => (string) $USER->id,
             'user_level'       => $userLevel,
-            'lang'        => $lang,
-            'sesskey'     => sesskey(),
-            'strings'     => [
-                'placeholder' => get_string('chat_placeholder', 'block_pharos_tutor'),
-                'send'        => get_string('chat_send', 'block_pharos_tutor'),
-                'thinking'    => get_string('chat_thinking', 'block_pharos_tutor'),
-                'error'       => get_string('chat_error', 'block_pharos_tutor'),
-                'welcome'     => get_string('chat_welcome', 'block_pharos_tutor'),
+            'lang'             => $lang,
+            'sesskey'          => sesskey(),
+            'strings'          => [
+                'pluginname'    => get_string('pluginname',       'block_pharos_tutor'),
+                'placeholder'   => get_string('chat_placeholder', 'block_pharos_tutor'),
+                'send'          => get_string('chat_send',        'block_pharos_tutor'),
+                'thinking'      => get_string('chat_thinking',    'block_pharos_tutor'),
+                'error'         => get_string('chat_error',       'block_pharos_tutor'),
+                'welcome'       => get_string('chat_welcome',     'block_pharos_tutor'),
+                'skip_to_input' => get_string('chat_skip_to_input', 'block_pharos_tutor'),
+                'messages_label'=> get_string('chat_messages_label','block_pharos_tutor'),
+                'form_label'    => get_string('chat_form_label',  'block_pharos_tutor'),
             ],
         ];
 
