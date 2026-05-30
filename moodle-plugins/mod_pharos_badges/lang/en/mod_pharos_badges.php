@@ -1,0 +1,36 @@
+<?php
+defined('MOODLE_INTERNAL') || die();
+
+$string['pluginname']               = 'PHAROS Badges';
+$string['modulename']               = 'PHAROS Badges';
+$string['modulenameplural']         = 'PHAROS Badges';
+$string['pharos_badges:view']               = 'View PHAROS badges';
+$string['pharos_badges:submit_evidence']    = 'Submit evidence';
+$string['microcredenciales']        = 'Microcredentials';
+$string['evidence_product']         = 'Product evidence';
+$string['evidence_process']         = 'Process evidence';
+$string['evidence_impact']          = 'Impact evidence';
+$string['badge_earned']             = 'Badge earned';
+$string['evidence_recorded']        = 'Evidence recorded successfully.';
+$string['badge_issued']             = 'Congratulations! You have earned a new microcredential.';
+$string['evidencias_requeridas']    = 'required evidence';
+$string['no_evidence_yet']          = 'You have not submitted any evidence for this level yet.';
+$string['submit_evidence']          = 'Submit evidence';
+$string['nivel']                    = 'Level';
+$string['tipo_evidencia']           = 'Evidence type';
+$string['descripcion_evidencia']    = 'Evidence description';
+$string['descripcion_evidencia_hint'] = 'Maximum 1000 characters. Describe what you learned, created or applied.';
+$string['evidencias_enviadas']      = 'Submitted evidence';
+$string['tipo']                     = 'Type';
+$string['de']                       = 'of';
+$string['pageheading']              = 'My evidence and microcredentials';
+$string['level1_desc']              = 'Foundations';
+$string['level2_desc']              = 'AI in practice';
+$string['level3_desc']              = 'Critical facilitation';
+$string['privacy:metadata']                                      = 'The PHAROS Badges module stores evidence submitted by students.';
+$string['privacy:metadata:pharos_badges_evidence']               = 'Evidence submitted by the user to obtain microcredentials.';
+$string['privacy:metadata:pharos_badges_evidence:userid']        = 'Moodle user ID.';
+$string['privacy:metadata:pharos_badges_evidence:level']         = 'Itinerary level the evidence belongs to.';
+$string['privacy:metadata:pharos_badges_evidence:type']          = 'Evidence type (product, process or impact).';
+$string['privacy:metadata:pharos_badges_evidence:description']   = 'Text description of the evidence provided by the user.';
+$string['privacy:metadata:pharos_badges_evidence:timecreated']   = 'Date and time the evidence was submitted.';

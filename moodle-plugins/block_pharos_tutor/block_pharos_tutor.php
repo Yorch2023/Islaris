@@ -56,17 +56,24 @@ class block_pharos_tutor extends block_base {
         }
 
         // Determine the itinerary level for this user by querying the DB.
+        // Gracefully fall back to level 1 if the PHAROS tables do not exist yet.
         $userLevel = 1;
-        $itinerary = $DB->get_record_sql(
-            "SELECT pp.level
-               FROM {pharos_itinerary_progress} pp
-               JOIN {pharos_itinerary} pi ON pi.id = pp.itineraryid
-              WHERE pi.course = :course AND pp.userid = :userid
-              LIMIT 1",
-            ['course' => $COURSE->id, 'userid' => $USER->id]
-        );
-        if ($itinerary) {
-            $userLevel = max(1, min(3, (int) $itinerary->level));
+        try {
+            if ($DB->get_manager()->table_exists('pharos_itinerary_progress')) {
+                $itinerary = $DB->get_record_sql(
+                    "SELECT pp.level
+                       FROM {pharos_itinerary_progress} pp
+                       JOIN {pharos_itinerary} pi ON pi.id = pp.itineraryid
+                      WHERE pi.course = :course AND pp.userid = :userid
+                      LIMIT 1",
+                    ['course' => $COURSE->id, 'userid' => $USER->id]
+                );
+                if ($itinerary) {
+                    $userLevel = max(1, min(3, (int) $itinerary->level));
+                }
+            }
+        } catch (Exception $e) {
+            // Tables not yet installed; default level 1 is fine.
         }
 
         // Derive language ('es' or 'it') from Moodle's current language.
