@@ -1,5 +1,3 @@
-version: '3.8'
-
 # PHAROS-AI · Entorno local completo
 # Uso: docker-compose up -d
 # Acceso: http://localhost  (admin / PharosAdmin2024!)
@@ -8,16 +6,16 @@ services:
 
   # ── Base de datos ────────────────────────────────────────────────────────────
   db:
-    image: bitnami/mariadb:10.11
+    image: mariadb:10.11
     environment:
       MARIADB_ROOT_PASSWORD: pharos_root
       MARIADB_DATABASE: pharos_moodle
       MARIADB_USER: pharos
       MARIADB_PASSWORD: pharos_db
     volumes:
-      - db_data:/bitnami/mariadb
+      - db_data:/var/lib/mysql
     healthcheck:
-      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-upharos", "-ppharos_db"]
+      test: ["CMD", "healthcheck.sh", "--connect", "--innodb_initialized"]
       interval: 10s
       timeout: 5s
       retries: 10
@@ -41,7 +39,6 @@ services:
       MOODLE_EMAIL: admin@pharos-ai.local
       MOODLE_SITE_NAME: "PHAROS-AI"
       MOODLE_LANG: es
-      # Desactiva envío de correos en local
       MOODLE_SMTP_HOST: ""
     volumes:
       - moodle_data:/bitnami/moodle
