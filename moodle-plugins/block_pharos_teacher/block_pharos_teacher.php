@@ -41,22 +41,34 @@ class block_pharos_teacher extends block_base {
         $this->content = new stdClass();
         $this->content->footer = '';
 
-        $context = context_course::instance($COURSE->id);
+        try {
+            $context = context_course::instance($COURSE->id);
+        } catch (Exception $e) {
+            $this->content->text = '';
+            return $this->content;
+        }
 
         if (!has_capability('block/pharos_teacher:view', $context)) {
             $this->content->text = '';
             return $this->content;
         }
 
-        $students = get_enrolled_users($context, 'mod/pharos_itinerary:view', 0, 'u.id, u.firstname, u.lastname');
+        $students = get_enrolled_users($context, '', 0, 'u.id, u.firstname, u.lastname');
 
-        // Find the first itinerary instance in this course.
-        $itinerary = $DB->get_record_sql(
-            "SELECT pi.id FROM {pharos_itinerary} pi
-               JOIN {course_modules} cm ON cm.instance = pi.id
-              WHERE pi.course = :course LIMIT 1",
-            ['course' => $COURSE->id]
-        );
+        // Find the first itinerary instance in this course (only if tables exist).
+        $itinerary = null;
+        try {
+            if ($DB->get_manager()->table_exists('pharos_itinerary')) {
+                $itinerary = $DB->get_record_sql(
+                    "SELECT pi.id FROM {pharos_itinerary} pi
+                       JOIN {course_modules} cm ON cm.instance = pi.id
+                      WHERE pi.course = :course LIMIT 1",
+                    ['course' => $COURSE->id]
+                );
+            }
+        } catch (Exception $e) {
+            // Table not yet installed; no itinerary data available.
+        }
 
         $inactiveDays = 7;
         $now          = time();
@@ -71,13 +83,26 @@ class block_pharos_teacher extends block_base {
         ];
         $thresholds = [1 => 100, 2 => 250, 3 => 250];
 
+        $itineraryTableExists = false;
+        $evidenceTableExists  = false;
+        try {
+            $itineraryTableExists = $DB->get_manager()->table_exists('pharos_itinerary_progress');
+            $evidenceTableExists  = $DB->get_manager()->table_exists('pharos_badges_evidence');
+        } catch (Exception $e) {
+            // Tables not yet installed; skip progress and evidence data.
+        }
+
         foreach ($students as $student) {
             $progress = null;
-            if ($itinerary) {
-                $progress = $DB->get_record('pharos_itinerary_progress', [
-                    'itineraryid' => $itinerary->id,
-                    'userid'      => $student->id,
-                ]);
+            if ($itinerary && $itineraryTableExists) {
+                try {
+                    $progress = $DB->get_record('pharos_itinerary_progress', [
+                        'itineraryid' => $itinerary->id,
+                        'userid'      => $student->id,
+                    ]);
+                } catch (Exception $e) {
+                    // Graceful fallback.
+                }
             }
 
             $level      = $progress->level ?? 1;
@@ -94,13 +119,20 @@ class block_pharos_teacher extends block_base {
 
             // Count pending evidence per level: started but threshold not yet reached.
             $evidenceThresholds = [1 => 3, 2 => 4, 3 => 5];
-            $evidenceRows = $DB->get_records_sql(
-                "SELECT level, COUNT(*) AS cnt
-                   FROM {pharos_badges_evidence}
-                  WHERE userid = :userid AND courseid = :courseid
-                  GROUP BY level",
-                ['userid' => $student->id, 'courseid' => $COURSE->id]
-            );
+            $evidenceRows = [];
+            if ($evidenceTableExists) {
+                try {
+                    $evidenceRows = $DB->get_records_sql(
+                        "SELECT level, COUNT(*) AS cnt
+                           FROM {pharos_badges_evidence}
+                          WHERE userid = :userid AND courseid = :courseid
+                          GROUP BY level",
+                        ['userid' => $student->id, 'courseid' => $COURSE->id]
+                    );
+                } catch (Exception $e) {
+                    // Graceful fallback.
+                }
+            }
             $hasPending = false;
             foreach ($evidenceRows as $row) {
                 $threshold = $evidenceThresholds[(int) $row->level] ?? PHP_INT_MAX;
@@ -135,14 +167,18 @@ class block_pharos_teacher extends block_base {
 
         // Manage activities URL: only expose when an itinerary CM exists.
         $manageUrl = '';
-        $itineraryCm = $DB->get_record_sql(
-            "SELECT cm.id FROM {course_modules} cm
-               JOIN {modules} m ON m.id = cm.module AND m.name = 'pharos_itinerary'
-              WHERE cm.course = :course LIMIT 1",
-            ['course' => $COURSE->id]
-        );
-        if ($itineraryCm && has_capability('mod/pharos_itinerary:addinstance', context_course::instance($COURSE->id))) {
-            $manageUrl = (new moodle_url('/mod/pharos_itinerary/manage_activities.php', ['id' => $itineraryCm->id]))->out(false);
+        try {
+            $itineraryCm = $DB->get_record_sql(
+                "SELECT cm.id FROM {course_modules} cm
+                   JOIN {modules} m ON m.id = cm.module AND m.name = 'pharos_itinerary'
+                  WHERE cm.course = :course LIMIT 1",
+                ['course' => $COURSE->id]
+            );
+            if ($itineraryCm && has_capability('mod/pharos_itinerary:addinstance', $context)) {
+                $manageUrl = (new moodle_url('/mod/pharos_itinerary/manage_activities.php', ['id' => $itineraryCm->id]))->out(false);
+            }
+        } catch (Exception $e) {
+            // Module not yet installed; no manage URL.
         }
 
         $templateData = [

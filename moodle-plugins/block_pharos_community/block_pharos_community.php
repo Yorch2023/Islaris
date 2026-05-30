@@ -50,18 +50,26 @@ class block_pharos_community extends block_base {
         }
 
         // Determine user level from itinerary progress.
+        // Gracefully fall back to level 1 if the PHAROS tables do not exist yet.
         $userLevel = 1;
-        $record = $DB->get_record_sql(
-            "SELECT pp.level
-               FROM {pharos_itinerary_progress} pp
-               JOIN {pharos_itinerary} pi ON pi.id = pp.itineraryid
-              WHERE pi.course = :course AND pp.userid = :userid
-           ORDER BY pp.level DESC
-              LIMIT 1",
-            ['course' => $COURSE->id, 'userid' => $USER->id]
-        );
-        if ($record) {
-            $userLevel = (int) $record->level;
+        try {
+            if ($DB->get_manager()->table_exists('pharos_itinerary_progress') &&
+                    $DB->get_manager()->table_exists('pharos_itinerary')) {
+                $record = $DB->get_record_sql(
+                    "SELECT pp.level
+                       FROM {pharos_itinerary_progress} pp
+                       JOIN {pharos_itinerary} pi ON pi.id = pp.itineraryid
+                      WHERE pi.course = :course AND pp.userid = :userid
+                   ORDER BY pp.level DESC
+                      LIMIT 1",
+                    ['course' => $COURSE->id, 'userid' => $USER->id]
+                );
+                if ($record) {
+                    $userLevel = max(1, min(3, (int) $record->level));
+                }
+            }
+        } catch (Exception $e) {
+            // Tables not yet installed; default level 1 is fine.
         }
 
         // Build forum list: forums whose name contains a level tag and the
