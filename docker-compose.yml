@@ -26,23 +26,16 @@ services:
       context: .
       dockerfile: Dockerfile
     ports:
-      - "80:8080"
+      - "80:80"
     environment:
-      MOODLE_DATABASE_TYPE: mariadb
-      MOODLE_DATABASE_HOST: db
-      MOODLE_DATABASE_PORT_NUMBER: 3306
-      MOODLE_DATABASE_NAME: pharos_moodle
-      MOODLE_DATABASE_USER: pharos
-      MOODLE_DATABASE_PASSWORD: pharos_db
-      MOODLE_USERNAME: admin
-      MOODLE_PASSWORD: PharosAdmin2024!
-      MOODLE_EMAIL: admin@pharos-ai.local
-      MOODLE_SITE_NAME: "PHAROS-AI"
-      MOODLE_LANG: es
-      MOODLE_SMTP_HOST: ""
+      DB_HOST: db
+      DB_NAME: pharos_moodle
+      DB_USER: pharos
+      DB_PASS: pharos_db
+      MOODLE_WWWROOT: http://localhost
+      MOODLE_ADMINPASS: PharosAdmin2024!
     volumes:
-      - moodle_data:/bitnami/moodle
-      - moodledata:/bitnami/moodledata
+      - moodledata:/var/moodledata
     depends_on:
       db:
         condition: service_healthy
@@ -60,10 +53,9 @@ services:
     environment:
       NODE_ENV: production
       PORT: 3001
-      ALLOWED_ORIGINS: "http://localhost,http://localhost:80"
+      ALLOWED_ORIGINS: "http://localhost"
     restart: unless-stopped
 
 volumes:
   db_data:
-  moodle_data:
   moodledata:
