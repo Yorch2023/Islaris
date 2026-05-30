@@ -17,6 +17,7 @@ chown -R www-data:www-data "$MOODLEDATA"
 if [ -f "$CONFIG_PERSISTENT" ] && [ ! -f /var/www/html/config.php ]; then
     cp "$CONFIG_PERSISTENT" /var/www/html/config.php
     chown www-data:www-data /var/www/html/config.php
+    chmod 644 /var/www/html/config.php
     echo "♻️  Configuración Moodle restaurada."
 fi
 
@@ -44,7 +45,9 @@ if [ ! -f /var/www/html/config.php ]; then
 
     # Persist config.php in the volume so it survives container rebuilds
     cp /var/www/html/config.php "$CONFIG_PERSISTENT"
-    chown -R www-data:www-data /var/www/html/config.php "$MOODLEDATA"
+    chown www-data:www-data /var/www/html/config.php "$CONFIG_PERSISTENT"
+    chmod 644 /var/www/html/config.php "$CONFIG_PERSISTENT"
+    chown -R www-data:www-data "$MOODLEDATA"
 
     echo "🎉 ¡Moodle listo! Accede en http://localhost"
 fi
