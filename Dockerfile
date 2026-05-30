@@ -1,4 +1,4 @@
-FROM bitnami/moodle:4.3
+FROM bitnami/moodle:latest
 
 # Copy PHAROS-AI plugins and theme into the Moodle image.
 # Bitnami copies /opt/bitnami/moodle → /bitnami/moodle on first boot,
