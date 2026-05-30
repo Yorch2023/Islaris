@@ -10,7 +10,7 @@ if ($ADMIN->fulltree) {
         get_string('setting_middleware_url', 'block_pharos_tutor'),
         get_string('setting_middleware_url_desc', 'block_pharos_tutor'),
         'http://localhost:3001',
-        PARAM_URL
+        PARAM_TEXT
     ));
 
     $settings->add(new admin_setting_configpasswordunmask(
