@@ -5,7 +5,7 @@ MOODLEDATA=/var/moodledata
 CONFIG_PERSISTENT="$MOODLEDATA/config.php"
 
 echo "⏳ Esperando base de datos..."
-until mysqladmin ping -h"${DB_HOST:-db}" -u"${DB_USER:-pharos}" -p"${DB_PASS:-pharos_db}" --silent 2>/dev/null; do
+until (echo > /dev/tcp/${DB_HOST:-db}/3306) 2>/dev/null; do
     sleep 3
 done
 echo "✅ Base de datos lista."
