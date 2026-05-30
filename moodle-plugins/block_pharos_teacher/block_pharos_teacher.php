@@ -15,6 +15,10 @@ defined('MOODLE_INTERNAL') || die();
  */
 class block_pharos_teacher extends block_base {
 
+    public function name(): string {
+        return 'pharos_teacher';
+    }
+
     public function init(): void {
         $this->title = get_string('pluginname', 'block_pharos_teacher');
     }
