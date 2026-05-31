@@ -26,16 +26,70 @@ if (!$course) {
 }
 echo "Curso: [{$course->shortname}] {$course->fullname} (id={$course->id})\n\n";
 
-// ── 2. Verificar que el módulo pharos_itinerary está instalado ────────────────
+// ── 2. Verificar / instalar el módulo pharos_itinerary ───────────────────────
 
-$itineraryModId = $DB->get_field('modules', 'id', ['name' => 'pharos_itinerary']);
-if (!$itineraryModId) {
-    echo "ERROR: El módulo 'pharos_itinerary' no está en la tabla modules.\n";
-    echo "Asegúrate de que el plugin está en /var/www/html/mod/pharos_itinerary/ y\n";
-    echo "de haber ejecutado: php /var/www/html/admin/cli/upgrade.php --non-interactive\n";
+$pluginDir = $CFG->dirroot . '/mod/pharos_itinerary';
+if (!is_dir($pluginDir)) {
+    echo "ERROR: El directorio del plugin no existe: $pluginDir\n";
     exit(1);
 }
-echo "Módulo pharos_itinerary instalado (module_id={$itineraryModId})\n";
+
+$itineraryModId = $DB->get_field('modules', 'id', ['name' => 'pharos_itinerary']);
+
+if (!$itineraryModId) {
+    echo "Módulo pharos_itinerary no registrado — instalando manualmente…\n";
+
+    // (a) Registrar en mdl_modules.
+    $mod          = new stdClass();
+    $mod->name    = 'pharos_itinerary';
+    $mod->cron    = 0;
+    $mod->lastcron = 0;
+    $mod->search  = '';
+    $mod->visible = 1;
+    $itineraryModId = $DB->insert_record('modules', $mod);
+    echo "  → Registrado en modules (id=$itineraryModId)\n";
+
+    // (b) Instalar tablas desde install.xml.
+    $dbman      = $DB->get_manager();
+    $xmldbfile  = new xmldb_file("$pluginDir/db/install.xml");
+    if ($xmldbfile->loadXMLStructure()) {
+        foreach ($xmldbfile->getStructure()->getTables() as $table) {
+            if (!$dbman->table_exists($table)) {
+                $dbman->create_table($table);
+                echo "  → Tabla {$table->getName()} creada\n";
+            } else {
+                echo "  → Tabla {$table->getName()} ya existe\n";
+            }
+        }
+    } else {
+        echo "ERROR: No se pudo cargar install.xml\n";
+        exit(1);
+    }
+
+    // (c) Registrar capacidades desde db/access.php.
+    require_once($CFG->libdir . '/accesslib.php');
+    $capabilities = [];
+    require("$pluginDir/db/access.php");
+    foreach ($capabilities as $capname => $capdef) {
+        if (!$DB->record_exists('capabilities', ['name' => $capname])) {
+            $cap               = new stdClass();
+            $cap->name         = $capname;
+            $cap->captype      = $capdef['captype'];
+            $cap->contextlevel = $capdef['contextlevel'];
+            $cap->component    = 'mod_pharos_itinerary';
+            $cap->riskbitmask  = $capdef['riskbitmask'] ?? 0;
+            $DB->insert_record('capabilities', $cap);
+            echo "  → Capacidad $capname registrada\n";
+        }
+    }
+
+    // (d) Guardar versión en config_plugins (para que upgrade.php no lo reinstale).
+    set_config('version', 2025060100, 'mod_pharos_itinerary');
+
+    echo "Módulo pharos_itinerary instalado (module_id=$itineraryModId)\n";
+} else {
+    echo "Módulo pharos_itinerary ya instalado (module_id=$itineraryModId)\n";
+}
 
 $pageModId = $DB->get_field('modules', 'id', ['name' => 'page']);
 if (!$pageModId) {
