@@ -40,8 +40,13 @@
                 body:    JSON.stringify(data)
             })
             .then(function (res) {
-                return res.json().then(function (body) {
-                    if (!res.ok || body.error) throw new Error(body.error || 'Error HTTP ' + res.status);
+                return res.text().then(function (text) {
+                    var body;
+                    try { body = JSON.parse(text); } catch (e) {
+                        // Server returned HTML — show first 200 chars for diagnosis
+                        throw new Error('El servidor devolvió HTML (HTTP ' + res.status + '): ' + text.substring(0, 200));
+                    }
+                    if (!res.ok || body.error) throw new Error(body.error || 'HTTP ' + res.status);
                     return body;
                 });
             })
