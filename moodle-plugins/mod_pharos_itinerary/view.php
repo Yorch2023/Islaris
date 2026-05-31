@@ -18,8 +18,14 @@ require_login($course, true, $cm);
 $context = context_module::instance($cm->id);
 require_capability('mod/pharos_itinerary:view', $context);
 
-$completion = new completion_info($course);
-$completion->set_module_viewed($cm);
+// Guard against coding_exception from plugin_supports() when the module is not
+// in Moodle's component registry (manual install without upgrade.php detection).
+try {
+    $completion = new completion_info($course);
+    $completion->set_module_viewed($cm);
+} catch (coding_exception $e) {
+    // Completion tracking unavailable for manually-installed module; non-critical.
+}
 
 $progress  = pharos_itinerary_get_or_create_progress($itinerary->id, $USER->id);
 
