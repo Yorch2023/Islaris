@@ -3,17 +3,93 @@
 
 // === Navbar ===
 .navbar {
-    background-color: $pharos-navy !important;
-    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.18);
+    background: linear-gradient(135deg, $pharos-navy 0%, lighten($pharos-navy, 6%) 100%) !important;
+    box-shadow: 0 2px 12px rgba(0, 0, 0, 0.22);
+    border-bottom: 3px solid $pharos-red;
 }
 
 .navbar-brand {
     font-weight: 700;
-    letter-spacing: 0.02em;
+    font-size: 1.25rem;
+    letter-spacing: 0.04em;
     color: #fff !important;
 
     &::before {
         content: '🔦 ';
+    }
+}
+
+// === Page header (hero) ===
+#page-header {
+    background: linear-gradient(135deg, $pharos-navy 0%, lighten($pharos-navy, 10%) 100%);
+    color: #fff;
+    padding: 1.75rem 0 1.5rem;
+    margin-bottom: 0;
+    border-bottom: 4px solid $pharos-red;
+
+    .page-header-headings h1,
+    h1.h2 {
+        color: #fff;
+        font-weight: 700;
+    }
+
+    .breadcrumb {
+        background: transparent;
+        padding: 0;
+        margin-bottom: 0.5rem;
+
+        .breadcrumb-item,
+        .breadcrumb-item a,
+        .breadcrumb-item + .breadcrumb-item::before {
+            color: rgba(255, 255, 255, 0.72);
+        }
+    }
+
+    .action-menu .dropdown-toggle,
+    .btn-outline-secondary {
+        color: rgba(255, 255, 255, 0.85);
+        border-color: rgba(255, 255, 255, 0.3);
+
+        &:hover { background: rgba(255, 255, 255, 0.1); }
+    }
+}
+
+// === Blocks ===
+.block {
+    border: none;
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.07);
+    border-radius: $border-radius-lg;
+    overflow: hidden;
+    margin-bottom: 1.25rem;
+
+    .card-header,
+    .block-header {
+        background: $pharos-navy;
+        color: #fff;
+        font-weight: 600;
+        padding: 0.75rem 1rem;
+        border-bottom: 2px solid $pharos-red;
+
+        .title,
+        h5,
+        h3 {
+            color: #fff;
+            margin: 0;
+        }
+
+        a { color: rgba(255, 255, 255, 0.85); }
+
+        .action-menu .icon,
+        .icon { filter: brightness(0) invert(1); }
+    }
+
+    .block-controls .dropdown .icon {
+        color: #fff;
+    }
+
+    .card-body,
+    .content {
+        padding: 1rem;
     }
 }
 

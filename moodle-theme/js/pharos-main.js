@@ -2,6 +2,17 @@
 'use strict';
 
 (function () {
+    // Load Inter from Google Fonts for better typography.
+    if (!document.querySelector('link[href*="Inter"]')) {
+        const pre = document.createElement('link');
+        pre.rel = 'preconnect';
+        pre.href = 'https://fonts.googleapis.com';
+        document.head.appendChild(pre);
+        const font = document.createElement('link');
+        font.rel = 'stylesheet';
+        font.href = 'https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap';
+        document.head.appendChild(font);
+    }
     // Smooth-scroll anchor links within the page.
     document.addEventListener('click', function (e) {
         const link = e.target.closest('a[href^="#"]');
