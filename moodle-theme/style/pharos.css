@@ -151,7 +151,44 @@ body {
     border-color: #C8102E !important;
 }
 
-/* === PHAROS Tutor chat block === */
+/* === Edit mode toggle — force white on dark navbar === */
+.editmode-switch-form,
+.editmode-switch-form label,
+.editmode-switch-form .custom-control-label,
+.editmode-switch-form .form-check-label,
+#page-navbar .editmode-switch-form *,
+.navbar .editmode-switch-form,
+.navbar .editmode-switch-form label,
+.navbar .editmode-switch-form span {
+    color: #fff !important;
+}
+
+.editmode-switch-form .custom-control-input:checked ~ .custom-control-label::before,
+.editmode-switch-form .form-check-input:checked {
+    background-color: #C8102E !important;
+    border-color: #C8102E !important;
+}
+
+.editmode-switch-form .custom-control-label::before,
+.editmode-switch-form .form-check-input {
+    border-color: rgba(255,255,255,0.5) !important;
+    background-color: rgba(255,255,255,0.15) !important;
+}
+
+/* Moodle 4.x edit mode toggle button */
+.btn.editmode-switch,
+.nav-item .editmode-switch {
+    color: #fff !important;
+    border-color: rgba(255,255,255,0.35) !important;
+    background: rgba(255,255,255,0.1) !important;
+}
+
+.btn.editmode-switch:hover,
+.nav-item .editmode-switch:hover {
+    background: rgba(255,255,255,0.2) !important;
+}
+
+
 .pharos-tutor {
     display: flex;
     flex-direction: column;
