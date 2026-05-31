@@ -80,13 +80,13 @@ class block_pharos_tutor extends block_base {
         $lang = current_language();
         $lang = str_starts_with($lang, 'it') ? 'it' : 'es';
 
-        // Proxy URLs: non-streaming and SSE streaming.
-        $proxyUrl       = new moodle_url('/blocks/pharos_tutor/ajax.php');
-        $streamProxyUrl = new moodle_url('/blocks/pharos_tutor/ajax-stream.php');
+        // Use the non-streaming proxy only — SSE streaming requires Nginx or
+        // special Apache configuration that is not available in this setup.
+        $proxyUrl = new moodle_url('/blocks/pharos_tutor/ajax.php');
 
         $templateData = [
             'proxy_url'        => $proxyUrl->out(false),
-            'stream_proxy_url' => $streamProxyUrl->out(false),
+            'stream_proxy_url' => '',
             'user_id'          => (string) $USER->id,
             'user_level'       => $userLevel,
             'lang'             => $lang,
