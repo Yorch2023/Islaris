@@ -4,7 +4,6 @@
  * Access: http://localhost/blocks/pharos_teacher/test-generator.php
  * DELETE this file before going to production.
  */
-define('NO_MOODLE_COOKIES', true);
 require_once(__DIR__ . '/../../config.php');
 
 require_login();
