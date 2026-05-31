@@ -2,7 +2,11 @@
 (function () {
     'use strict';
 
-    var config = window.PHAROS_GENERATOR_CONFIG || {};
+    // Read config lazily so Moodle's inline js_init_code (which runs after
+    // external scripts are loaded) has already set PHAROS_GENERATOR_CONFIG.
+    function cfg() {
+        return window.PHAROS_GENERATOR_CONFIG || {};
+    }
 
     function init() {
         var form     = document.getElementById('pharos-generator-form');
@@ -18,6 +22,14 @@
 
         form.addEventListener('submit', function (e) {
             e.preventDefault();
+            var config = cfg();
+
+            if (!config.ajaxUrl) {
+                errorEl.textContent = 'Error de configuración: PHAROS_GENERATOR_CONFIG no está definido.';
+                errorEl.hidden = false;
+                return;
+            }
+
             errorEl.hidden = true;
             result.hidden  = true;
             if (actions) actions.hidden = true;
@@ -43,8 +55,7 @@
                 return res.text().then(function (text) {
                     var body;
                     try { body = JSON.parse(text); } catch (e) {
-                        // Server returned HTML — show first 200 chars for diagnosis
-                        throw new Error('El servidor devolvió HTML (HTTP ' + res.status + '): ' + text.substring(0, 200));
+                        throw new Error('El servidor devolvió HTML (HTTP ' + res.status + '): ' + text.substring(0, 300));
                     }
                     if (!res.ok || body.error) throw new Error(body.error || 'HTTP ' + res.status);
                     return body;
@@ -75,6 +86,7 @@
         if (btnDocx) btnDocx.addEventListener('click', function () { handleExport('docx'); });
 
         function handleExport(format) {
+            var config   = cfg();
             var activity = result ? result.dataset.activity : '';
             var lang     = result ? (result.dataset.lang || 'es') : 'es';
             if (!activity) return;

@@ -1,7 +1,8 @@
 {{!
     Template: block_pharos_teacher/generator_view
-    Context: courseid, sesskey, back_url, ajax_url, export_url
+    Context: courseid, js_config, back_url, ajax_url, export_url
 }}
+<script>window.PHAROS_GENERATOR_CONFIG = {{{js_config}}};</script>
 <div class="pharos-generator" role="region" aria-labelledby="pharos-generator-heading">
 
     <a href="{{back_url}}" class="btn btn-link pharos-generator__back mb-3">

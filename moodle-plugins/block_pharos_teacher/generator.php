@@ -25,22 +25,26 @@ $PAGE->set_title(get_string('generator_title', 'block_pharos_teacher'));
 $PAGE->set_heading($course->fullname);
 $PAGE->set_pagelayout('incourse');
 
-// Pass config via a global JS variable, then load as plain script (avoids AMD caching issues).
+$ajaxUrl   = (new moodle_url('/blocks/pharos_teacher/ajax-generator.php'))->out(false);
+$exportUrl = (new moodle_url('/blocks/pharos_teacher/ajax-export.php'))->out(false);
+
+// Inject config as an inline <script> in the page body (via template) so it is
+// always defined before generator-direct.js runs, regardless of footer ordering.
 $jsConfig = json_encode([
-    'ajaxUrl'   => (new moodle_url('/blocks/pharos_teacher/ajax-generator.php'))->out(false),
-    'exportUrl' => (new moodle_url('/blocks/pharos_teacher/ajax-export.php'))->out(false),
+    'ajaxUrl'   => $ajaxUrl,
+    'exportUrl' => $exportUrl,
     'sesskey'   => sesskey(),
     'courseId'  => $courseId,
 ]);
-$PAGE->requires->js_init_code("window.PHAROS_GENERATOR_CONFIG = {$jsConfig};");
+
 $PAGE->requires->js(new moodle_url('/blocks/pharos_teacher/generator-direct.js'), true);
 
 $templateData = [
-    'courseid'  => $courseId,
-    'sesskey'   => sesskey(),
-    'back_url'  => (new moodle_url('/course/view.php', ['id' => $courseId]))->out(false),
-    'ajax_url'  => (new moodle_url('/blocks/pharos_teacher/ajax-generator.php'))->out(false),
-    'export_url' => (new moodle_url('/blocks/pharos_teacher/ajax-export.php'))->out(false),
+    'courseid'   => $courseId,
+    'js_config'  => $jsConfig,
+    'back_url'   => (new moodle_url('/course/view.php', ['id' => $courseId]))->out(false),
+    'ajax_url'   => $ajaxUrl,
+    'export_url' => $exportUrl,
 ];
 
 echo $OUTPUT->header();
