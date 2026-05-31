@@ -7,7 +7,11 @@ require_once($CFG->dirroot . '/mod/pharos_itinerary/lib.php');
 
 $id = required_param('id', PARAM_INT);
 
-[$course, $cm] = get_course_and_cm_from_cmid($id, 'pharos_itinerary');
+// Omit modulename to skip core_component registry validation for manually-installed plugins.
+[$course, $cm] = get_course_and_cm_from_cmid($id);
+if ($cm->modname !== 'pharos_itinerary') {
+    throw new moodle_exception('invalidcoursemodule');
+}
 $itinerary = $DB->get_record('pharos_itinerary', ['id' => $cm->instance], '*', MUST_EXIST);
 
 require_login($course, true, $cm);
