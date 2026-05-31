@@ -25,12 +25,15 @@ $PAGE->set_title(get_string('generator_title', 'block_pharos_teacher'));
 $PAGE->set_heading($course->fullname);
 $PAGE->set_pagelayout('incourse');
 
-$PAGE->requires->js_call_amd('block_pharos_teacher/activity-generator', 'init', [[
-    'ajaxUrl'    => (new moodle_url('/blocks/pharos_teacher/ajax-generator.php'))->out(false),
-    'exportUrl'  => (new moodle_url('/blocks/pharos_teacher/ajax-export.php'))->out(false),
-    'sesskey'    => sesskey(),
-    'courseId'   => $courseId,
-]]);
+// Pass config via a global JS variable, then load as plain script (avoids AMD caching issues).
+$jsConfig = json_encode([
+    'ajaxUrl'   => (new moodle_url('/blocks/pharos_teacher/ajax-generator.php'))->out(false),
+    'exportUrl' => (new moodle_url('/blocks/pharos_teacher/ajax-export.php'))->out(false),
+    'sesskey'   => sesskey(),
+    'courseId'  => $courseId,
+]);
+$PAGE->requires->js_init_code("window.PHAROS_GENERATOR_CONFIG = {$jsConfig};");
+$PAGE->requires->js(new moodle_url('/blocks/pharos_teacher/generator-direct.js'), true);
 
 $templateData = [
     'courseid'  => $courseId,
