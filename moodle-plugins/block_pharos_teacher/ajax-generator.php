@@ -30,7 +30,21 @@ if (empty($data['sesskey']) || !confirm_sesskey($data['sesskey'])) {
 }
 
 $courseId = isset($data['courseid']) ? (int) $data['courseid'] : (isset($data['courseId']) ? (int) $data['courseId'] : 0);
-$context  = context_course::instance($courseId);
+
+if ($courseId < 1) {
+    http_response_code(400);
+    echo json_encode(['error' => 'courseId missing or invalid (got: ' . $courseId . ')']);
+    die();
+}
+
+try {
+    $context = context_course::instance($courseId);
+} catch (Exception $e) {
+    http_response_code(400);
+    echo json_encode(['error' => 'Invalid course: ' . $e->getMessage()]);
+    die();
+}
+
 require_capability('block/pharos_teacher:view', $context);
 
 $middlewareUrl = get_config('block_pharos_tutor', 'middleware_url');
@@ -83,7 +97,15 @@ curl_close($ch);
 
 if ($curlError) {
     http_response_code(502);
-    echo json_encode(['error' => 'Could not reach AI middleware']);
+    echo json_encode(['error' => 'No se pudo contactar con el middleware: ' . $curlError]);
+    die();
+}
+
+// If middleware returned non-JSON, wrap in an error object so the browser shows it.
+$decoded = json_decode($response, true);
+if (json_last_error() !== JSON_ERROR_NONE) {
+    http_response_code(502);
+    echo json_encode(['error' => 'Middleware devolvió respuesta no válida (HTTP ' . $httpCode . '): ' . substr($response, 0, 200)]);
     die();
 }
 
