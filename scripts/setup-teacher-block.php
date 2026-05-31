@@ -45,6 +45,7 @@ $existing = $DB->get_record('block_instances', [
 if ($existing) {
     echo "Instancia ya existe (id={$existing->id})\n";
 } else {
+    $now                   = time();
     $bi                    = new stdClass();
     $bi->blockname         = 'pharos_teacher';
     $bi->parentcontextid   = $courseCtx->id;
@@ -53,11 +54,22 @@ if ($existing) {
     $bi->pagetypepattern   = 'course-view-*';
     $bi->subpagepattern    = null;
     $bi->defaultregion     = 'side-pre';
-    $bi->defaultweight     = -1; // above the tutor block
-    $bi->configdata        = '';
-    $id = $DB->insert_record('block_instances', $bi);
-    context_block::instance($id);
-    echo "Instancia pharos_teacher creada (id=$id)\n";
+    $bi->defaultweight     = -1;
+    $bi->configdata        = null;
+    $bi->timecreated       = $now;
+    $bi->timemodified      = $now;
+    try {
+        $id = $DB->insert_record('block_instances', $bi);
+        context_block::instance($id);
+        echo "Instancia pharos_teacher creada (id=$id)\n";
+    } catch (Exception $e) {
+        echo "ERROR insertando bloque: " . $e->getMessage() . "\n";
+
+        // Diagnóstico: mostrar columnas de la tabla
+        $cols = $DB->get_columns('block_instances');
+        echo "Columnas en block_instances: " . implode(', ', array_keys($cols)) . "\n";
+        exit(1);
+    }
 }
 
 // ── 4. Crear docente demo si no existe ───────────────────────────────────────
