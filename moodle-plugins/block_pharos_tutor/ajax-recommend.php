@@ -17,16 +17,6 @@ define('AJAX_SCRIPT', true);
 require_once(__DIR__ . '/../../config.php');
 
 require_login();
-require_sesskey();
-
-$middlewareUrl = get_config('block_pharos_tutor', 'middleware_url');
-$secret        = get_config('block_pharos_tutor', 'moodle_secret');
-
-if (empty($middlewareUrl) || empty($secret)) {
-    http_response_code(503);
-    echo json_encode(['error' => 'Middleware not configured']);
-    die();
-}
 
 $raw  = file_get_contents('php://input');
 $data = json_decode($raw, true);
@@ -34,6 +24,21 @@ $data = json_decode($raw, true);
 if (json_last_error() !== JSON_ERROR_NONE) {
     http_response_code(400);
     echo json_encode(['error' => 'Invalid JSON']);
+    die();
+}
+
+if (empty($data['sesskey']) || !confirm_sesskey($data['sesskey'])) {
+    http_response_code(403);
+    echo json_encode(['error' => 'Invalid session key']);
+    die();
+}
+
+$middlewareUrl = get_config('block_pharos_tutor', 'middleware_url');
+$secret        = get_config('block_pharos_tutor', 'moodle_secret');
+
+if (empty($middlewareUrl) || empty($secret)) {
+    http_response_code(503);
+    echo json_encode(['error' => 'Middleware not configured']);
     die();
 }
 

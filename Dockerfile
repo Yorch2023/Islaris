@@ -30,6 +30,8 @@ COPY --chown=www-data:www-data moodle-plugins/mod_pharos_itinerary   /var/www/ht
 COPY --chown=www-data:www-data moodle-plugins/mod_pharos_badges      /var/www/html/mod/pharos_badges
 COPY --chown=www-data:www-data moodle-theme                          /var/www/html/theme/pharos
 
+COPY --chown=www-data:www-data scripts /var/www/scripts
+
 COPY docker/apache.conf  /etc/apache2/sites-enabled/000-default.conf
 COPY docker/entrypoint.sh /entrypoint.sh
 RUN chmod +x /entrypoint.sh
