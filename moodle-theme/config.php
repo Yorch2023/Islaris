@@ -5,7 +5,7 @@
 defined('MOODLE_INTERNAL') || die();
 
 $THEME->name        = 'pharos';
-$THEME->sheets      = [];
+$THEME->sheets      = ['pharos'];
 $THEME->editor_sheets = [];
 $THEME->parents     = ['boost'];
 $THEME->enable_dock = false;
