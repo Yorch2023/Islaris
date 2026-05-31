@@ -86,6 +86,17 @@ else
     echo "🎉 ¡Moodle listo! Accede en http://localhost"
 fi
 
+# Always ensure the PHAROS theme is active (survives cache purges and rebuilds).
+php -r "
+define('CLI_SCRIPT', true);
+require '/var/www/html/config.php';
+set_config('theme', 'pharos');
+set_config('sitename', 'PHAROS-AI');
+" && echo "🎨 Tema PHAROS-AI activado."
+
+# Purge theme/CSS cache so the next request gets fresh compiled styles.
+php /var/www/html/admin/cli/purge_caches.php
+
 # Ensure config.php is always readable by Apache (www-data) regardless of how it was created
 if [ -f /var/www/html/config.php ]; then
     chown www-data:www-data /var/www/html/config.php
