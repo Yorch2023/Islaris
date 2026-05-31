@@ -12,9 +12,36 @@ define('AJAX_SCRIPT', true);
 require_once(__DIR__ . '/../../config.php');
 
 require_login();
-require_sesskey();
 
-$context = context_course::instance(required_param('courseid', PARAM_INT));
+$raw  = file_get_contents('php://input');
+$data = json_decode($raw, true);
+
+if (json_last_error() !== JSON_ERROR_NONE) {
+    http_response_code(400);
+    echo json_encode(['error' => 'Invalid JSON']);
+    die();
+}
+
+if (empty($data['sesskey']) || !confirm_sesskey($data['sesskey'])) {
+    http_response_code(403);
+    echo json_encode(['error' => 'Invalid session key']);
+    die();
+}
+
+$courseId = isset($data['courseid']) ? (int) $data['courseid'] : 0;
+if ($courseId < 1) {
+    http_response_code(400);
+    echo json_encode(['error' => 'courseid missing or invalid']);
+    die();
+}
+
+try {
+    $context = context_course::instance($courseId);
+} catch (Exception $e) {
+    http_response_code(400);
+    echo json_encode(['error' => 'Invalid course']);
+    die();
+}
 require_capability('block/pharos_teacher:view', $context);
 
 $middlewareUrl = get_config('block_pharos_tutor', 'middleware_url');
@@ -23,15 +50,6 @@ $secret        = get_config('block_pharos_tutor', 'moodle_secret');
 if (empty($middlewareUrl) || empty($secret)) {
     http_response_code(503);
     echo json_encode(['error' => 'Middleware not configured']);
-    die();
-}
-
-$raw  = file_get_contents('php://input');
-$data = json_decode($raw, true);
-
-if (json_last_error() !== JSON_ERROR_NONE) {
-    http_response_code(400);
-    echo json_encode(['error' => 'Invalid JSON']);
     die();
 }
 

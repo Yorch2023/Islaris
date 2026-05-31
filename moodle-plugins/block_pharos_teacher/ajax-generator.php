@@ -11,14 +11,8 @@ define('AJAX_SCRIPT', true);
 
 require_once(__DIR__ . '/../../config.php');
 
-// TEMP DEBUG — remove before production
-$_pharosLog = function($msg) {
-    file_put_contents('/tmp/generator-debug.log', date('[H:i:s] ') . $msg . "\n", FILE_APPEND);
-};
-
 require_login();
 
-// JSON body — read before sesskey check (same pattern as ajax.php).
 $raw  = file_get_contents('php://input');
 $data = json_decode($raw, true);
 
@@ -28,22 +22,17 @@ if (json_last_error() !== JSON_ERROR_NONE) {
     die();
 }
 
-$_pharosLog("raw input: " . substr($raw, 0, 200));
-$_pharosLog("sesskey in data: " . ($data['sesskey'] ?? 'MISSING'));
-
 if (empty($data['sesskey']) || !confirm_sesskey($data['sesskey'])) {
-    $_pharosLog("SESSKEY FAILED");
     http_response_code(403);
     echo json_encode(['error' => 'Invalid session key']);
     die();
 }
-$_pharosLog("sesskey OK, courseId=" . ($data['courseid'] ?? 'MISSING'));
 
-$courseId = isset($data['courseid']) ? (int) $data['courseid'] : (isset($data['courseId']) ? (int) $data['courseId'] : 0);
+$courseId = isset($data['courseid']) ? (int) $data['courseid'] : 0;
 
 if ($courseId < 1) {
     http_response_code(400);
-    echo json_encode(['error' => 'courseId missing or invalid (got: ' . $courseId . ')']);
+    echo json_encode(['error' => 'courseid missing or invalid']);
     die();
 }
 
@@ -111,15 +100,13 @@ if ($curlError) {
     die();
 }
 
-// If middleware returned non-JSON, wrap in an error object so the browser shows it.
 $decoded = json_decode($response, true);
 if (json_last_error() !== JSON_ERROR_NONE) {
     http_response_code(502);
-    echo json_encode(['error' => 'Middleware devolvió respuesta no válida (HTTP ' . $httpCode . '): ' . substr($response, 0, 200)]);
+    echo json_encode(['error' => 'Middleware devolvió respuesta no válida (HTTP ' . $httpCode . ')']);
     die();
 }
 
-$_pharosLog("middleware HTTP=$httpCode response=" . substr($response, 0, 150));
 http_response_code($httpCode);
 header('Content-Type: application/json');
 echo $response;
