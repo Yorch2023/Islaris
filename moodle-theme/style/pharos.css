@@ -23,6 +23,18 @@
     font-size: 1.2rem !important;
     letter-spacing: 0.04em !important;
     color: #fff !important;
+    display: flex !important;
+    align-items: center !important;
+    gap: 0.5rem !important;
+}
+
+.navbar-brand::before {
+    content: '' !important;
+    display: inline-block !important;
+    width: 28px !important;
+    height: 34px !important;
+    background: url('../pix/pharos-logo.svg') center/contain no-repeat !important;
+    flex-shrink: 0 !important;
 }
 
 .navbar .nav-link,
