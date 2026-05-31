@@ -51,7 +51,7 @@ services:
     env_file:
       - .env
     environment:
-      NODE_ENV: production
+      NODE_ENV: development
       PORT: 3001
       ALLOWED_ORIGINS: "http://localhost"
     restart: unless-stopped
