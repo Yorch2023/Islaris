@@ -11,6 +11,11 @@ define('AJAX_SCRIPT', true);
 
 require_once(__DIR__ . '/../../config.php');
 
+// TEMP DEBUG — remove before production
+$_pharosLog = function($msg) {
+    file_put_contents('/tmp/generator-debug.log', date('[H:i:s] ') . $msg . "\n", FILE_APPEND);
+};
+
 require_login();
 
 // JSON body — read before sesskey check (same pattern as ajax.php).
@@ -23,11 +28,16 @@ if (json_last_error() !== JSON_ERROR_NONE) {
     die();
 }
 
+$_pharosLog("raw input: " . substr($raw, 0, 200));
+$_pharosLog("sesskey in data: " . ($data['sesskey'] ?? 'MISSING'));
+
 if (empty($data['sesskey']) || !confirm_sesskey($data['sesskey'])) {
+    $_pharosLog("SESSKEY FAILED");
     http_response_code(403);
     echo json_encode(['error' => 'Invalid session key']);
     die();
 }
+$_pharosLog("sesskey OK, courseId=" . ($data['courseid'] ?? 'MISSING'));
 
 $courseId = isset($data['courseid']) ? (int) $data['courseid'] : (isset($data['courseId']) ? (int) $data['courseId'] : 0);
 
@@ -109,6 +119,7 @@ if (json_last_error() !== JSON_ERROR_NONE) {
     die();
 }
 
+$_pharosLog("middleware HTTP=$httpCode response=" . substr($response, 0, 150));
 http_response_code($httpCode);
 header('Content-Type: application/json');
 echo $response;

@@ -36,6 +36,13 @@
 
     // Ensure navbar brand always shows "PHAROS-AI" regardless of Moodle site name setting.
     document.querySelectorAll('.navbar-brand').forEach(function (el) {
+        // Moodle 4.x wraps the site name in a child span (.site-name or similar)
+        var nameEl = el.querySelector('.site-name, .brand-name, [class*="site"], span:not(.sr-only):not([aria-hidden])');
+        if (nameEl && nameEl.textContent.trim() && !nameEl.textContent.includes('PHAROS-AI')) {
+            nameEl.textContent = 'PHAROS-AI';
+            return;
+        }
+        // Fallback: direct text node (Moodle 3.x / some layouts)
         for (var i = 0; i < el.childNodes.length; i++) {
             var node = el.childNodes[i];
             if (node.nodeType === 3 && node.textContent.trim()) {
