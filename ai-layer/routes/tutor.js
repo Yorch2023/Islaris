@@ -3,13 +3,11 @@
 const express = require('express');
 const fs = require('fs');
 const path = require('path');
-const Anthropic = require('@anthropic-ai/sdk');
 
 const { validateMoodleToken } = require('../middleware/auth');
 const { tutorLimiter } = require('../middleware/rateLimit');
 
 const router = express.Router();
-const client = new Anthropic();
 
 const LEVEL_LABELS = { 1: 'N1 — Fundamentos', 2: 'N2 — IA en la práctica', 3: 'N3 — Facilitación crítica' };
 
@@ -21,58 +19,109 @@ const SYSTEM_PROMPT = fs.readFileSync(
 const MAX_MESSAGES = 20;
 const MAX_MESSAGE_LENGTH = 4000;
 
+// Provider selection: prefer Groq (free) when available, fall back to Anthropic.
+const USE_GROQ = !!process.env.GROQ_API_KEY;
+
+// Lazy-load Anthropic SDK only when needed.
+let anthropicClient = null;
+function getAnthropic() {
+    if (!anthropicClient) {
+        const Anthropic = require('@anthropic-ai/sdk');
+        anthropicClient = new Anthropic();
+    }
+    return anthropicClient;
+}
+
+/**
+ * Call the configured AI provider and return a reply string.
+ */
+async function callAI(systemText, messages) {
+    if (USE_GROQ) {
+        return callGroq(systemText, messages);
+    }
+    return callAnthropic(systemText, messages);
+}
+
+async function callGroq(systemText, messages) {
+    const res = await fetch('https://api.groq.com/openai/v1/chat/completions', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${process.env.GROQ_API_KEY}`,
+        },
+        body: JSON.stringify({
+            model: process.env.GROQ_MODEL || 'llama-3.1-8b-instant',
+            max_tokens: 1024,
+            messages: [
+                { role: 'system', content: systemText },
+                ...messages,
+            ],
+        }),
+    });
+
+    if (!res.ok) {
+        const err = await res.text();
+        throw Object.assign(new Error(`Groq error ${res.status}: ${err}`), { status: res.status });
+    }
+
+    const data = await res.json();
+    return data.choices[0]?.message?.content ?? '';
+}
+
+async function callAnthropic(systemText, messages) {
+    const client = getAnthropic();
+    const response = await client.messages.create({
+        model: process.env.ANTHROPIC_MODEL || 'claude-sonnet-4-5',
+        max_tokens: 1024,
+        system: [
+            { type: 'text', text: SYSTEM_PROMPT, cache_control: { type: 'ephemeral' } },
+            { type: 'text', text: systemText },
+        ],
+        messages,
+    });
+    return response.content[0]?.text ?? '';
+}
+
+function buildSystemText(level, lang) {
+    return `Nivel actual del usuario: ${LEVEL_LABELS[level]}\n`
+         + `Idioma de respuesta: ${lang === 'es' ? 'español' : 'italiano'}`;
+}
+
+function sanitize(messages) {
+    return messages
+        .slice(-MAX_MESSAGES)
+        .filter(m => m.role === 'user' || m.role === 'assistant')
+        .map(m => ({ role: m.role, content: String(m.content).slice(0, MAX_MESSAGE_LENGTH) }));
+}
+
+function validateBody(body, res) {
+    const { userId, level, lang, messages } = body;
+    if (!userId || typeof userId !== 'string')
+        return res.status(400).json({ error: 'userId is required' });
+    if (![1, 2, 3].includes(level))
+        return res.status(400).json({ error: 'level must be 1, 2 or 3' });
+    if (!['es', 'it'].includes(lang))
+        return res.status(400).json({ error: 'lang must be "es" or "it"' });
+    if (!Array.isArray(messages) || messages.length === 0)
+        return res.status(400).json({ error: 'messages must be a non-empty array' });
+    return null;
+}
+
 /**
  * POST /api/tutor/chat
- *
- * Body:
- *   userId      {string}  Moodle user ID (opaque, used for rate limiting only)
- *   level       {number}  Itinerary level: 1, 2 or 3
- *   lang        {string}  'es' or 'it'
- *   messages    {Array}   Conversation history: [{role, content}]
- *
- * Returns:
- *   { reply: string }
  */
 router.post('/chat', validateMoodleToken, tutorLimiter, async (req, res, next) => {
     try {
-        const { userId, level, lang, messages } = req.body;
+        const invalid = validateBody(req.body, res);
+        if (invalid) return;
 
-        if (!userId || typeof userId !== 'string') {
-            return res.status(400).json({ error: 'userId is required' });
-        }
+        const { level, lang, messages } = req.body;
+        const sanitized = sanitize(messages);
 
-        if (![1, 2, 3].includes(level)) {
-            return res.status(400).json({ error: 'level must be 1, 2 or 3' });
-        }
-
-        if (!['es', 'it'].includes(lang)) {
-            return res.status(400).json({ error: 'lang must be "es" or "it"' });
-        }
-
-        if (!Array.isArray(messages) || messages.length === 0) {
-            return res.status(400).json({ error: 'messages must be a non-empty array' });
-        }
-
-        const sanitizedMessages = messages
-            .slice(-MAX_MESSAGES)
-            .filter(m => m.role === 'user' || m.role === 'assistant')
-            .map(m => ({
-                role: m.role,
-                content: String(m.content).slice(0, MAX_MESSAGE_LENGTH),
-            }));
-
-        if (sanitizedMessages.length === 0 || sanitizedMessages[sanitizedMessages.length - 1].role !== 'user') {
+        if (!sanitized.length || sanitized.at(-1).role !== 'user')
             return res.status(400).json({ error: 'Last message must be from the user' });
-        }
 
-        const response = await client.messages.create({
-            model: 'claude-sonnet-4-5',
-            max_tokens: 1024,
-            system: buildSystem(level, lang, LEVEL_LABELS),
-            messages: sanitizedMessages,
-        });
-
-        const reply = response.content[0]?.text ?? '';
+        const reply = await callAI(buildSystemText(level, lang), sanitized);
         res.json({ reply });
 
     } catch (err) {
@@ -81,57 +130,26 @@ router.post('/chat', validateMoodleToken, tutorLimiter, async (req, res, next) =
 });
 
 /**
- * POST /api/tutor/stream
- *
- * Same parameters as /chat. Returns a Server-Sent Events stream of text deltas.
- * Each SSE event: data: {"delta":"<text>"}\n\n
- * Final event:    data: [DONE]\n\n
+ * POST /api/tutor/stream  (SSE — kept for future Nginx deployments)
  */
 router.post('/stream', validateMoodleToken, tutorLimiter, async (req, res, next) => {
     try {
-        const { userId, level, lang, messages } = req.body;
+        const invalid = validateBody(req.body, res);
+        if (invalid) return;
 
-        if (!userId || typeof userId !== 'string') {
-            return res.status(400).json({ error: 'userId is required' });
-        }
-        if (![1, 2, 3].includes(level)) {
-            return res.status(400).json({ error: 'level must be 1, 2 or 3' });
-        }
-        if (!['es', 'it'].includes(lang)) {
-            return res.status(400).json({ error: 'lang must be "es" or "it"' });
-        }
-        if (!Array.isArray(messages) || messages.length === 0) {
-            return res.status(400).json({ error: 'messages must be a non-empty array' });
-        }
+        const { level, lang, messages } = req.body;
+        const sanitized = sanitize(messages);
 
-        const sanitizedMessages = messages
-            .slice(-MAX_MESSAGES)
-            .filter(m => m.role === 'user' || m.role === 'assistant')
-            .map(m => ({ role: m.role, content: String(m.content).slice(0, MAX_MESSAGE_LENGTH) }));
-
-        if (!sanitizedMessages.length || sanitizedMessages.at(-1).role !== 'user') {
+        if (!sanitized.length || sanitized.at(-1).role !== 'user')
             return res.status(400).json({ error: 'Last message must be from the user' });
-        }
+
+        // For simplicity, SSE path calls the same non-streaming AI and wraps in SSE format.
+        const reply = await callAI(buildSystemText(level, lang), sanitized);
 
         res.setHeader('Content-Type', 'text/event-stream; charset=utf-8');
         res.setHeader('Cache-Control', 'no-cache');
-        res.setHeader('Connection', 'keep-alive');
-        res.setHeader('X-Accel-Buffering', 'no');
         res.flushHeaders();
-
-        const stream = client.messages.stream({
-            model: 'claude-sonnet-4-5',
-            max_tokens: 1024,
-            system: buildSystem(level, lang, LEVEL_LABELS),
-            messages: sanitizedMessages,
-        });
-
-        for await (const event of stream) {
-            if (event.type === 'content_block_delta' && event.delta?.type === 'text_delta') {
-                res.write(`data: ${JSON.stringify({ delta: event.delta.text })}\n\n`);
-            }
-        }
-
+        res.write(`data: ${JSON.stringify({ delta: reply })}\n\n`);
         res.write('data: [DONE]\n\n');
         res.end();
 
@@ -144,18 +162,5 @@ router.post('/stream', validateMoodleToken, tutorLimiter, async (req, res, next)
         }
     }
 });
-
-// Build a system prompt array with prompt caching on the static base.
-// The cached block must be ≥ 1024 tokens; our base prompt qualifies.
-function buildSystem(level, lang, levelLabels) {
-    return [
-        { type: 'text', text: SYSTEM_PROMPT, cache_control: { type: 'ephemeral' } },
-        {
-            type: 'text',
-            text: `Nivel actual del usuario: ${levelLabels[level]}\n`
-                + `Idioma de respuesta: ${lang === 'es' ? 'español' : 'italiano'}`,
-        },
-    ];
-}
 
 module.exports = router;
