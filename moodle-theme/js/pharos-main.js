@@ -34,6 +34,17 @@
         }, 6000);
     });
 
+    // Ensure navbar brand always shows "PHAROS-AI" regardless of Moodle site name setting.
+    document.querySelectorAll('.navbar-brand').forEach(function (el) {
+        for (var i = 0; i < el.childNodes.length; i++) {
+            var node = el.childNodes[i];
+            if (node.nodeType === 3 && node.textContent.trim()) {
+                node.textContent = ' PHAROS-AI';
+                break;
+            }
+        }
+    });
+
     // Mark external links with rel="noopener" and a screen-reader indicator.
     const isItalian = document.documentElement.lang.startsWith('it');
     const externalLinkSr = isItalian
