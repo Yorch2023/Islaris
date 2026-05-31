@@ -13,7 +13,7 @@ $capabilities = [
     ],
     'block/pharos_teacher:view' => [
         'captype'     => 'read',
-        'contextlevel'=> CONTEXT_BLOCK,
+        'contextlevel'=> CONTEXT_COURSE,
         'archetypes'  => [
             'teacher'        => CAP_ALLOW,
             'editingteacher' => CAP_ALLOW,

@@ -29,7 +29,7 @@ if (empty($data['sesskey']) || !confirm_sesskey($data['sesskey'])) {
     die();
 }
 
-$courseId = isset($data['courseId']) ? (int) $data['courseId'] : 0;
+$courseId = isset($data['courseid']) ? (int) $data['courseid'] : (isset($data['courseId']) ? (int) $data['courseId'] : 0);
 $context  = context_course::instance($courseId);
 require_capability('block/pharos_teacher:view', $context);
 

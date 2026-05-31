@@ -68,6 +68,7 @@ define([], function () {
             return res.json();
         })
         .then(function (body) {
+            if (body.error) throw new Error(body.error);
             if (!body.activity) throw new Error('Empty response from server');
 
             // Store for export use.
