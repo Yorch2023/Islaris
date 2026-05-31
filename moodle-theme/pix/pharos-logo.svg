@@ -1,18 +1,11 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 28 32" fill="white">
-  <!-- Single diagonal beam (goes upper-right) -->
-  <path d="M14 9 L28 0 L28 5 Z" fill="#F5A623" opacity="0.8"/>
-  <!-- Dome -->
-  <path d="M10 8 Q14 3 18 8 Z"/>
-  <!-- Lantern room -->
-  <rect x="9" y="8" width="10" height="5" rx="1"/>
-  <!-- Tower -->
-  <path d="M10 13 L18 13 L19.5 26 L8.5 26 Z"/>
-  <!-- Red band -->
-  <path d="M9.5 18 L18.5 18 L18.9 21.5 L9.1 21.5 Z" fill="#C8102E"/>
-  <!-- Base -->
-  <rect x="7" y="26" width="14" height="3.5" rx="1.5"/>
-  <!-- Light glow -->
-  <circle cx="14" cy="10.5" r="3" fill="#F5A623" opacity="0.3"/>
-  <circle cx="14" cy="10.5" r="1.6" fill="#F5A623"/>
-  <circle cx="14" cy="10.5" r="0.8" fill="white"/>
+<!-- Solo outline blanco — minimalista premium -->
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 36" fill="none" stroke="white" stroke-width="1.8" stroke-linejoin="round" stroke-linecap="round">
+  <path d="M11 10 Q16 2 21 10"/>
+  <path d="M16 10 L30 3 L28 8 Z" fill="#F5A623" stroke="none"/>
+  <rect x="10" y="10" width="12" height="6" rx="2"/>
+  <path d="M11 16 L21 16 L22.5 29 L9.5 29 Z"/>
+  <line x1="10.5" y1="21" x2="21.5" y2="21"/>
+  <line x1="10.5" y1="25" x2="21.5" y2="25"/>
+  <rect x="8" y="29" width="16" height="3.5" rx="2"/>
+  <circle cx="16" cy="13" r="1.5" fill="#F5A623" stroke="none"/>
 </svg>
