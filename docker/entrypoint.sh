@@ -52,6 +52,11 @@ PHPEOF
     fi
     chown www-data:www-data /var/www/html/config.php
     chmod 644 /var/www/html/config.php
+
+    # Always run upgrade in case plugin versions changed after a rebuild.
+    echo "🔌 Verificando actualizaciones de plugins..."
+    php /var/www/html/admin/cli/upgrade.php --non-interactive
+    echo "✅ Plugins actualizados."
 else
     echo "🚀 Instalando Moodle por primera vez (unos minutos)..."
     php /var/www/html/admin/cli/install.php \
