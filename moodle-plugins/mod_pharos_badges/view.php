@@ -17,7 +17,10 @@ use mod_pharos_badges\badge_issuer;
 $id     = required_param('id', PARAM_INT);       // Course module ID.
 $level  = optional_param('level', 0, PARAM_INT); // Level filter (0 = all).
 
-[$course, $cm] = get_course_and_cm_from_cmid($id, 'pharos_badges');
+[$course, $cm] = get_course_and_cm_from_cmid($id);
+if ($cm->modname !== 'pharos_badges') {
+    throw new moodle_exception('invalidcoursemodule');
+}
 
 require_login($course, true, $cm);
 $context = context_module::instance($cm->id);
