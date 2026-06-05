@@ -22,4 +22,6 @@ $string['middleware_not_configured']   = 'Il blocco Tutor IA non è configurato.
 $string['chat_skip_to_input']         = 'Vai al campo di testo del tutor';
 $string['chat_messages_label']        = 'Messaggi del tutor IA';
 $string['chat_form_label']            = 'Modulo per la domanda al tutor';
-$string['privacy:metadata']           = 'Il blocco Tutor IA PHAROS non memorizza dati personali. Le conversazioni non vengono salvate nel database di Moodle.';
+$string['privacy:metadata']           = 'Il blocco Tutor IA PHAROS memorizza metadati di sessione (senza contenuto delle conversazioni) per l\'analisi pedagogica.';
+$string['evidence_registered']       = '✓ Attività registrata — continua così per ottenere la tua microcredenziale.';
+$string['badge_unlocked']            = '🎖 Congratulazioni! Hai sbloccato una nuova microcredenziale PHAROS.';

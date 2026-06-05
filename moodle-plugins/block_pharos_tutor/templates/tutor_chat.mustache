@@ -17,6 +17,8 @@
 <div class="pharos-tutor"
      data-proxy-url="{{proxy_url}}"
      data-stream-proxy-url="{{stream_proxy_url}}"
+     data-session-url="{{session_url}}"
+     data-course-id="{{course_id}}"
      data-user-id="{{user_id}}"
      data-level="{{user_level}}"
      data-lang="{{lang}}"
@@ -48,6 +50,21 @@
          aria-atomic="true"
          data-error-text="{{strings.error}}">
         {{strings.thinking}}
+    </div>
+
+    {{! Session progress — hidden, updated by JS }}
+    <div class="pharos-tutor__session-progress"
+         id="pharos-tutor-session-progress"
+         aria-live="polite"
+         aria-atomic="true"></div>
+
+    {{! Evidence toast — shown when an AI session creates an evidence record }}
+    <div class="pharos-tutor__evidence-toast pharos-tutor__evidence-toast--hidden"
+         id="pharos-tutor-evidence-toast"
+         role="status"
+         aria-live="polite"
+         aria-atomic="true">
+        {{strings.evidence_registered}}
     </div>
 
     <form class="pharos-tutor__form"

@@ -19,9 +19,10 @@ require_once($CFG->libdir . '/badgeslib.php');
 class badge_issuer {
 
     // Evidence type constants.
-    const EVIDENCE_PRODUCT  = 'product';
-    const EVIDENCE_PROCESS  = 'process';
-    const EVIDENCE_IMPACT   = 'impact';
+    const EVIDENCE_PRODUCT        = 'product';
+    const EVIDENCE_PROCESS        = 'process';
+    const EVIDENCE_IMPACT         = 'impact';
+    const EVIDENCE_AI_INTERACTION = 'ai_interaction';
 
     // Minimum evidence items required per level to trigger badge issuance.
     private const EVIDENCE_THRESHOLD = [1 => 3, 2 => 4, 3 => 5];
@@ -46,7 +47,12 @@ class badge_issuer {
     ): bool {
         global $DB;
 
-        $allowedTypes = [self::EVIDENCE_PRODUCT, self::EVIDENCE_PROCESS, self::EVIDENCE_IMPACT];
+        $allowedTypes = [
+            self::EVIDENCE_PRODUCT,
+            self::EVIDENCE_PROCESS,
+            self::EVIDENCE_IMPACT,
+            self::EVIDENCE_AI_INTERACTION,
+        ];
         if (!in_array($type, $allowedTypes, true)) {
             throw new \coding_exception('Invalid evidence type: ' . $type);
         }

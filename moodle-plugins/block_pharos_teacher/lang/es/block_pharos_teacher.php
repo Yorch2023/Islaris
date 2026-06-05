@@ -37,3 +37,6 @@ $string['export_html_aria']                  = 'Descargar actividad como página
 $string['export_docx']                       = 'Descargar DOCX';
 $string['export_docx_aria']                  = 'Descargar actividad como documento Word';
 $string['student_list']                      = 'Lista de alumnos';
+$string['ai_sessions_week']                  = 'Sesiones IA esta semana';
+$string['ai_messages_total']                 = 'Mensajes totales al tutor IA';
+$string['ai_activity']                       = 'Actividad IA';

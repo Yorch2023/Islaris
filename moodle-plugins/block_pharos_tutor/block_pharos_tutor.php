@@ -82,11 +82,14 @@ class block_pharos_tutor extends block_base {
 
         // Use the non-streaming proxy only — SSE streaming requires Nginx or
         // special Apache configuration that is not available in this setup.
-        $proxyUrl = new moodle_url('/blocks/pharos_tutor/ajax.php');
+        $proxyUrl      = new moodle_url('/blocks/pharos_tutor/ajax.php');
+        $sessionUrl    = new moodle_url('/blocks/pharos_tutor/ajax-session.php');
 
         $templateData = [
             'proxy_url'        => $proxyUrl->out(false),
             'stream_proxy_url' => '',
+            'session_url'      => $sessionUrl->out(false),
+            'course_id'        => (string) $COURSE->id,
             'user_id'          => (string) $USER->id,
             'user_level'       => $userLevel,
             'lang'             => $lang,
@@ -98,9 +101,11 @@ class block_pharos_tutor extends block_base {
                 'thinking'      => get_string('chat_thinking',    'block_pharos_tutor'),
                 'error'         => get_string('chat_error',       'block_pharos_tutor'),
                 'welcome'       => get_string('chat_welcome',     'block_pharos_tutor'),
-                'skip_to_input' => get_string('chat_skip_to_input', 'block_pharos_tutor'),
-                'messages_label'=> get_string('chat_messages_label','block_pharos_tutor'),
-                'form_label'    => get_string('chat_form_label',  'block_pharos_tutor'),
+                'skip_to_input'       => get_string('chat_skip_to_input',   'block_pharos_tutor'),
+                'messages_label'      => get_string('chat_messages_label', 'block_pharos_tutor'),
+                'form_label'          => get_string('chat_form_label',     'block_pharos_tutor'),
+                'evidence_registered' => get_string('evidence_registered', 'block_pharos_tutor'),
+                'badge_unlocked'      => get_string('badge_unlocked',      'block_pharos_tutor'),
             ],
         ];
 

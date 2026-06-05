@@ -1,15 +1,22 @@
 {{!
     Template: mod_pharos_badges/evidence_view
     Context:
-      id          - Course module ID
-      sesskey     - Moodle session key
-      can_submit  - bool
-      levels      - Array of { level, level_label, count, threshold, percent, badge_earned, evidence_items[] }
-      types       - Array of { value, label }
+      id     - Course module ID
+      levels - Array of { level, level_label, count, threshold, percent, badge_earned, evidence_items[] }
+               evidence_items: { type, description, date, date_iso }
 }}
 <div class="pharos-badges" role="region" aria-labelledby="pharos-badges-heading">
 
-    <h2 id="pharos-badges-heading" class="h4 mb-4">{{#str}}pageheading, mod_pharos_badges{{/str}}</h2>
+    <h2 id="pharos-badges-heading" class="h4 mb-3">{{#str}}pageheading, mod_pharos_badges{{/str}}</h2>
+
+    {{! Explanation banner }}
+    <div class="alert alert-info d-flex align-items-start mb-4" role="note">
+        <span class="mr-2" aria-hidden="true" style="font-size:1.4rem">🤖</span>
+        <div>
+            <strong>{{#str}}ai_evidence_title, mod_pharos_badges{{/str}}</strong><br>
+            <small>{{#str}}ai_evidence_info, mod_pharos_badges{{/str}}</small>
+        </div>
+    </div>
 
     {{#levels}}
     <div class="card mb-4">
@@ -17,12 +24,13 @@
              id="pharos-badges-level-{{level}}-header">
             <span class="pharos-level-badge pharos-level-badge--n{{level}}">{{level_label}}</span>
             {{#badge_earned}}
-            <span class="badge badge-success">
-                {{#str}}badge_earned, mod_pharos_badges{{/str}}
+            <span class="badge badge-success" aria-label="{{#str}}badge_earned, mod_pharos_badges{{/str}}">
+                🎖 {{#str}}badge_earned, mod_pharos_badges{{/str}}
             </span>
             {{/badge_earned}}
             {{^badge_earned}}
-            <small class="text-muted" aria-label="{{count}} {{#str}}de, mod_pharos_badges{{/str}} {{threshold}} {{#str}}evidencias_requeridas, mod_pharos_badges{{/str}}">
+            <small class="text-muted"
+                   aria-label="{{count}} {{#str}}de, mod_pharos_badges{{/str}} {{threshold}} {{#str}}evidencias_requeridas, mod_pharos_badges{{/str}}">
                 <span aria-hidden="true">{{count}} / {{threshold}}</span>
                 {{#str}}evidencias_requeridas, mod_pharos_badges{{/str}}
             </small>
@@ -40,15 +48,16 @@
                 <div class="pharos-xp-bar__fill" style="width:{{percent}}%"></div>
             </div>
 
-            {{! Evidence list — always a <ul> so screen readers get list semantics }}
+            {{! Evidence list }}
             <ul class="list-unstyled mb-0"
                 aria-label="{{#str}}evidencias_enviadas, mod_pharos_badges{{/str}}">
                 {{#evidence_items}}
                 <li class="d-flex align-items-start mb-2">
-                    <span class="badge badge-secondary mr-2 flex-shrink-0">
+                    <span class="badge badge-secondary mr-2 flex-shrink-0 text-wrap text-left"
+                          style="max-width:90px">
                         <span class="sr-only">{{#str}}tipo, mod_pharos_badges{{/str}}: </span>{{type}}
                     </span>
-                    <span class="flex-grow-1">{{description}}</span>
+                    <span class="flex-grow-1 small">{{description}}</span>
                     <time class="text-muted ml-2 flex-shrink-0 small" datetime="{{date_iso}}">{{date}}</time>
                 </li>
                 {{/evidence_items}}
@@ -62,66 +71,5 @@
         </div>
     </div>
     {{/levels}}
-
-    {{! Submit evidence form }}
-    {{#can_submit}}
-    <div class="card">
-        <div class="card-header font-weight-bold" id="pharos-badges-form-heading">
-            {{#str}}submit_evidence, mod_pharos_badges{{/str}}
-        </div>
-        <div class="card-body">
-            <form method="post" action=""
-                  aria-labelledby="pharos-badges-form-heading"
-                  novalidate>
-                <input type="hidden" name="sesskey" value="{{sesskey}}">
-
-                <div class="form-group">
-                    <label for="evidence-level">{{#str}}nivel, mod_pharos_badges{{/str}}</label>
-                    <select id="evidence-level" name="evidence_level"
-                            class="form-control"
-                            required
-                            aria-required="true">
-                        {{#form_levels}}
-                        <option value="{{value}}">{{label}}</option>
-                        {{/form_levels}}
-                    </select>
-                </div>
-
-                <div class="form-group">
-                    <label for="evidence-type">{{#str}}tipo_evidencia, mod_pharos_badges{{/str}}</label>
-                    <select id="evidence-type" name="evidence_type"
-                            class="form-control"
-                            required
-                            aria-required="true">
-                        {{#types}}
-                        <option value="{{value}}">{{label}}</option>
-                        {{/types}}
-                    </select>
-                </div>
-
-                <div class="form-group">
-                    <label for="evidence-description">
-                        {{#str}}descripcion_evidencia, mod_pharos_badges{{/str}}
-                    </label>
-                    <textarea id="evidence-description"
-                              name="evidence_description"
-                              class="form-control"
-                              rows="3"
-                              maxlength="1000"
-                              required
-                              aria-required="true"
-                              aria-describedby="evidence-description-hint"></textarea>
-                    <small id="evidence-description-hint" class="form-text text-muted">
-                        {{#str}}descripcion_evidencia_hint, mod_pharos_badges{{/str}}
-                    </small>
-                </div>
-
-                <button type="submit" class="btn btn-danger">
-                    {{#str}}submit_evidence, mod_pharos_badges{{/str}}
-                </button>
-            </form>
-        </div>
-    </div>
-    {{/can_submit}}
 
 </div>

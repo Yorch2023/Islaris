@@ -28,6 +28,10 @@ $string['level1_desc']              = 'Fundamentos';
 $string['level2_desc']              = 'IA en la práctica';
 $string['level3_desc']              = 'Facilitación crítica';
 
+$string['evidence_ai_interaction']  = 'Sesión con tutor IA';
+$string['ai_evidence_title']        = 'Las evidencias se generan automáticamente';
+$string['ai_evidence_info']         = 'Cada conversación de 5 o más intercambios con el Tutor IA PHAROS registra automáticamente una evidencia de aprendizaje para ese nivel. Sin formularios, sin subida de documentos.';
+
 // Privacy API
 $string['privacy:metadata']                                      = 'El módulo Badges PHAROS almacena evidencias enviadas por los estudiantes.';
 $string['privacy:metadata:pharos_badges_evidence']               = 'Evidencias enviadas por el usuario para obtener microcredenciales.';

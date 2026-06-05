@@ -85,12 +85,17 @@ class block_pharos_teacher extends block_base {
 
         $itineraryTableExists = false;
         $evidenceTableExists  = false;
+        $sessionsTableExists  = false;
         try {
             $itineraryTableExists = $DB->get_manager()->table_exists('pharos_itinerary_progress');
             $evidenceTableExists  = $DB->get_manager()->table_exists('pharos_badges_evidence');
+            $sessionsTableExists  = $DB->get_manager()->table_exists('block_pharos_tutor_sessions');
         } catch (Exception $e) {
             // Tables not yet installed; skip progress and evidence data.
         }
+
+        $weekAgo  = $now - (7  * DAYSECS);
+        $monthAgo = $now - (30 * DAYSECS);
 
         foreach ($students as $student) {
             $progress = null;
@@ -145,18 +150,59 @@ class block_pharos_teacher extends block_base {
                 $pendingCount++;
             }
 
+            // AI session stats for this student.
+            $aiSessionsWeek  = 0;
+            $aiMessagesTotal = 0;
+            $lastAiSession   = 0;
+            if ($sessionsTableExists) {
+                try {
+                    $aiRow = $DB->get_record_sql(
+                        "SELECT COUNT(*) AS total_sessions,
+                                COALESCE(SUM(message_count), 0) AS total_messages,
+                                MAX(timecreated) AS last_session
+                           FROM {block_pharos_tutor_sessions}
+                          WHERE userid = :uid AND courseid = :cid",
+                        ['uid' => $student->id, 'cid' => $COURSE->id]
+                    );
+                    if ($aiRow) {
+                        $aiMessagesTotal = (int) $aiRow->total_messages;
+                        $lastAiSession   = (int) $aiRow->last_session;
+                    }
+                    $aiWeekRow = $DB->count_records_select(
+                        'block_pharos_tutor_sessions',
+                        'userid = :uid AND courseid = :cid AND timecreated >= :week',
+                        ['uid' => $student->id, 'cid' => $COURSE->id, 'week' => $weekAgo]
+                    );
+                    $aiSessionsWeek = (int) $aiWeekRow;
+                } catch (Exception $e) {
+                    // Graceful fallback.
+                }
+            }
+
+            $aiStatus = 'inactive';
+            if ($lastAiSession >= $weekAgo) {
+                $aiStatus = 'active';
+            } elseif ($lastAiSession >= $monthAgo) {
+                $aiStatus = 'recent';
+            }
+
             $profileUrl = new moodle_url('/user/view.php', ['id' => $student->id, 'course' => $COURSE->id]);
 
             $studentsData[] = [
-                'name'             => fullname($student),
-                'profile_url'      => $profileUrl->out(false),
-                'level'            => $level,
-                'level_label'      => $levelLabels[$level] ?? 'N1',
-                'xp_percent'       => $xpPercent,
-                'xp_aria_label'    => get_string('xp_progress_label', 'block_pharos_teacher', $xpPercent),
-                'days_inactive'    => $daysSince,
-                'is_inactive'      => $isInactive,
-                'evidence_pending' => $hasPending,
+                'name'              => fullname($student),
+                'profile_url'       => $profileUrl->out(false),
+                'level'             => $level,
+                'level_label'       => $levelLabels[$level] ?? 'N1',
+                'xp_percent'        => $xpPercent,
+                'xp_aria_label'     => get_string('xp_progress_label', 'block_pharos_teacher', $xpPercent),
+                'days_inactive'     => $daysSince,
+                'is_inactive'       => $isInactive,
+                'evidence_pending'  => $hasPending,
+                'ai_sessions_week'  => $aiSessionsWeek,
+                'ai_messages_total' => $aiMessagesTotal,
+                'ai_status_active'  => $aiStatus === 'active',
+                'ai_status_recent'  => $aiStatus === 'recent',
+                'ai_status_none'    => $aiStatus === 'inactive',
             ];
         }
 

@@ -2,8 +2,9 @@
     Template: block_pharos_teacher/teacher_dashboard
     Context:
       students         - Array of { name, profile_url, level, level_label,
-                           xp_percent, xp_aria_label,
-                           days_inactive, is_inactive, evidence_pending }
+                           xp_percent, xp_aria_label, days_inactive, is_inactive,
+                           evidence_pending, ai_sessions_week, ai_messages_total,
+                           ai_status_active, ai_status_recent, ai_status_none }
       inactive_count   - Students inactive > 7 days
       pending_count    - Students with pending evidence
       generator_url    - URL to the activity generator
@@ -53,13 +54,27 @@
         {{#students}}
         <li class="list-group-item px-0 py-2 {{#is_inactive}}list-group-item-warning{{/is_inactive}}">
             <div class="d-flex justify-content-between align-items-start">
-                <div>
+                <div style="min-width:0">
                     <a href="{{profile_url}}" class="font-weight-bold d-block text-truncate"
-                       style="max-width:120px">{{name}}</a>
+                       style="max-width:110px">{{name}}</a>
                     <span class="pharos-level-badge pharos-level-badge--n{{level}} small"
                           aria-hidden="true">{{level_label}}</span>
                 </div>
-                <div class="text-right ml-2 flex-shrink-0">
+
+                {{! AI usage indicator }}
+                <div class="text-center mx-1 flex-shrink-0" style="min-width:44px"
+                     title="{{#str}}ai_sessions_week, block_pharos_teacher{{/str}}: {{ai_sessions_week}}">
+                    <span class="pharos-ai-dot
+                        {{#ai_status_active}}pharos-ai-dot--active{{/ai_status_active}}
+                        {{#ai_status_recent}}pharos-ai-dot--recent{{/ai_status_recent}}
+                        {{#ai_status_none}}pharos-ai-dot--none{{/ai_status_none}}"
+                          aria-hidden="true"></span>
+                    <small class="d-block text-center" style="font-size:0.65rem;line-height:1.1">
+                        {{ai_sessions_week}}s
+                    </small>
+                </div>
+
+                <div class="text-right ml-1 flex-shrink-0">
                     {{#is_inactive}}
                     <small class="text-muted d-block"
                            aria-label="{{days_inactive}} {{#str}}days_inactive, block_pharos_teacher{{/str}}">

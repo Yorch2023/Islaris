@@ -350,3 +350,17 @@
         line-height: 1;
     }
 }
+
+
+// === Teacher dashboard: AI activity dot indicator ===
+.pharos-ai-dot {
+    display: inline-block;
+    width: 10px;
+    height: 10px;
+    border-radius: 50%;
+    margin-bottom: 2px;
+
+    &--active { background: #28a745; }  // active this week
+    &--recent { background: #ffc107; }  // active this month
+    &--none   { background: #dee2e6; }  // no recent activity
+}

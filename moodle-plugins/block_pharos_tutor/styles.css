@@ -153,3 +153,52 @@
         max-height: 420px;
     }
 }
+
+/* Session progress bar — shows how close the user is to earning an evidence */
+.pharos-session-bar {
+    height: 4px;
+    background: var(--pharos-border);
+    border-radius: 2px;
+    overflow: hidden;
+}
+
+.pharos-session-bar__fill {
+    height: 100%;
+    background: var(--pharos-red);
+    border-radius: 2px;
+    transition: width 0.3s ease;
+}
+
+.pharos-session-bar__label {
+    font-size: 0.7rem;
+    color: #6c757d;
+}
+
+.pharos-tutor__session-progress {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0 0.25rem;
+    min-height: 1rem;
+}
+
+/* Evidence toast — shown briefly when an AI session creates evidence */
+.pharos-tutor__evidence-toast {
+    padding: 0.5rem 0.75rem;
+    border-radius: 0.5rem;
+    background: #d4edda;
+    border: 1px solid #c3e6cb;
+    color: #155724;
+    font-size: 0.875rem;
+    transition: opacity 0.4s ease;
+}
+
+.pharos-tutor__evidence-toast--badge {
+    background: #fff3cd;
+    border-color: #ffeeba;
+    color: #856404;
+}
+
+.pharos-tutor__evidence-toast--hidden {
+    display: none;
+}
