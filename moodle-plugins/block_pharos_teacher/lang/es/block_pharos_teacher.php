@@ -40,3 +40,6 @@ $string['student_list']                      = 'Lista de alumnos';
 $string['ai_sessions_week']                  = 'Sesiones IA esta semana';
 $string['ai_messages_total']                 = 'Mensajes totales al tutor IA';
 $string['ai_activity']                       = 'Actividad IA';
+$string['contact_student']                   = 'Enviar mensaje';
+$string['ai_detail_title']                   = 'Uso de IA — {$a}';
+$string['no_ai_sessions']                    = 'Sin sesiones de IA registradas.';

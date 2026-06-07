@@ -27,6 +27,9 @@ $string['pageheading']              = 'Le mie prove e microcredenziali';
 $string['level1_desc']              = 'Fondamenti';
 $string['level2_desc']              = 'IA nella pratica';
 $string['level3_desc']              = 'Facilitazione critica';
+$string['evidence_ai_interaction']  = 'Sessione con tutor IA';
+$string['ai_evidence_title']        = 'Le prove vengono generate automaticamente';
+$string['ai_evidence_info']         = 'Ogni conversazione di 5 o più scambi con il Tutor IA PHAROS registra automaticamente una prova di apprendimento per il livello corrispondente. Nessun modulo, nessun caricamento di documenti.';
 
 // Privacy API
 $string['privacy:metadata']                                      = 'Il modulo Badge PHAROS memorizza le prove inviate dagli studenti.';

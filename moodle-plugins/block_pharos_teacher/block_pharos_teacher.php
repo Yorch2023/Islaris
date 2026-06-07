@@ -188,9 +188,13 @@ class block_pharos_teacher extends block_base {
 
             $profileUrl = new moodle_url('/user/view.php', ['id' => $student->id, 'course' => $COURSE->id]);
 
+            $messageUrl = (new moodle_url('/message/index.php', ['id' => $student->id]))->out(false);
+
             $studentsData[] = [
+                'id'                => $student->id,
                 'name'              => fullname($student),
                 'profile_url'       => $profileUrl->out(false),
+                'message_url'       => $messageUrl,
                 'level'             => $level,
                 'level_label'       => $levelLabels[$level] ?? 'N1',
                 'xp_percent'        => $xpPercent,
@@ -227,6 +231,11 @@ class block_pharos_teacher extends block_base {
             // Module not yet installed; no manage URL.
         }
 
+        $aiDetailUrl = (new moodle_url(
+            '/blocks/pharos_teacher/ajax-ai-detail.php',
+            ['courseid' => $COURSE->id]
+        ))->out(false);
+
         $templateData = [
             'students'       => $studentsData,
             'student_count'  => count($studentsData),
@@ -234,6 +243,8 @@ class block_pharos_teacher extends block_base {
             'pending_count'  => $pendingCount,
             'generator_url'  => $generatorPageUrl,
             'manage_url'     => $manageUrl,
+            'ai_detail_url'  => $aiDetailUrl,
+            'sesskey'        => sesskey(),
         ];
 
         $this->content->text = $PAGE->get_renderer('core')
