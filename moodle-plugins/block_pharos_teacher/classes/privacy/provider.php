@@ -118,11 +118,15 @@ class provider implements
         if ($context->contextlevel !== CONTEXT_COURSE) {
             return;
         }
-        [$insql, $params] = $DB->get_in_or_equal($userlist->get_userids(), SQL_PARAMS_NAMED);
-        $params['courseid'] = $context->instanceid;
+        $userids = $userlist->get_userids();
+        // Use distinct param prefixes so studentid and teacherid IN-lists don't
+        // share named parameter names (which would cause a conflict in PostgreSQL).
+        [$insqlS, $paramsS] = $DB->get_in_or_equal($userids, SQL_PARAMS_NAMED, 'sid');
+        [$insqlT, $paramsT] = $DB->get_in_or_equal($userids, SQL_PARAMS_NAMED, 'tid');
+        $params = array_merge($paramsS, $paramsT, ['courseid' => $context->instanceid]);
         $DB->delete_records_select(
             'block_pharos_teacher_alerts',
-            "(studentid $insql OR teacherid $insql) AND courseid = :courseid",
+            "(studentid $insqlS OR teacherid $insqlT) AND courseid = :courseid",
             $params
         );
     }
