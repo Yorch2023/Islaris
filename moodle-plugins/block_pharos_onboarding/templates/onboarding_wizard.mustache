@@ -1,0 +1,234 @@
+{{!
+    Template: block_pharos_onboarding/onboarding_wizard
+    Context:
+      completed      - bool: wizard already done
+      has_progress   - bool: student has XP in the itinerary
+      level          - current level int
+      level_label    - current level label
+      xp             - current XP
+      xp_percent     - XP % towards next level
+      itinerary_url  - URL to mod_pharos_itinerary
+      save_url       - AJAX endpoint to save diagnostic profile
+      sesskey        - Moodle sesskey
+      lang           - 'es' | 'it'
+      rec_level      - recommended level (completed state)
+      rec_level_label- recommended level label (completed state)
+}}
+
+{{^completed}}
+{{! ── Wizard (new student) ─────────────────────────────────────────────────── }}
+<div class="pharos-onboarding"
+     data-save-url="{{save_url}}"
+     data-sesskey="{{sesskey}}"
+     data-lang="{{lang}}"
+     data-itinerary-url="{{itinerary_url}}"
+     role="region"
+     aria-labelledby="pharos-ob-heading">
+
+    <div class="pharos-onboarding__header mb-3">
+        <span class="pharos-onboarding__beacon" aria-hidden="true">🔦</span>
+        <h4 id="pharos-ob-heading" class="h6 mb-0 font-weight-bold">
+            {{#str}}welcome_title, block_pharos_onboarding{{/str}}
+        </h4>
+        <p class="small text-muted mt-1 mb-0">
+            {{#str}}welcome_subtitle, block_pharos_onboarding{{/str}}
+        </p>
+    </div>
+
+    {{! Step progress indicator }}
+    <div class="pharos-ob-steps d-flex mb-3" role="list" aria-label="{{#str}}steps_label, block_pharos_onboarding{{/str}}">
+        <div class="pharos-ob-step pharos-ob-step--active flex-fill" data-step="1" role="listitem">
+            <div class="pharos-ob-step__dot"></div>
+            <small class="pharos-ob-step__label">{{#str}}step1_short, block_pharos_onboarding{{/str}}</small>
+        </div>
+        <div class="pharos-ob-step__line flex-fill"></div>
+        <div class="pharos-ob-step flex-fill" data-step="2" role="listitem">
+            <div class="pharos-ob-step__dot"></div>
+            <small class="pharos-ob-step__label">{{#str}}step2_short, block_pharos_onboarding{{/str}}</small>
+        </div>
+        <div class="pharos-ob-step__line flex-fill"></div>
+        <div class="pharos-ob-step flex-fill" data-step="3" role="listitem">
+            <div class="pharos-ob-step__dot"></div>
+            <small class="pharos-ob-step__label">{{#str}}step3_short, block_pharos_onboarding{{/str}}</small>
+        </div>
+    </div>
+
+    <form id="pharos-ob-form" novalidate>
+
+        {{! Step 1: Professional context }}
+        <fieldset id="pharos-ob-step-1" class="pharos-ob-panel" aria-labelledby="pharos-ob-step1-title">
+            <legend id="pharos-ob-step1-title" class="pharos-ob-panel__title small font-weight-bold mb-2">
+                {{#str}}step1_title, block_pharos_onboarding{{/str}}
+            </legend>
+
+            <div class="form-group mb-2">
+                <label for="pharos-ob-employment" class="small mb-1">{{#str}}employment_label, block_pharos_onboarding{{/str}}</label>
+                <select id="pharos-ob-employment" name="employment" class="form-control form-control-sm" required>
+                    <option value="">{{#str}}select_placeholder, block_pharos_onboarding{{/str}}</option>
+                    <option value="education">{{#str}}emp_education, block_pharos_onboarding{{/str}}</option>
+                    <option value="professional">{{#str}}emp_professional, block_pharos_onboarding{{/str}}</option>
+                    <option value="job_seeker">{{#str}}emp_job_seeker, block_pharos_onboarding{{/str}}</option>
+                    <option value="retired">{{#str}}emp_retired, block_pharos_onboarding{{/str}}</option>
+                </select>
+            </div>
+
+            <div class="form-group mb-0">
+                <label class="small mb-1">{{#str}}digital_exp_label, block_pharos_onboarding{{/str}}</label>
+                <div class="pharos-ob-radio-group">
+                    <label class="pharos-ob-radio">
+                        <input type="radio" name="digital_exp" value="basic" required>
+                        <span>{{#str}}exp_basic, block_pharos_onboarding{{/str}}</span>
+                    </label>
+                    <label class="pharos-ob-radio">
+                        <input type="radio" name="digital_exp" value="intermediate">
+                        <span>{{#str}}exp_intermediate, block_pharos_onboarding{{/str}}</span>
+                    </label>
+                    <label class="pharos-ob-radio">
+                        <input type="radio" name="digital_exp" value="advanced">
+                        <span>{{#str}}exp_advanced, block_pharos_onboarding{{/str}}</span>
+                    </label>
+                </div>
+            </div>
+
+            <button type="button" class="btn btn-danger btn-sm btn-block mt-3 pharos-ob-next" data-next="2">
+                {{#str}}next, block_pharos_onboarding{{/str}}
+            </button>
+        </fieldset>
+
+        {{! Step 2: AI familiarity }}
+        <fieldset id="pharos-ob-step-2" class="pharos-ob-panel d-none" aria-labelledby="pharos-ob-step2-title">
+            <legend id="pharos-ob-step2-title" class="pharos-ob-panel__title small font-weight-bold mb-2">
+                {{#str}}step2_title, block_pharos_onboarding{{/str}}
+            </legend>
+
+            <div class="form-group mb-0">
+                <label class="small mb-1">{{#str}}ai_use_label, block_pharos_onboarding{{/str}}</label>
+                <div class="pharos-ob-radio-group">
+                    <label class="pharos-ob-radio">
+                        <input type="radio" name="ai_use" value="never" required>
+                        <span>{{#str}}ai_never, block_pharos_onboarding{{/str}}</span>
+                    </label>
+                    <label class="pharos-ob-radio">
+                        <input type="radio" name="ai_use" value="occasional">
+                        <span>{{#str}}ai_occasional, block_pharos_onboarding{{/str}}</span>
+                    </label>
+                    <label class="pharos-ob-radio">
+                        <input type="radio" name="ai_use" value="regular">
+                        <span>{{#str}}ai_regular, block_pharos_onboarding{{/str}}</span>
+                    </label>
+                    <label class="pharos-ob-radio">
+                        <input type="radio" name="ai_use" value="teaches">
+                        <span>{{#str}}ai_teaches, block_pharos_onboarding{{/str}}</span>
+                    </label>
+                </div>
+            </div>
+
+            <div class="d-flex mt-3 gap-2">
+                <button type="button" class="btn btn-outline-secondary btn-sm pharos-ob-back" data-back="1">
+                    {{#str}}back, block_pharos_onboarding{{/str}}
+                </button>
+                <button type="button" class="btn btn-danger btn-sm flex-fill pharos-ob-next" data-next="3">
+                    {{#str}}next, block_pharos_onboarding{{/str}}
+                </button>
+            </div>
+        </fieldset>
+
+        {{! Step 3: Goals + time }}
+        <fieldset id="pharos-ob-step-3" class="pharos-ob-panel d-none" aria-labelledby="pharos-ob-step3-title">
+            <legend id="pharos-ob-step3-title" class="pharos-ob-panel__title small font-weight-bold mb-2">
+                {{#str}}step3_title, block_pharos_onboarding{{/str}}
+            </legend>
+
+            <div class="form-group mb-2">
+                <label class="small mb-1">{{#str}}goals_label, block_pharos_onboarding{{/str}}</label>
+                <label class="pharos-ob-check">
+                    <input type="checkbox" name="goals" value="understand">
+                    <span>{{#str}}goal_understand, block_pharos_onboarding{{/str}}</span>
+                </label>
+                <label class="pharos-ob-check">
+                    <input type="checkbox" name="goals" value="protect">
+                    <span>{{#str}}goal_protect, block_pharos_onboarding{{/str}}</span>
+                </label>
+                <label class="pharos-ob-check">
+                    <input type="checkbox" name="goals" value="work_tools">
+                    <span>{{#str}}goal_work_tools, block_pharos_onboarding{{/str}}</span>
+                </label>
+                <label class="pharos-ob-check">
+                    <input type="checkbox" name="goals" value="teach_others">
+                    <span>{{#str}}goal_teach_others, block_pharos_onboarding{{/str}}</span>
+                </label>
+            </div>
+
+            <div class="form-group mb-0">
+                <label for="pharos-ob-time" class="small mb-1">{{#str}}time_label, block_pharos_onboarding{{/str}}</label>
+                <select id="pharos-ob-time" name="time_weekly" class="form-control form-control-sm" required>
+                    <option value="">{{#str}}select_placeholder, block_pharos_onboarding{{/str}}</option>
+                    <option value="lt1">{{#str}}time_lt1, block_pharos_onboarding{{/str}}</option>
+                    <option value="1to2">{{#str}}time_1to2, block_pharos_onboarding{{/str}}</option>
+                    <option value="gt2">{{#str}}time_gt2, block_pharos_onboarding{{/str}}</option>
+                </select>
+            </div>
+
+            <div class="d-flex mt-3 gap-2">
+                <button type="button" class="btn btn-outline-secondary btn-sm pharos-ob-back" data-back="2">
+                    {{#str}}back, block_pharos_onboarding{{/str}}
+                </button>
+                <button type="submit" id="pharos-ob-submit"
+                        class="btn btn-danger btn-sm flex-fill"
+                        aria-label="{{#str}}submit_label, block_pharos_onboarding{{/str}}">
+                    {{#str}}submit, block_pharos_onboarding{{/str}}
+                </button>
+            </div>
+        </fieldset>
+
+        {{! Step 4: Result (hidden until wizard complete) }}
+        <div id="pharos-ob-result" class="pharos-ob-panel d-none" role="status" aria-live="polite">
+        </div>
+
+    </form>
+</div>
+{{/completed}}
+
+{{#completed}}
+{{! ── Welcome back (returning student) ───────────────────────────────────────── }}
+<div class="pharos-onboarding pharos-onboarding--compact"
+     data-itinerary-url="{{itinerary_url}}"
+     role="region"
+     aria-labelledby="pharos-ob-return-heading">
+
+    <div class="d-flex align-items-center mb-2">
+        <span class="pharos-onboarding__beacon mr-2" aria-hidden="true">🔦</span>
+        <div>
+            <p id="pharos-ob-return-heading" class="small font-weight-bold mb-0">
+                {{#str}}welcome_back, block_pharos_onboarding{{/str}}
+            </p>
+            <p class="small text-muted mb-0">
+                {{#str}}your_level_label, block_pharos_onboarding{{/str}}:
+                <strong>{{level_label}}</strong>
+            </p>
+        </div>
+    </div>
+
+    <div class="pharos-xp-bar mb-2"
+         style="height:6px"
+         role="progressbar"
+         aria-valuenow="{{xp_percent}}"
+         aria-valuemin="0"
+         aria-valuemax="100"
+         aria-label="XP: {{xp_percent}}%"
+         data-xp-target="{{xp_percent}}">
+        <div class="pharos-xp-bar__fill" style="width:0%"></div>
+    </div>
+    <p class="text-muted" style="font-size:0.7rem;margin-bottom:0.5rem">
+        {{xp}} XP · {{xp_percent}}%
+    </p>
+
+    {{#itinerary_url}}
+    <a href="{{itinerary_url}}"
+       class="btn btn-danger btn-sm btn-block"
+       aria-label="{{#str}}continue_label, block_pharos_onboarding{{/str}}">
+        {{#str}}continue_learning, block_pharos_onboarding{{/str}}
+    </a>
+    {{/itinerary_url}}
+</div>
+{{/completed}}

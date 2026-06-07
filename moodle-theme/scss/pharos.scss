@@ -431,3 +431,104 @@
     0%, 60%, 100% { transform: translateY(0); opacity: 0.5; }
     30%            { transform: translateY(-4px); opacity: 1; }
 }
+
+// === Student onboarding wizard ===
+.pharos-onboarding {
+    font-size: 0.875rem;
+
+    &__beacon {
+        display: block;
+        font-size: 1.4rem;
+        margin-bottom: 0.25rem;
+    }
+
+    &__header {
+        text-align: center;
+    }
+}
+
+.pharos-ob-steps {
+    align-items: center;
+    gap: 0;
+}
+
+.pharos-ob-step {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    flex: 0 0 auto;
+    min-width: 36px;
+
+    &__dot {
+        width: 20px;
+        height: 20px;
+        border-radius: 50%;
+        border: 2px solid #dee2e6;
+        background: #fff;
+        transition: background 0.2s, border-color 0.2s;
+    }
+
+    &__label {
+        font-size: 0.6rem;
+        color: #adb5bd;
+        margin-top: 2px;
+        text-align: center;
+    }
+
+    &__line {
+        height: 2px;
+        background: #dee2e6;
+        flex: 1 1 auto;
+        margin-bottom: 16px;  // align with dot centers
+    }
+
+    &--active {
+        .pharos-ob-step__dot {
+            border-color: $pharos-red;
+            background: $pharos-red;
+        }
+        .pharos-ob-step__label { color: $pharos-red; font-weight: 700; }
+    }
+
+    &--done {
+        .pharos-ob-step__dot {
+            border-color: $pharos-red;
+            background: $pharos-red;
+        }
+    }
+}
+
+.pharos-ob-panel__title {
+    color: $pharos-navy;
+    border-bottom: 1px solid #dee2e6;
+    padding-bottom: 0.4rem;
+}
+
+.pharos-ob-radio-group {
+    display: flex;
+    flex-direction: column;
+    gap: 0.4rem;
+}
+
+.pharos-ob-radio,
+.pharos-ob-check {
+    display: flex;
+    align-items: flex-start;
+    gap: 0.5rem;
+    cursor: pointer;
+    padding: 0.35rem 0.5rem;
+    border-radius: 0.4rem;
+    border: 1px solid #dee2e6;
+    transition: border-color 0.15s, background 0.15s;
+
+    input { margin-top: 0.1rem; flex-shrink: 0; }
+    span  { font-size: 0.8rem; line-height: 1.3; }
+
+    &:hover { border-color: $pharos-red; background: lighten($pharos-red, 48%); }
+
+    input:checked ~ span { color: $pharos-navy; font-weight: 600; }
+    input:checked + span,
+    &:has(input:checked) {
+        // Highlight selected option
+    }
+}

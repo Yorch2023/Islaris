@@ -39,7 +39,39 @@ echo ""
 echo "▶ Setup panel docente..."
 $CONTAINER_PHP $SCRIPTS_DIR/setup-teacher-block.php $COURSE_ID
 
-# 5. Purgar cachés finales
+# 5. Añadir bloque de onboarding al curso (si no existe)
+echo ""
+echo "▶ Registrando bloque de onboarding..."
+$CONTAINER_PHP - <<'PHPSCRIPT'
+<?php
+define('CLI_SCRIPT', true);
+require_once('/var/www/html/config.php');
+global $DB;
+$courseCtx = context_course::instance(2);
+if (!$DB->record_exists('block_instances', [
+    'blockname' => 'pharos_onboarding',
+    'parentcontextid' => $courseCtx->id,
+])) {
+    $instance = new stdClass();
+    $instance->blockname         = 'pharos_onboarding';
+    $instance->parentcontextid   = $courseCtx->id;
+    $instance->showinsubcontexts = 0;
+    $instance->requiredbytheme   = 0;
+    $instance->pagetypepattern   = 'course-view-*';
+    $instance->subpagepattern    = null;
+    $instance->defaultregion     = 'side-pre';
+    $instance->defaultweight     = -10;
+    $instance->configdata        = '';
+    $instance->timecreated       = time();
+    $instance->timemodified      = time();
+    $DB->insert_record('block_instances', $instance);
+    echo "Bloque pharos_onboarding añadido al curso 2.\n";
+} else {
+    echo "Bloque pharos_onboarding ya existe.\n";
+}
+PHPSCRIPT
+
+# 6. Purgar cachés finales
 echo ""
 echo "▶ Purga final de cachés..."
 $CONTAINER_PHP $MOODLE_DIR/admin/cli/purge_caches.php
