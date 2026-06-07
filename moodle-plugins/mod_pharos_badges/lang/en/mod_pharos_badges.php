@@ -37,3 +37,8 @@ $string['privacy:metadata:pharos_badges_evidence:level']         = 'Itinerary le
 $string['privacy:metadata:pharos_badges_evidence:type']          = 'Evidence type (product, process or impact).';
 $string['privacy:metadata:pharos_badges_evidence:description']   = 'Text description of the evidence provided by the user.';
 $string['privacy:metadata:pharos_badges_evidence:timecreated']   = 'Date and time the evidence was submitted.';
+
+// Notifications
+$string['messageprovider:badge_earned']  = 'PHAROS micro-credential notifications';
+$string['notify_badge_subject']          = '🎖 You earned the micro-credential {$a->badge}!';
+$string['notify_badge_body']             = "Hi {$a->name}!\n\nCongratulations! You have completed {$a->level} and earned the micro-credential:\n\n{$a->badge}\n\nThis micro-credential certifies your competency in critical AI literacy and can be added to your Europass profile.\n\nGo to the course: {$a->courseurl}\n\nThe PHAROS-AI Team";

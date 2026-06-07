@@ -532,3 +532,49 @@
         // Highlight selected option
     }
 }
+
+// === Student progress page ===
+
+.pharos-progress {
+    max-width: 960px;
+    margin: 0 auto;
+}
+
+// === Reflection modal ===
+
+.pharos-reflect-btn {
+    font-size: 0.68rem;
+    white-space: nowrap;
+    line-height: 1;
+}
+
+// === Risk badges in teacher dashboard ===
+
+.pharos-risk-badge {
+    font-size: 0.65rem;
+    vertical-align: middle;
+}
+
+// === Motivation message box ===
+
+.pharos-motivate-message {
+    font-size: 0.9rem;
+    line-height: 1.6;
+    background: #f8f8f8;
+    border-left: 3px solid $pharos-red;
+    white-space: pre-wrap;
+}
+
+// === Student notification badges in block footer ===
+
+.pharos-progress-link {
+    display: block;
+    text-align: center;
+    padding: 0.25rem 0;
+    font-size: 0.75rem;
+    color: $pharos-navy;
+    opacity: 0.7;
+    transition: opacity 0.15s;
+
+    &:hover { opacity: 1; text-decoration: none; color: $pharos-red; }
+}

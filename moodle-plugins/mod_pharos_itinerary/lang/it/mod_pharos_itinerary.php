@@ -64,3 +64,8 @@ $string['reflect_placeholder'] = 'Descrivi cosa hai imparato, cosa ti ha sorpres
 $string['reflect_hint']        = 'Min. 50 caratteri · Max. 1000 · Ctrl+Invio per inviare';
 $string['reflect_submit']      = 'Invia riflessione';
 $string['reflect_close']       = 'Chiudi';
+
+// Notifications
+$string['messageprovider:level_up']      = 'Notifiche avanzamento livello PHAROS';
+$string['notify_level_up_subject']       = '🚀 Hai sbloccato {$a->level} in PHAROS-AI!';
+$string['notify_level_up_body']          = "Ciao {$a->name}!\n\nComplimenti! Hai raggiunto il {$a->level} — {$a->leveldesc} nel tuo itinerario PHAROS-AI.\n\nQuesto nuovo livello ti dà accesso ad attività e risorse più avanzate. Continua così!\n\nAccedi al corso: {$a->courseurl}\n\nIl team PHAROS-AI";

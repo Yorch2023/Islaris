@@ -39,3 +39,8 @@ $string['privacy:metadata:pharos_badges_evidence:level']         = 'Livello dell
 $string['privacy:metadata:pharos_badges_evidence:type']          = 'Tipo di prova (prodotto, processo o impatto).';
 $string['privacy:metadata:pharos_badges_evidence:description']   = 'Descrizione testuale della prova fornita dall\'utente.';
 $string['privacy:metadata:pharos_badges_evidence:timecreated']   = 'Data e ora di invio della prova.';
+
+// Notifications
+$string['messageprovider:badge_earned']  = 'Notifiche micro-credenziale PHAROS';
+$string['notify_badge_subject']          = '🎖 Hai ottenuto la micro-credenziale {$a->badge}!';
+$string['notify_badge_body']             = "Ciao {$a->name}!\n\nComplimenti! Hai completato il {$a->level} e ottenuto la micro-credenziale:\n\n{$a->badge}\n\nQuesta micro-credenziale certifica la tua competenza nell'alfabetizzazione critica sull'IA e può essere aggiunta al tuo profilo Europass.\n\nAccedi al corso: {$a->courseurl}\n\nIl team PHAROS-AI";

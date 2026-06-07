@@ -112,7 +112,54 @@ class badge_issuer {
         }
 
         $badgeObj->issue($userId, true);
+
+        // Send a Moodle notification to the student.
+        self::notify_badge_earned($courseId, $userId, $level, $badgeName);
+
         return true;
+    }
+
+    private static function notify_badge_earned(int $courseId, int $userId, int $level, string $badgeName): void {
+        global $DB;
+
+        $student = $DB->get_record('user', ['id' => $userId],
+            'id, firstname, lastname, email, lang, timezone, mailformat', IGNORE_MISSING);
+        if (!$student || isguestuser($student)) {
+            return;
+        }
+
+        $courseUrl = (new \moodle_url('/course/view.php', ['id' => $courseId]))->out(false);
+
+        $subject = get_string('notify_badge_subject', 'mod_pharos_badges', [
+            'badge' => $badgeName,
+        ]);
+
+        $body = get_string('notify_badge_body', 'mod_pharos_badges', [
+            'name'      => fullname($student),
+            'badge'     => $badgeName,
+            'level'     => 'N' . $level,
+            'courseurl' => $courseUrl,
+        ]);
+
+        $msg                    = new \core\message\message();
+        $msg->component         = 'mod_pharos_badges';
+        $msg->name              = 'badge_earned';
+        $msg->userfrom          = \core_user::get_noreply_user();
+        $msg->userto            = $student;
+        $msg->subject           = $subject;
+        $msg->fullmessage       = $body;
+        $msg->fullmessageformat = FORMAT_PLAIN;
+        $msg->fullmessagehtml   = text_to_html($body, false, false, true);
+        $msg->smallmessage      = $subject;
+        $msg->notification      = 1;
+        $msg->contexturl        = $courseUrl;
+        $msg->contexturlname    = get_string('pluginname', 'mod_pharos_badges');
+
+        try {
+            message_send($msg);
+        } catch (\Throwable $e) {
+            debugging('pharos_badges: failed to send badge_earned notification: ' . $e->getMessage());
+        }
     }
 
     private static function badge_name_for_level(int $level): string {

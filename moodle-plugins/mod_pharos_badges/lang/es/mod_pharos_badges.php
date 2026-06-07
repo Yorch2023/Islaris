@@ -40,3 +40,8 @@ $string['privacy:metadata:pharos_badges_evidence:level']         = 'Nivel del it
 $string['privacy:metadata:pharos_badges_evidence:type']          = 'Tipo de evidencia (producto, proceso o impacto).';
 $string['privacy:metadata:pharos_badges_evidence:description']   = 'Descripción textual de la evidencia aportada por el usuario.';
 $string['privacy:metadata:pharos_badges_evidence:timecreated']   = 'Fecha y hora de envío de la evidencia.';
+
+// Notifications
+$string['messageprovider:badge_earned']  = 'Notificaciones de microcredencial PHAROS';
+$string['notify_badge_subject']          = '🎖 ¡Has obtenido la microcredencial {$a->badge}!';
+$string['notify_badge_body']             = "¡Hola {$a->name}!\n\n¡Felicidades! Has completado el {$a->level} y obtenido la microcredencial:\n\n{$a->badge}\n\nEsta microcredencial certifica tu competencia en alfabetización crítica en IA y puede añadirse a tu perfil de Europass.\n\nAccede al curso: {$a->courseurl}\n\nEl equipo PHAROS-AI";

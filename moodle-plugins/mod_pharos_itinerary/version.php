@@ -3,7 +3,7 @@
 defined('MOODLE_INTERNAL') || die();
 
 $plugin->component = 'mod_pharos_itinerary';
-$plugin->version   = 2025060100;
+$plugin->version   = 2025060400;
 $plugin->requires  = 2023100900;
 $plugin->maturity  = MATURITY_ALPHA;
 $plugin->release   = '0.1.0';
