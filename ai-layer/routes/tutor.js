@@ -82,7 +82,7 @@ async function callAnthropic(systemText, messages) {
     return response.content[0]?.text ?? '';
 }
 
-function buildSystemText(level, lang, learnerMemory) {
+function buildSystemText(level, lang, learnerMemory, diagnosticProfile) {
     let text = `Nivel actual del usuario: ${LEVEL_LABELS[level]}\n`
              + `Idioma de respuesta: ${lang === 'es' ? 'español' : 'italiano'}`;
 
@@ -134,6 +134,59 @@ function buildSystemText(level, lang, learnerMemory) {
         }
     }
 
+    // Sector adaptation from onboarding diagnostic profile.
+    if (diagnosticProfile && typeof diagnosticProfile === 'object') {
+        const dp = diagnosticProfile;
+        const sectorLines = [];
+
+        const employmentMap = {
+            education:    lang === 'it' ? 'lavora nel settore dell\'istruzione'      : 'trabaja en el sector educativo',
+            professional: lang === 'it' ? 'lavora in un altro settore professionale' : 'trabaja en otro sector profesional',
+            job_seeker:   lang === 'it' ? 'è in cerca di lavoro o si sta riqualificando' : 'busca empleo o está en proceso de reorientación profesional',
+            retired:      lang === 'it' ? 'è in pensione o in aspettativa'           : 'está jubilado/a o en excedencia',
+        };
+
+        const goalMap = {
+            understand:  lang === 'it' ? 'comprendere l\'IA'              : 'comprender la IA',
+            protect:     lang === 'it' ? 'proteggersi dai rischi dell\'IA' : 'protegerse de los riesgos de la IA',
+            work_tools:  lang === 'it' ? 'usare l\'IA nel lavoro'          : 'usar la IA en su trabajo',
+            teach_others:lang === 'it' ? 'insegnare l\'IA ad altri'        : 'enseñar IA a otras personas',
+        };
+
+        const sectorExamples = {
+            education:    lang === 'it'
+                ? 'Usa esempi del settore educativo: strumenti IA per docenti, valutazione automatica, personalizzazione dell\'apprendimento, chatbot per studenti, bias nei sistemi di valutazione.'
+                : 'Usa ejemplos del sector educativo: herramientas IA para docentes, evaluación automatizada, personalización del aprendizaje, chatbots para estudiantes, sesgos en sistemas de calificación.',
+            professional: lang === 'it'
+                ? 'Usa esempi pratici del mondo del lavoro: automazione di processi, IA nelle decisioni HR, assistenti virtuali, analisi predittiva, compliance AI Act per le imprese.'
+                : 'Usa ejemplos prácticos del mundo laboral: automatización de procesos, IA en decisiones de RRHH, asistentes virtuales, analítica predictiva, cumplimiento del AI Act en empresas.',
+            job_seeker:   lang === 'it'
+                ? 'Connetti l\'IA alle opportunità di lavoro: competenze digitali richieste, come l\'IA trasforma le professioni, come usare l\'IA per cercare lavoro, competenze che gli algoritmi non possono sostituire.'
+                : 'Conecta la IA con las oportunidades laborales: qué competencias digitales demanda el mercado, cómo la IA transforma las profesiones, cómo usar IA para buscar empleo, competencias que los algoritmos no reemplazan.',
+            retired:      lang === 'it'
+                ? 'Usa esempi della vita quotidiana: assistenti vocali, sistemi di raccomandazione, riconoscimento facciale, privacy e diritti digitali, come rimanere informati senza essere sopraffatti.'
+                : 'Usa ejemplos de la vida cotidiana: asistentes de voz, sistemas de recomendación, reconocimiento facial, privacidad y derechos digitales, cómo mantenerse informado sin abrumarse.',
+        };
+
+        if (dp.employment && employmentMap[dp.employment]) {
+            sectorLines.push((lang === 'it' ? 'Situazione lavorativa: ' : 'Situación laboral: ') + employmentMap[dp.employment]);
+        }
+        if (Array.isArray(dp.goals) && dp.goals.length) {
+            const goalStr = dp.goals.map(g => goalMap[g]).filter(Boolean).join(', ');
+            if (goalStr) sectorLines.push((lang === 'it' ? 'Obiettivi: ' : 'Objetivos: ') + goalStr);
+        }
+        if (dp.employment && sectorExamples[dp.employment]) {
+            sectorLines.push(sectorExamples[dp.employment]);
+        }
+
+        if (sectorLines.length) {
+            const header = lang === 'it'
+                ? '\n\n## Contesto professionale del discente\n'
+                : '\n\n## Contexto profesional del aprendiz\n';
+            text += header + sectorLines.map(l => `- ${l}`).join('\n');
+        }
+    }
+
     return text;
 }
 
@@ -165,13 +218,13 @@ router.post('/chat', validateMoodleToken, tutorLimiter, async (req, res, next) =
         const invalid = validateBody(req.body, res);
         if (invalid) return;
 
-        const { level, lang, messages, learnerMemory } = req.body;
+        const { level, lang, messages, learnerMemory, diagnosticProfile } = req.body;
         const sanitized = sanitize(messages);
 
         if (!sanitized.length || sanitized.at(-1).role !== 'user')
             return res.status(400).json({ error: 'Last message must be from the user' });
 
-        const reply = await callAI(buildSystemText(level, lang, learnerMemory), sanitized);
+        const reply = await callAI(buildSystemText(level, lang, learnerMemory, diagnosticProfile), sanitized);
         res.json({ reply });
 
     } catch (err) {
@@ -187,14 +240,14 @@ router.post('/stream', validateMoodleToken, tutorLimiter, async (req, res, next)
         const invalid = validateBody(req.body, res);
         if (invalid) return;
 
-        const { level, lang, messages, learnerMemory } = req.body;
+        const { level, lang, messages, learnerMemory, diagnosticProfile } = req.body;
         const sanitized = sanitize(messages);
 
         if (!sanitized.length || sanitized.at(-1).role !== 'user')
             return res.status(400).json({ error: 'Last message must be from the user' });
 
         // For simplicity, SSE path calls the same non-streaming AI and wraps in SSE format.
-        const reply = await callAI(buildSystemText(level, lang, learnerMemory), sanitized);
+        const reply = await callAI(buildSystemText(level, lang, learnerMemory, diagnosticProfile), sanitized);
 
         res.setHeader('Content-Type', 'text/event-stream; charset=utf-8');
         res.setHeader('Cache-Control', 'no-cache');

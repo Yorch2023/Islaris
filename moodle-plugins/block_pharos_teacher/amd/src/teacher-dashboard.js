@@ -1,5 +1,5 @@
 // AMD module: block_pharos_teacher/teacher-dashboard
-// Animates XP bars, handles the AI usage detail modal, and the AI Advisor chat.
+// Animates XP bars, handles the AI usage detail modal, the AI Advisor chat, and the motivation generator.
 define([], function () {
     'use strict';
 
@@ -9,6 +9,7 @@ define([], function () {
         animateXpBars(root);
         initAiDetailButtons(root);
         initAdvisorButtons(root);
+        initMotivateButtons(root);
     }
 
     // ── XP bar animation ───────────────────────────────────────────────────
@@ -247,6 +248,100 @@ define([], function () {
     function removeTyping(msgBox, id) {
         const el = document.getElementById(id);
         if (el) el.remove();
+    }
+
+    // ── Motivation message generator ──────────────────────────────────────
+
+    function initMotivateButtons(root) {
+        const motivateUrl = root.dataset.motivateUrl;
+        const sesskey     = root.dataset.sesskey;
+        const lang        = root.dataset.advisorLang || 'es';
+        if (!motivateUrl) return;
+
+        const modal    = document.getElementById('pharos-motivate-modal');
+        const subtitle = modal && modal.querySelector('.pharos-motivate-subtitle');
+        const loading  = document.getElementById('pharos-motivate-loading');
+        const result   = document.getElementById('pharos-motivate-result');
+        const message  = document.getElementById('pharos-motivate-message');
+        const copyBtn  = document.getElementById('pharos-motivate-copy');
+        const sendLink = document.getElementById('pharos-motivate-send-link');
+        const errorBox = document.getElementById('pharos-motivate-error');
+        if (!modal || !loading || !result || !message || !copyBtn || !sendLink || !errorBox) return;
+
+        const courseId = new URLSearchParams(new URL(motivateUrl).search).get('courseid');
+
+        root.addEventListener('click', function (e) {
+            const btn = e.target.closest('.pharos-motivate-btn');
+            if (!btn) return;
+
+            const studentId  = btn.dataset.studentId;
+            const studentName = btn.dataset.studentName;
+            const messageUrl  = btn.dataset.messageUrl;
+
+            if (subtitle) subtitle.textContent = studentName;
+            loading.classList.remove('d-none');
+            result.classList.add('d-none');
+            errorBox.classList.add('d-none');
+            message.textContent = '';
+
+            showModal(modal);
+
+            fetch(motivateUrl, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    sesskey:    sesskey,
+                    courseid:   parseInt(courseId, 10),
+                    student_id: parseInt(studentId, 10),
+                    lang:       lang,
+                }),
+            })
+            .then(function (r) { return r.json(); })
+            .then(function (data) {
+                loading.classList.add('d-none');
+                if (data.error) {
+                    errorBox.textContent = data.error;
+                    errorBox.classList.remove('d-none');
+                } else {
+                    message.textContent = data.message;
+                    sendLink.href = data.message_url || messageUrl;
+                    result.classList.remove('d-none');
+                }
+            })
+            .catch(function () {
+                loading.classList.add('d-none');
+                errorBox.textContent = 'Error de conexión. Inténtalo de nuevo.';
+                errorBox.classList.remove('d-none');
+            });
+        });
+
+        copyBtn.addEventListener('click', function () {
+            const text = message.textContent;
+            if (!text) return;
+            if (navigator.clipboard && navigator.clipboard.writeText) {
+                navigator.clipboard.writeText(text).then(function () {
+                    copyBtn.textContent = '✓';
+                    setTimeout(function () { copyBtn.textContent = copyBtn.dataset.label || 'Copiar'; }, 2000);
+                });
+            } else {
+                const ta = document.createElement('textarea');
+                ta.value = text;
+                ta.style.position = 'fixed';
+                ta.style.opacity = '0';
+                document.body.appendChild(ta);
+                ta.select();
+                document.execCommand('copy');
+                document.body.removeChild(ta);
+                copyBtn.textContent = '✓';
+                setTimeout(function () { copyBtn.textContent = copyBtn.dataset.label || 'Copiar'; }, 2000);
+            }
+        });
+
+        modal.addEventListener('click', function (e) {
+            if (e.target.closest('[data-dismiss="modal"]') || e.target === modal) {
+                hideModal(modal);
+            }
+        });
     }
 
     // ── Modal helpers ──────────────────────────────────────────────────────

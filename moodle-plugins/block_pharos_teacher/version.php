@@ -5,7 +5,7 @@
 defined('MOODLE_INTERNAL') || die();
 
 $plugin->component = 'block_pharos_teacher';
-$plugin->version   = 2025060200;
+$plugin->version   = 2025060300;
 $plugin->requires  = 2023100900; // Moodle 4.3
 $plugin->maturity  = MATURITY_ALPHA;
 $plugin->release   = '0.1.0';

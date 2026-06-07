@@ -186,6 +186,47 @@ class block_pharos_teacher extends block_base {
                 $aiStatus = 'recent';
             }
 
+            // ── Dropout risk score (0-100) ───────────────────────────────────
+            $risk = 0;
+
+            // Factor 1: days since last itinerary activity (0-40 pts)
+            if ($daysSince === null) {
+                $risk += 35;
+            } elseif ($daysSince > 21) {
+                $risk += 40;
+            } elseif ($daysSince > 14) {
+                $risk += 28;
+            } elseif ($daysSince > 7) {
+                $risk += 15;
+            } elseif ($daysSince > 4) {
+                $risk += 5;
+            }
+
+            // Factor 2: AI session recency (0-30 pts)
+            $twoWeeksAgo = $now - 14 * DAYSECS;
+            if ($lastAiSession === 0) {
+                $risk += 20;
+            } elseif ($lastAiSession < $twoWeeksAgo) {
+                $risk += 30;
+            } elseif ($lastAiSession < $weekAgo) {
+                $risk += 14;
+            }
+
+            // Factor 3: zero XP progress (0-20 pts)
+            if ($xp === 0) {
+                $risk += 20;
+            } elseif ($xpPercent < 15) {
+                $risk += 8;
+            }
+
+            // Factor 4: no evidence submitted yet (0-10 pts)
+            if (empty($evidenceRows)) {
+                $risk += 10;
+            }
+
+            $risk      = min(100, $risk);
+            $riskLevel = ($risk >= 65) ? 'high' : (($risk >= 35) ? 'medium' : 'low');
+
             $profileUrl = new moodle_url('/user/view.php', ['id' => $student->id, 'course' => $COURSE->id]);
 
             $messageUrl = (new moodle_url('/message/index.php', ['id' => $student->id]))->out(false);
@@ -207,6 +248,10 @@ class block_pharos_teacher extends block_base {
                 'ai_status_active'  => $aiStatus === 'active',
                 'ai_status_recent'  => $aiStatus === 'recent',
                 'ai_status_none'    => $aiStatus === 'inactive',
+                'risk_score'        => $risk,
+                'risk_high'         => $riskLevel === 'high',
+                'risk_medium'       => $riskLevel === 'medium',
+                'risk_low'          => $riskLevel === 'low',
             ];
         }
 
@@ -241,6 +286,11 @@ class block_pharos_teacher extends block_base {
             ['courseid' => $COURSE->id]
         ))->out(false);
 
+        $motivateUrl = (new moodle_url(
+            '/blocks/pharos_teacher/ajax-motivate.php',
+            ['courseid' => $COURSE->id]
+        ))->out(false);
+
         // Detect interface language for the AI advisor.
         $lang = current_language();
         $advisorLang = (substr($lang, 0, 2) === 'it') ? 'it' : 'es';
@@ -254,6 +304,7 @@ class block_pharos_teacher extends block_base {
             'manage_url'     => $manageUrl,
             'ai_detail_url'  => $aiDetailUrl,
             'advisor_url'    => $advisorUrl,
+            'motivate_url'   => $motivateUrl,
             'advisor_lang'   => $advisorLang,
             'sesskey'        => sesskey(),
         ];

@@ -68,13 +68,39 @@ if ($courseId > 0) {
     }
 }
 
+// Load onboarding diagnostic profile and inject as sector context.
+$diagnosticProfile = null;
+try {
+    $profileJson = get_user_preferences('pharos_diagnostic_profile', '', $USER->id);
+    if ($profileJson) {
+        $raw = json_decode($profileJson, true);
+        if ($raw) {
+            $allowedEmployments = ['education', 'professional', 'job_seeker', 'retired'];
+            $allowedGoals       = ['understand', 'protect', 'work_tools', 'teach_others'];
+            $diagnosticProfile  = [
+                'employment'  => in_array($raw['employment'] ?? '', $allowedEmployments, true)
+                    ? $raw['employment'] : null,
+                'digital_exp' => $raw['digital_exp'] ?? null,
+                'ai_use'      => $raw['ai_use']      ?? null,
+                'goals'       => array_values(array_filter(
+                    (array) ($raw['goals'] ?? []),
+                    fn($g) => in_array($g, $allowedGoals, true)
+                )),
+            ];
+        }
+    }
+} catch (Exception $e) {
+    // user_preferences not available; tutor works without sector context.
+}
+
 // Whitelist keys before forwarding — never relay unknown browser-supplied fields.
 $payload = [
-    'userId'        => $data['userId'],
-    'level'         => $data['level'],
-    'lang'          => $data['lang'],
-    'messages'      => is_array($data['messages'] ?? null) ? $data['messages'] : [],
-    'learnerMemory' => $learnerMemory,
+    'userId'            => $data['userId'],
+    'level'             => $data['level'],
+    'lang'              => $data['lang'],
+    'messages'          => is_array($data['messages'] ?? null) ? $data['messages'] : [],
+    'learnerMemory'     => $learnerMemory,
+    'diagnosticProfile' => $diagnosticProfile,
 ];
 
 // Forward to middleware.
