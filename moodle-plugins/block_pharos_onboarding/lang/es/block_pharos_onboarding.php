@@ -5,6 +5,7 @@ $string['pluginname']                    = 'Bienvenida PHAROS-AI';
 $string['block/pharos_onboarding:addinstance']    = 'Añadir bloque de bienvenida PHAROS';
 $string['block/pharos_onboarding:myaddinstance']  = 'Añadir bloque de bienvenida PHAROS al panel';
 $string['privacy:metadata']              = 'Este bloque guarda el perfil diagnóstico en las preferencias de usuario de Moodle.';
+$string['privacy:metadata:pharos_diagnostic_profile'] = 'Perfil de diagnóstico inicial: sector laboral, experiencia digital, familiaridad con la IA, metas de aprendizaje y nivel recomendado.';
 
 // Wizard
 $string['welcome_title']                 = 'Bienvenido/a a PHAROS-AI';

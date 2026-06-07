@@ -100,7 +100,7 @@ curl_setopt_array($ch, [
     CURLOPT_POSTFIELDS     => $payload,
     CURLOPT_HTTPHEADER     => [
         'Content-Type: application/json',
-        'X-Moodle-Secret: ' . $secret,
+        'Authorization: Bearer ' . $secret,
     ],
     CURLOPT_TIMEOUT        => 20,
 ]);

@@ -95,7 +95,13 @@ router.post('/extract', validateMoodleToken, memoryLimiter, async (req, res, nex
             ? existingProfile
             : null;
 
-        const profile = await extractMemory(sanitized, existing);
+        let profile;
+        try {
+            profile = await extractMemory(sanitized, existing);
+        } catch (parseErr) {
+            // JSON.parse throws SyntaxError when the AI returns non-JSON text.
+            return res.status(500).json({ error: 'Invalid profile structure from AI' });
+        }
 
         // Validate the returned object is safe before sending back.
         if (typeof profile !== 'object' || Array.isArray(profile)) {
