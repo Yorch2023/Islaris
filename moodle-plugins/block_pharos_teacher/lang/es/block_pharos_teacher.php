@@ -67,3 +67,23 @@ $string['privacy:metadata:block_pharos_teacher_alerts:studentid']    = 'ID del a
 $string['privacy:metadata:block_pharos_teacher_alerts:teacherid']    = 'ID del docente notificado/a.';
 $string['privacy:metadata:block_pharos_teacher_alerts:risk_score']   = 'Puntuación de riesgo calculada (0-100).';
 $string['privacy:metadata:block_pharos_teacher_alerts:timecreated']  = 'Fecha y hora de la notificación.';
+
+// Analytics page
+$string['analytics_title']           = 'Analítica de aprendizaje — PHAROS';
+$string['analytics_csv']             = 'Exportar CSV';
+$string['analytics_csv_aria']        = 'Descargar datos de analítica como CSV para Excel';
+$string['analytics_generated']       = 'Generado el';
+$string['analytics_summary']         = 'Resumen del curso';
+$string['analytics_total_students']  = 'Alumnado total';
+$string['analytics_high_risk']       = 'Riesgo de abandono alto';
+$string['analytics_medium_risk']     = 'Riesgo de abandono medio';
+$string['analytics_active_7d']       = 'Activos últimos 7 días';
+$string['analytics_col_student']     = 'Alumno/a';
+$string['analytics_col_level']       = 'Nivel';
+$string['analytics_col_xp']         = 'XP';
+$string['analytics_col_last_seen']   = 'Última actividad';
+$string['analytics_col_ai']         = 'Sesiones IA';
+$string['analytics_col_evidence']    = 'Evidencias';
+$string['analytics_col_risk']        = 'Riesgo';
+$string['analytics_ai_total_hint']   = 'Total de sesiones IA';
+$string['analytics_link']            = 'Ver analítica completa';

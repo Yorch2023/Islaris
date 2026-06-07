@@ -309,8 +309,21 @@ class block_pharos_teacher extends block_base {
             'sesskey'        => sesskey(),
         ];
 
+        $analyticsUrl = (new moodle_url(
+            '/blocks/pharos_teacher/analytics.php',
+            ['courseid' => $COURSE->id]
+        ))->out(false);
+
+        $templateData['analytics_url'] = $analyticsUrl;
+
         $this->content->text = $PAGE->get_renderer('core')
             ->render_from_template('block_pharos_teacher/teacher_dashboard', $templateData);
+
+        $this->content->footer = html_writer::link(
+            $analyticsUrl,
+            get_string('analytics_link', 'block_pharos_teacher'),
+            ['class' => 'pharos-progress-link']
+        );
 
         $PAGE->requires->js_call_amd('block_pharos_teacher/teacher-dashboard', 'init');
 

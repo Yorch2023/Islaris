@@ -70,3 +70,23 @@ $string['privacy:metadata:block_pharos_teacher_alerts:studentid']    = 'ID of th
 $string['privacy:metadata:block_pharos_teacher_alerts:teacherid']    = 'ID of the notified teacher.';
 $string['privacy:metadata:block_pharos_teacher_alerts:risk_score']   = 'Computed risk score (0-100).';
 $string['privacy:metadata:block_pharos_teacher_alerts:timecreated']  = 'Notification timestamp.';
+
+// Analytics page
+$string['analytics_title']           = 'Learning Analytics — PHAROS';
+$string['analytics_csv']             = 'Export CSV';
+$string['analytics_csv_aria']        = 'Download analytics data as CSV for Excel';
+$string['analytics_generated']       = 'Generated on';
+$string['analytics_summary']         = 'Course summary';
+$string['analytics_total_students']  = 'Total students';
+$string['analytics_high_risk']       = 'High dropout risk';
+$string['analytics_medium_risk']     = 'Medium dropout risk';
+$string['analytics_active_7d']       = 'Active last 7 days';
+$string['analytics_col_student']     = 'Student';
+$string['analytics_col_level']       = 'Level';
+$string['analytics_col_xp']         = 'XP';
+$string['analytics_col_last_seen']   = 'Last activity';
+$string['analytics_col_ai']         = 'AI sessions';
+$string['analytics_col_evidence']    = 'Evidence';
+$string['analytics_col_risk']        = 'Risk';
+$string['analytics_ai_total_hint']   = 'Total AI sessions';
+$string['analytics_link']            = 'Full learning analytics';

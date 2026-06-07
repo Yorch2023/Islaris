@@ -170,6 +170,17 @@
     </div>
     {{/manage_url}}
 
+    {{! Link to full analytics page }}
+    {{#analytics_url}}
+    <div class="mt-2 text-center">
+        <a href="{{analytics_url}}"
+           class="pharos-progress-link"
+           aria-label="{{#str}}analytics_link, block_pharos_teacher{{/str}}">
+            &#128202; {{#str}}analytics_link, block_pharos_teacher{{/str}}
+        </a>
+    </div>
+    {{/analytics_url}}
+
 </div>
 
 {{! AI Advisor modal — teacher chat with PHAROS AI about a specific student }}
