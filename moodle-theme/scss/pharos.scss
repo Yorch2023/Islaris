@@ -364,3 +364,70 @@
     &--recent { background: #ffc107; }  // active this month
     &--none   { background: #dee2e6; }  // no recent activity
 }
+
+// === Teacher AI Advisor chat ===
+.pharos-advisor-messages {
+    overflow-y: auto;
+    max-height: 340px;
+    min-height: 120px;
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+    padding: 0.25rem 0;
+}
+
+.pharos-advisor-msg {
+    max-width: 85%;
+    padding: 0.5rem 0.75rem;
+    border-radius: 0.75rem;
+    font-size: 0.875rem;
+    line-height: 1.45;
+    white-space: pre-wrap;
+    word-break: break-word;
+
+    &--user {
+        align-self: flex-end;
+        background: $pharos-red;
+        color: #fff;
+        border-bottom-right-radius: 0.2rem;
+    }
+
+    &--assistant {
+        align-self: flex-start;
+        background: #f1f3f5;
+        color: $pharos-navy;
+        border-bottom-left-radius: 0.2rem;
+    }
+
+    &--error {
+        align-self: flex-start;
+        background: #fff3cd;
+        color: #856404;
+        border-radius: 0.5rem;
+    }
+
+    &--typing {
+        align-self: flex-start;
+        background: #f1f3f5;
+        border-bottom-left-radius: 0.2rem;
+        padding: 0.6rem 0.75rem;
+
+        span {
+            display: inline-block;
+            width: 6px;
+            height: 6px;
+            border-radius: 50%;
+            background: #adb5bd;
+            margin: 0 1px;
+            animation: pharos-typing-dot 1.2s ease-in-out infinite;
+
+            &:nth-child(2) { animation-delay: 0.2s; }
+            &:nth-child(3) { animation-delay: 0.4s; }
+        }
+    }
+}
+
+@keyframes pharos-typing-dot {
+    0%, 60%, 100% { transform: translateY(0); opacity: 0.5; }
+    30%            { transform: translateY(-4px); opacity: 1; }
+}

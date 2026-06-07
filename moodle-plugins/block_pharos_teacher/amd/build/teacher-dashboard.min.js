@@ -1,5 +1,5 @@
 // AMD module: block_pharos_teacher/teacher-dashboard
-// Animates XP bars and handles the AI usage detail modal.
+// Animates XP bars, handles the AI usage detail modal, and the AI Advisor chat.
 define([], function () {
     'use strict';
 
@@ -8,7 +8,10 @@ define([], function () {
         if (!root) return;
         animateXpBars(root);
         initAiDetailButtons(root);
+        initAdvisorButtons(root);
     }
+
+    // ── XP bar animation ───────────────────────────────────────────────────
 
     function animateXpBars(root) {
         const bars = root.querySelectorAll('[data-xp-target]');
@@ -28,6 +31,8 @@ define([], function () {
         }, { threshold: 0.1 });
         bars.forEach(function (bar) { observer.observe(bar); });
     }
+
+    // ── AI session detail modal ────────────────────────────────────────────
 
     function initAiDetailButtons(root) {
         const detailUrl = root.dataset.aiDetailUrl;
@@ -49,13 +54,7 @@ define([], function () {
             modalTitle.textContent = btn.dataset.studentName;
             modalBody.innerHTML = '<div class="text-center py-3"><div class="spinner-border text-danger" role="status"><span class="sr-only">…</span></div></div>';
 
-            if (typeof $ !== 'undefined') {
-                $(modal).modal('show');
-            } else {
-                modal.classList.add('show');
-                modal.style.display = 'block';
-                document.body.classList.add('modal-open');
-            }
+            showModal(modal);
 
             fetch(detailUrl, {
                 method: 'POST',
@@ -75,13 +74,7 @@ define([], function () {
 
         modal.addEventListener('click', function (e) {
             if (e.target.closest('[data-dismiss="modal"]') || e.target === modal) {
-                if (typeof $ !== 'undefined') {
-                    $(modal).modal('hide');
-                } else {
-                    modal.classList.remove('show');
-                    modal.style.display = '';
-                    document.body.classList.remove('modal-open');
-                }
+                hideModal(modal);
             }
         });
     }
@@ -122,6 +115,160 @@ define([], function () {
             '<p class="h5 mb-0 text-danger">' + value + '</p>' +
             '<small class="text-muted">' + label + '</small>' +
             '</div>';
+    }
+
+    // ── AI Advisor chat modal ──────────────────────────────────────────────
+
+    var advisorState = {
+        studentId:   null,
+        studentName: null,
+        courseId:    null,
+        messages:    [],
+        sending:     false,
+    };
+
+    function initAdvisorButtons(root) {
+        const advisorUrl = root.dataset.advisorUrl;
+        const sesskey    = root.dataset.sesskey;
+        const lang       = root.dataset.advisorLang || 'es';
+        if (!advisorUrl) return;
+
+        const modal    = document.getElementById('pharos-advisor-modal');
+        const subtitle = modal && modal.querySelector('.pharos-advisor-subtitle');
+        const msgBox   = document.getElementById('pharos-advisor-messages');
+        const input    = document.getElementById('pharos-advisor-input');
+        const sendBtn  = document.getElementById('pharos-advisor-send');
+        if (!modal || !msgBox || !input || !sendBtn) return;
+
+        const courseId = new URLSearchParams(new URL(advisorUrl).search).get('courseid');
+
+        root.addEventListener('click', function (e) {
+            const btn = e.target.closest('.pharos-advisor-btn');
+            if (!btn) return;
+
+            advisorState.studentId   = btn.dataset.studentId;
+            advisorState.studentName = btn.dataset.studentName;
+            advisorState.courseId    = courseId;
+            advisorState.messages    = [];
+
+            if (subtitle) {
+                subtitle.textContent = advisorState.studentName;
+            }
+            msgBox.innerHTML = '';
+            input.value = '';
+
+            showModal(modal);
+            input.focus();
+        });
+
+        sendBtn.addEventListener('click', function () {
+            sendAdvisorMessage(advisorUrl, sesskey, lang, msgBox, input, sendBtn);
+        });
+
+        input.addEventListener('keydown', function (e) {
+            if (e.key === 'Enter' && !e.shiftKey) {
+                e.preventDefault();
+                sendAdvisorMessage(advisorUrl, sesskey, lang, msgBox, input, sendBtn);
+            }
+        });
+
+        modal.addEventListener('click', function (e) {
+            if (e.target.closest('[data-dismiss="modal"]') || e.target === modal) {
+                hideModal(modal);
+            }
+        });
+    }
+
+    function sendAdvisorMessage(advisorUrl, sesskey, lang, msgBox, input, sendBtn) {
+        if (advisorState.sending) return;
+        const text = input.value.trim();
+        if (!text) return;
+
+        advisorState.messages.push({ role: 'user', content: text });
+        appendMessage(msgBox, 'user', text);
+        input.value = '';
+        advisorState.sending = true;
+        sendBtn.disabled = true;
+
+        const typingId = appendTyping(msgBox);
+
+        fetch(advisorUrl, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                sesskey:    sesskey,
+                courseid:   advisorState.courseId,
+                student_id: advisorState.studentId,
+                lang:       lang,
+                messages:   advisorState.messages,
+            }),
+        })
+        .then(function (r) { return r.json(); })
+        .then(function (data) {
+            removeTyping(msgBox, typingId);
+            if (data.error) {
+                appendMessage(msgBox, 'error', data.error);
+            } else {
+                advisorState.messages.push({ role: 'assistant', content: data.reply });
+                appendMessage(msgBox, 'assistant', data.reply);
+            }
+        })
+        .catch(function () {
+            removeTyping(msgBox, typingId);
+            appendMessage(msgBox, 'error', 'Error de conexión. Inténtalo de nuevo.');
+        })
+        .finally(function () {
+            advisorState.sending = false;
+            sendBtn.disabled = false;
+            input.focus();
+        });
+    }
+
+    function appendMessage(msgBox, role, text) {
+        const div = document.createElement('div');
+        div.className = 'pharos-advisor-msg pharos-advisor-msg--' + role;
+        div.textContent = text;
+        msgBox.appendChild(div);
+        msgBox.scrollTop = msgBox.scrollHeight;
+    }
+
+    function appendTyping(msgBox) {
+        const id = 'pharos-typing-' + Date.now();
+        const div = document.createElement('div');
+        div.id = id;
+        div.className = 'pharos-advisor-msg pharos-advisor-msg--typing';
+        div.setAttribute('aria-label', 'Escribiendo…');
+        div.innerHTML = '<span></span><span></span><span></span>';
+        msgBox.appendChild(div);
+        msgBox.scrollTop = msgBox.scrollHeight;
+        return id;
+    }
+
+    function removeTyping(msgBox, id) {
+        const el = document.getElementById(id);
+        if (el) el.remove();
+    }
+
+    // ── Modal helpers ──────────────────────────────────────────────────────
+
+    function showModal(modal) {
+        if (typeof $ !== 'undefined') {
+            $(modal).modal('show');
+        } else {
+            modal.classList.add('show');
+            modal.style.display = 'block';
+            document.body.classList.add('modal-open');
+        }
+    }
+
+    function hideModal(modal) {
+        if (typeof $ !== 'undefined') {
+            $(modal).modal('hide');
+        } else {
+            modal.classList.remove('show');
+            modal.style.display = '';
+            document.body.classList.remove('modal-open');
+        }
     }
 
     return { init };

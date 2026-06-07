@@ -14,6 +14,8 @@
 }}
 <div class="pharos-teacher-dashboard"
      data-ai-detail-url="{{ai_detail_url}}"
+     data-advisor-url="{{advisor_url}}"
+     data-advisor-lang="{{advisor_lang}}"
      data-sesskey="{{sesskey}}"
      role="region"
      aria-labelledby="pharos-teacher-heading">
@@ -98,6 +100,14 @@
                         {{#str}}evidencia, block_pharos_teacher{{/str}}
                     </span>
                     {{/evidence_pending}}
+                    <button type="button"
+                            class="pharos-advisor-btn btn btn-outline-danger btn-sm py-0 px-1 d-block mt-1"
+                            style="font-size:0.65rem;white-space:nowrap"
+                            data-student-id="{{id}}"
+                            data-student-name="{{name}}"
+                            aria-label="{{#str}}advisor_consult, block_pharos_teacher{{/str}}: {{name}}">
+                        {{#str}}advisor_consult, block_pharos_teacher{{/str}}
+                    </button>
                 </div>
             </div>
             <div class="pharos-xp-bar mt-1"
@@ -128,6 +138,51 @@
     </div>
     {{/manage_url}}
 
+</div>
+
+{{! AI Advisor modal — teacher chat with PHAROS AI about a specific student }}
+<div class="modal fade" id="pharos-advisor-modal" tabindex="-1"
+     role="dialog"
+     aria-labelledby="pharos-advisor-title"
+     aria-modal="true">
+    <div class="modal-dialog modal-dialog-scrollable modal-lg" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="pharos-advisor-title">
+                    {{#str}}advisor_title, block_pharos_teacher{{/str}}
+                </h5>
+                <button type="button" class="close" data-dismiss="modal"
+                        aria-label="{{#str}}closebuttontitle, core{{/str}}">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+            <div class="modal-body d-flex flex-column" style="min-height:320px">
+                <p class="pharos-advisor-subtitle text-muted small mb-2"></p>
+                <div id="pharos-advisor-messages"
+                     class="pharos-advisor-messages flex-grow-1 mb-2"
+                     role="log"
+                     aria-live="polite"
+                     aria-label="{{#str}}advisor_conversation, block_pharos_teacher{{/str}}">
+                </div>
+                <div class="input-group">
+                    <input type="text"
+                           id="pharos-advisor-input"
+                           class="form-control form-control-sm"
+                           placeholder="{{#str}}advisor_placeholder, block_pharos_teacher{{/str}}"
+                           aria-label="{{#str}}advisor_placeholder, block_pharos_teacher{{/str}}"
+                           maxlength="500">
+                    <div class="input-group-append">
+                        <button type="button"
+                                id="pharos-advisor-send"
+                                class="btn btn-danger btn-sm"
+                                aria-label="{{#str}}advisor_send, block_pharos_teacher{{/str}}">
+                            {{#str}}advisor_send, block_pharos_teacher{{/str}}
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
 </div>
 
 {{! AI detail modal — rendered once, populated by JS }}

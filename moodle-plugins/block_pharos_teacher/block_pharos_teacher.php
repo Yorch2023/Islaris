@@ -236,6 +236,15 @@ class block_pharos_teacher extends block_base {
             ['courseid' => $COURSE->id]
         ))->out(false);
 
+        $advisorUrl = (new moodle_url(
+            '/blocks/pharos_teacher/ajax-advisor.php',
+            ['courseid' => $COURSE->id]
+        ))->out(false);
+
+        // Detect interface language for the AI advisor.
+        $lang = current_language();
+        $advisorLang = (substr($lang, 0, 2) === 'it') ? 'it' : 'es';
+
         $templateData = [
             'students'       => $studentsData,
             'student_count'  => count($studentsData),
@@ -244,6 +253,8 @@ class block_pharos_teacher extends block_base {
             'generator_url'  => $generatorPageUrl,
             'manage_url'     => $manageUrl,
             'ai_detail_url'  => $aiDetailUrl,
+            'advisor_url'    => $advisorUrl,
+            'advisor_lang'   => $advisorLang,
             'sesskey'        => sesskey(),
         ];
 
