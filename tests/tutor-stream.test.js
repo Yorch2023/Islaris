@@ -4,32 +4,13 @@ process.env.MOODLE_SECRET    = 'test-secret';
 process.env.ANTHROPIC_API_KEY = 'sk-ant-test';
 
 // Mock the Anthropic SDK stream method.
+// The /stream endpoint calls messages.create (non-streaming) and wraps the
+// reply in a single SSE data event.  The mock therefore only needs 'create'.
 jest.mock('@anthropic-ai/sdk', () => {
     return jest.fn().mockImplementation(() => ({
         messages: {
-            // Non-streaming (used by /chat)
             create: jest.fn().mockResolvedValue({
-                content: [{ text: 'Respuesta de prueba.' }],
-            }),
-            // Streaming: async generator that yields text deltas then stops
-            stream: jest.fn().mockImplementation(() => {
-                const events = [
-                    { type: 'content_block_delta', delta: { type: 'text_delta', text: 'Hola, ' } },
-                    { type: 'content_block_delta', delta: { type: 'text_delta', text: 'soy el ' } },
-                    { type: 'content_block_delta', delta: { type: 'text_delta', text: 'tutor.' } },
-                    { type: 'message_stop' },
-                ];
-                let i = 0;
-                return {
-                    [Symbol.asyncIterator]() {
-                        return {
-                            next: async () => {
-                                if (i < events.length) return { value: events[i++], done: false };
-                                return { value: undefined, done: true };
-                            },
-                        };
-                    },
-                };
+                content: [{ text: 'Hola, soy el tutor.' }],
             }),
         },
     }));
