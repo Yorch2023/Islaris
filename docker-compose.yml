@@ -6,16 +6,15 @@ services:
 
   # ── Base de datos ────────────────────────────────────────────────────────────
   db:
-    image: mariadb:10.11
+    image: postgres:15
     environment:
-      MARIADB_ROOT_PASSWORD: pharos_root
-      MARIADB_DATABASE: pharos_moodle
-      MARIADB_USER: pharos
-      MARIADB_PASSWORD: pharos_db
+      POSTGRES_DB:       pharos_moodle
+      POSTGRES_USER:     pharos
+      POSTGRES_PASSWORD: pharos_db
     volumes:
-      - db_data:/var/lib/mysql
+      - db_data:/var/lib/postgresql/data
     healthcheck:
-      test: ["CMD", "healthcheck.sh", "--connect", "--innodb_initialized"]
+      test: ["CMD-SHELL", "pg_isready -U pharos -d pharos_moodle"]
       interval: 10s
       timeout: 5s
       retries: 10
@@ -28,11 +27,11 @@ services:
     ports:
       - "80:80"
     environment:
-      DB_HOST: db
-      DB_NAME: pharos_moodle
-      DB_USER: pharos
-      DB_PASS: pharos_db
-      MOODLE_WWWROOT: http://localhost
+      DB_HOST:          db
+      DB_NAME:          pharos_moodle
+      DB_USER:          pharos
+      DB_PASS:          pharos_db
+      MOODLE_WWWROOT:   http://localhost
       MOODLE_ADMINPASS: PharosAdmin2024!
     volumes:
       - moodledata:/var/moodledata
@@ -51,9 +50,9 @@ services:
     env_file:
       - .env
     environment:
-      NODE_ENV: development
-      PORT: 3001
-      ALLOWED_ORIGINS: "http://localhost"
+      NODE_ENV:         development
+      PORT:             3001
+      ALLOWED_ORIGINS:  "http://localhost"
     restart: unless-stopped
 
 volumes:

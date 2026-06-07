@@ -4,48 +4,50 @@ set -e
 MOODLEDATA=/var/moodledata
 CONFIG_PERSISTENT="$MOODLEDATA/config.php"
 
-echo "⏳ Esperando base de datos..."
-until (echo > /dev/tcp/${DB_HOST:-db}/3306) 2>/dev/null; do
+DB_HOST="${DB_HOST:-db}"
+DB_NAME="${DB_NAME:-pharos_moodle}"
+DB_USER="${DB_USER:-pharos}"
+DB_PASS="${DB_PASS:-pharos_db}"
+
+echo "⏳ Esperando base de datos PostgreSQL..."
+until PGPASSWORD="$DB_PASS" pg_isready -h "$DB_HOST" -U "$DB_USER" -d "$DB_NAME" -q; do
     sleep 3
 done
-sleep 2
+sleep 1
 echo "✅ Base de datos lista."
 
 mkdir -p "$MOODLEDATA"
 chown -R www-data:www-data "$MOODLEDATA"
 
 # Detect whether Moodle tables already exist (handles container restarts after install)
-TABLES_EXIST=$(php -r "
-\$m = @new mysqli(getenv('DB_HOST') ?: 'db', getenv('DB_USER') ?: 'pharos', getenv('DB_PASS') ?: 'pharos_db', getenv('DB_NAME') ?: 'pharos_moodle');
-if (\$m->connect_error) { echo 0; exit; }
-\$r = \$m->query('SHOW TABLES LIKE \"mdl_config\"');
-echo (\$r && \$r->num_rows > 0) ? 1 : 0;
-" 2>/dev/null || echo 0)
+TABLES_EXIST=$(PGPASSWORD="$DB_PASS" psql -h "$DB_HOST" -U "$DB_USER" -d "$DB_NAME" -tAc \
+    "SELECT COUNT(*) FROM information_schema.tables WHERE table_schema='public' AND table_name='mdl_config';" \
+    2>/dev/null || echo 0)
 
-if [ "$TABLES_EXIST" = "1" ]; then
+if [ "${TABLES_EXIST:-0}" = "1" ]; then
     echo "♻️  Moodle ya instalado — restaurando config.php..."
     if [ -f "$CONFIG_PERSISTENT" ]; then
         cp "$CONFIG_PERSISTENT" /var/www/html/config.php
     elif [ ! -f /var/www/html/config.php ]; then
         # Regenerate config.php from environment variables
-        php << 'PHPEOF'
+        php << PHPEOF
 <?php
-$host = getenv('DB_HOST')        ?: 'db';
-$name = getenv('DB_NAME')        ?: 'pharos_moodle';
-$user = getenv('DB_USER')        ?: 'pharos';
-$pass = getenv('DB_PASS')        ?: 'pharos_db';
-$www  = getenv('MOODLE_WWWROOT') ?: 'http://localhost';
+\$host = getenv('DB_HOST')        ?: 'db';
+\$name = getenv('DB_NAME')        ?: 'pharos_moodle';
+\$user = getenv('DB_USER')        ?: 'pharos';
+\$pass = getenv('DB_PASS')        ?: 'pharos_db';
+\$www  = getenv('MOODLE_WWWROOT') ?: 'http://localhost';
 
-$c  = "<?php\nunset(\$CFG);\nglobal \$CFG;\n\$CFG = new stdClass();\n";
-$c .= "\$CFG->dbtype    = 'mariadb';\n\$CFG->dblibrary = 'native';\n";
-$c .= "\$CFG->dbhost    = '$host';\n\$CFG->dbname    = '$name';\n";
-$c .= "\$CFG->dbuser    = '$user';\n\$CFG->dbpass    = '$pass';\n";
-$c .= "\$CFG->prefix    = 'mdl_';\n";
-$c .= "\$CFG->dboptions = array('dbpersist'=>0,'dbport'=>'','dbsocket'=>'');\n";
-$c .= "\$CFG->wwwroot   = '$www';\n\$CFG->dataroot  = '/var/moodledata';\n";
-$c .= "\$CFG->admin     = 'admin';\n\$CFG->directorypermissions = 0777;\n";
-$c .= "require_once(__DIR__ . '/lib/setup.php');\n";
-file_put_contents('/var/www/html/config.php', $c);
+\$c  = "<?php\nunset(\\\$CFG);\nglobal \\\$CFG;\n\\\$CFG = new stdClass();\n";
+\$c .= "\\\$CFG->dbtype    = 'pgsql';\n\\\$CFG->dblibrary = 'native';\n";
+\$c .= "\\\$CFG->dbhost    = '\$host';\n\\\$CFG->dbname    = '\$name';\n";
+\$c .= "\\\$CFG->dbuser    = '\$user';\n\\\$CFG->dbpass    = '\$pass';\n";
+\$c .= "\\\$CFG->prefix    = 'mdl_';\n";
+\$c .= "\\\$CFG->dboptions = array('dbpersist'=>0,'dbport'=>'','dbsocket'=>'');\n";
+\$c .= "\\\$CFG->wwwroot   = '\$www';\n\\\$CFG->dataroot  = '/var/moodledata';\n";
+\$c .= "\\\$CFG->admin     = 'admin';\n\\\$CFG->directorypermissions = 0777;\n";
+\$c .= "require_once(__DIR__ . '/lib/setup.php');\n";
+file_put_contents('/var/www/html/config.php', \$c);
 PHPEOF
         echo "🔧 config.php regenerado desde variables de entorno."
         cp /var/www/html/config.php "$CONFIG_PERSISTENT"
@@ -63,11 +65,11 @@ else
         --lang=es \
         --wwwroot="${MOODLE_WWWROOT:-http://localhost}" \
         --dataroot="$MOODLEDATA" \
-        --dbtype=mariadb \
-        --dbhost="${DB_HOST:-db}" \
-        --dbname="${DB_NAME:-pharos_moodle}" \
-        --dbuser="${DB_USER:-pharos}" \
-        --dbpass="${DB_PASS:-pharos_db}" \
+        --dbtype=pgsql \
+        --dbhost="$DB_HOST" \
+        --dbname="$DB_NAME" \
+        --dbuser="$DB_USER" \
+        --dbpass="$DB_PASS" \
         --adminuser=admin \
         --adminpass="${MOODLE_ADMINPASS:-PharosAdmin2024!}" \
         --adminemail=admin@pharos-ai.local \
