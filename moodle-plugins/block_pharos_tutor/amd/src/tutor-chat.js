@@ -16,6 +16,7 @@ define([], function () {
             proxyUrl:       root.dataset.proxyUrl,
             streamProxyUrl: root.dataset.streamProxyUrl,
             sessionUrl:     root.dataset.sessionUrl,
+            memoryUrl:      root.dataset.memoryUrl,
             courseId:       root.dataset.courseId,
             userId:         root.dataset.userId,
             level:          parseInt(root.dataset.level, 10) || 1,
@@ -38,6 +39,7 @@ define([], function () {
             start:        Date.now(),
             messageCount: 0,
             saved:        false,
+            memorySaved:  false,
         };
 
         ui.form.addEventListener('submit', function (e) {
@@ -64,10 +66,15 @@ define([], function () {
             });
         }
 
-        // Save session on page unload if any messages were sent.
+        // Save session and trigger memory extraction on page unload.
         window.addEventListener('beforeunload', function () {
-            if (session.messageCount > 0 && !session.saved && config.sessionUrl) {
-                saveSession(config, session, ui);
+            if (session.messageCount > 0) {
+                if (!session.saved && config.sessionUrl) {
+                    saveSession(config, session, ui);
+                }
+                if (!session.memorySaved && config.memoryUrl && history.length >= 2) {
+                    saveMemory(config, history);
+                }
             }
         });
     }
@@ -104,6 +111,11 @@ define([], function () {
             // Auto-save when threshold reached (and only once per session).
             if (session.messageCount >= EVIDENCE_THRESHOLD && !session.saved) {
                 await saveSession(config, session, ui);
+                // Trigger memory extraction asynchronously — no need to await.
+                if (!session.memorySaved && config.memoryUrl && history.length >= 2) {
+                    saveMemory(config, history);
+                    session.memorySaved = true;
+                }
             }
 
         } catch (_err) {
@@ -145,6 +157,30 @@ define([], function () {
             }
         } catch (_e) {
             // Non-critical — session metadata could not be saved.
+        }
+    }
+
+    // Sends the conversation to the memory extraction endpoint.
+    // Fire-and-forget: failures are non-critical.
+    function saveMemory(config, history) {
+        if (!config.memoryUrl || !history.length) return;
+        // Send at most the last 20 messages (well within keepalive size limits).
+        const messages = history.slice(-20).map(function (m) {
+            return { role: m.role, content: String(m.content).slice(0, 3000) };
+        });
+        try {
+            fetch(config.memoryUrl, {
+                method:  'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    sesskey:  config.sesskey,
+                    courseid: config.courseId,
+                    messages: messages,
+                }),
+                keepalive: true,
+            });
+        } catch (_e) {
+            // Non-critical.
         }
     }
 
@@ -229,6 +265,7 @@ define([], function () {
         return {
             sesskey:  config.sesskey,
             userId:   config.userId,
+            courseId: config.courseId,
             level:    config.level,
             lang:     config.lang,
             messages: messages,

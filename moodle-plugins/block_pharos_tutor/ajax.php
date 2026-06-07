@@ -48,12 +48,33 @@ $data['level'] = max(1, min(3, $level));
 $allowedLangs = ['es', 'it'];
 $data['lang']  = in_array($data['lang'] ?? '', $allowedLangs, true) ? $data['lang'] : 'es';
 
+// Load learner memory from DB and inject server-side — never expose to browser.
+$learnerMemory = null;
+// courseId can come as 'courseId' or 'course_id' depending on caller.
+$courseId = (int) ($data['courseId'] ?? $data['course_id'] ?? 0);
+if ($courseId > 0) {
+    try {
+        if ($DB->get_manager()->table_exists('block_pharos_tutor_memory')) {
+            $memRow = $DB->get_record('block_pharos_tutor_memory', [
+                'userid'   => $USER->id,
+                'courseid' => $courseId,
+            ], 'profile_json');
+            if ($memRow && $memRow->profile_json) {
+                $learnerMemory = json_decode($memRow->profile_json, true) ?: null;
+            }
+        }
+    } catch (Exception $e) {
+        // Memory table not yet installed; tutor works without it.
+    }
+}
+
 // Whitelist keys before forwarding — never relay unknown browser-supplied fields.
 $payload = [
-    'userId'   => $data['userId'],
-    'level'    => $data['level'],
-    'lang'     => $data['lang'],
-    'messages' => is_array($data['messages'] ?? null) ? $data['messages'] : [],
+    'userId'        => $data['userId'],
+    'level'         => $data['level'],
+    'lang'          => $data['lang'],
+    'messages'      => is_array($data['messages'] ?? null) ? $data['messages'] : [],
+    'learnerMemory' => $learnerMemory,
 ];
 
 // Forward to middleware.

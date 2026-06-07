@@ -84,11 +84,13 @@ class block_pharos_tutor extends block_base {
         // special Apache configuration that is not available in this setup.
         $proxyUrl      = new moodle_url('/blocks/pharos_tutor/ajax.php');
         $sessionUrl    = new moodle_url('/blocks/pharos_tutor/ajax-session.php');
+        $memoryUrl     = new moodle_url('/blocks/pharos_tutor/ajax-memory.php');
 
         $templateData = [
             'proxy_url'        => $proxyUrl->out(false),
             'stream_proxy_url' => '',
             'session_url'      => $sessionUrl->out(false),
+            'memory_url'       => $memoryUrl->out(false),
             'course_id'        => (string) $COURSE->id,
             'user_id'          => (string) $USER->id,
             'user_level'       => $userLevel,

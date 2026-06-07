@@ -82,9 +82,59 @@ async function callAnthropic(systemText, messages) {
     return response.content[0]?.text ?? '';
 }
 
-function buildSystemText(level, lang) {
-    return `Nivel actual del usuario: ${LEVEL_LABELS[level]}\n`
-         + `Idioma de respuesta: ${lang === 'es' ? 'español' : 'italiano'}`;
+function buildSystemText(level, lang, learnerMemory) {
+    let text = `Nivel actual del usuario: ${LEVEL_LABELS[level]}\n`
+             + `Idioma de respuesta: ${lang === 'es' ? 'español' : 'italiano'}`;
+
+    if (learnerMemory && typeof learnerMemory === 'object') {
+        const m = learnerMemory;
+        const lines = [];
+
+        if (Array.isArray(m.concepts_explored) && m.concepts_explored.length) {
+            lines.push(`Temas ya trabajados con este alumno: ${m.concepts_explored.slice(0, 8).join(', ')}`);
+        }
+        if (m.mastery && Object.keys(m.mastery).length) {
+            const masteryLines = Object.entries(m.mastery)
+                .slice(0, 6)
+                .map(([k, v]) => `${k} (nivel ${v}/3)`)
+                .join(', ');
+            lines.push(`Nivel de comprensión por concepto: ${masteryLines}`);
+        }
+        if (m.strengths) {
+            lines.push(`Puntos fuertes del alumno: ${String(m.strengths).slice(0, 200)}`);
+        }
+        if (m.growth_areas) {
+            lines.push(`Áreas donde necesita más apoyo: ${String(m.growth_areas).slice(0, 200)}`);
+        }
+        if (m.context) {
+            lines.push(`Contexto profesional relevante: ${String(m.context).slice(0, 200)}`);
+        }
+        if (m.learning_style && m.learning_style !== 'mixed') {
+            const styleLabels = {
+                concrete_examples: 'prefiere ejemplos concretos',
+                questions:         'aprende mejor haciendo preguntas',
+                definitions:       'prefiere definiciones precisas',
+                analogies:         'conecta mejor con analogías',
+            };
+            lines.push(`Estilo de aprendizaje: ${styleLabels[m.learning_style] || m.learning_style}`);
+        }
+        if (Array.isArray(m.recurring_questions) && m.recurring_questions.length) {
+            lines.push(`Dudas recurrentes: ${m.recurring_questions.slice(0, 3).join('; ')}`);
+        }
+        if (m.sessions_total > 1) {
+            lines.push(`Sesiones previas: ${m.sessions_total}`);
+        }
+
+        if (lines.length) {
+            text += '\n\n## Perfil de aprendizaje del alumno (datos de sesiones anteriores)\n'
+                  + lines.map(l => `- ${l}`).join('\n')
+                  + '\n\nUsa este perfil para personalizar tus respuestas: conecta nuevos conceptos con los que ya conoce, '
+                  + 'evita repasar lo que ya domina, refuerza las áreas de crecimiento. '
+                  + 'No menciones explícitamente que tienes este perfil a menos que el alumno lo pregunte.';
+        }
+    }
+
+    return text;
 }
 
 function sanitize(messages) {
@@ -95,7 +145,7 @@ function sanitize(messages) {
 }
 
 function validateBody(body, res) {
-    const { userId, level, lang, messages } = body;
+    const { userId, level, lang, messages, learnerMemory } = body;
     if (!userId || typeof userId !== 'string')
         return res.status(400).json({ error: 'userId is required' });
     if (![1, 2, 3].includes(level))
@@ -115,13 +165,13 @@ router.post('/chat', validateMoodleToken, tutorLimiter, async (req, res, next) =
         const invalid = validateBody(req.body, res);
         if (invalid) return;
 
-        const { level, lang, messages } = req.body;
+        const { level, lang, messages, learnerMemory } = req.body;
         const sanitized = sanitize(messages);
 
         if (!sanitized.length || sanitized.at(-1).role !== 'user')
             return res.status(400).json({ error: 'Last message must be from the user' });
 
-        const reply = await callAI(buildSystemText(level, lang), sanitized);
+        const reply = await callAI(buildSystemText(level, lang, learnerMemory), sanitized);
         res.json({ reply });
 
     } catch (err) {
@@ -137,14 +187,14 @@ router.post('/stream', validateMoodleToken, tutorLimiter, async (req, res, next)
         const invalid = validateBody(req.body, res);
         if (invalid) return;
 
-        const { level, lang, messages } = req.body;
+        const { level, lang, messages, learnerMemory } = req.body;
         const sanitized = sanitize(messages);
 
         if (!sanitized.length || sanitized.at(-1).role !== 'user')
             return res.status(400).json({ error: 'Last message must be from the user' });
 
         // For simplicity, SSE path calls the same non-streaming AI and wraps in SSE format.
-        const reply = await callAI(buildSystemText(level, lang), sanitized);
+        const reply = await callAI(buildSystemText(level, lang, learnerMemory), sanitized);
 
         res.setHeader('Content-Type', 'text/event-stream; charset=utf-8');
         res.setHeader('Cache-Control', 'no-cache');

@@ -30,5 +30,25 @@ function xmldb_block_pharos_tutor_upgrade($oldversion) {
         upgrade_block_savepoint(true, 2025060200, 'pharos_tutor');
     }
 
+    if ($oldversion < 2025060300) {
+        $table = new xmldb_table('block_pharos_tutor_memory');
+
+        if (!$dbman->table_exists($table)) {
+            $table->add_field('id',           XMLDB_TYPE_INTEGER, '10', null, XMLDB_NOTNULL, XMLDB_SEQUENCE);
+            $table->add_field('userid',       XMLDB_TYPE_INTEGER, '10', null, XMLDB_NOTNULL);
+            $table->add_field('courseid',     XMLDB_TYPE_INTEGER, '10', null, XMLDB_NOTNULL);
+            $table->add_field('profile_json', XMLDB_TYPE_TEXT,    null, null, null);
+            $table->add_field('timecreated',  XMLDB_TYPE_INTEGER, '10', null, XMLDB_NOTNULL, null, '0');
+            $table->add_field('timemodified', XMLDB_TYPE_INTEGER, '10', null, XMLDB_NOTNULL, null, '0');
+
+            $table->add_key('primary',   XMLDB_KEY_PRIMARY, ['id']);
+            $table->add_index('ix_userid_courseid', XMLDB_INDEX_UNIQUE, ['userid', 'courseid']);
+
+            $dbman->create_table($table);
+        }
+
+        upgrade_block_savepoint(true, 2025060300, 'pharos_tutor');
+    }
+
     return true;
 }

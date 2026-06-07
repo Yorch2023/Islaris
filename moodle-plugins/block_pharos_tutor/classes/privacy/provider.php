@@ -35,6 +35,16 @@ class provider implements
             ],
             'privacy:metadata:block_pharos_tutor_sessions'
         );
+        $collection->add_database_table(
+            'block_pharos_tutor_memory',
+            [
+                'userid'       => 'privacy:metadata:block_pharos_tutor_memory:userid',
+                'courseid'     => 'privacy:metadata:block_pharos_tutor_memory:courseid',
+                'profile_json' => 'privacy:metadata:block_pharos_tutor_memory:profile_json',
+                'timemodified' => 'privacy:metadata:block_pharos_tutor_memory:timemodified',
+            ],
+            'privacy:metadata:block_pharos_tutor_memory'
+        );
         return $collection;
     }
 
@@ -73,9 +83,18 @@ class provider implements
                 'userid'   => $userid,
                 'courseid' => $context->instanceid,
             ], 'timecreated ASC');
+            $memory = $DB->get_record('block_pharos_tutor_memory', [
+                'userid'   => $userid,
+                'courseid' => $context->instanceid,
+            ], 'profile_json, timemodified');
             writer::with_context($context)->export_data(
                 [get_string('pluginname', 'block_pharos_tutor')],
-                (object) ['sessions' => array_values($sessions)]
+                (object) [
+                    'sessions'         => array_values($sessions),
+                    'learning_profile' => $memory
+                        ? json_decode($memory->profile_json, true)
+                        : null,
+                ]
             );
         }
     }
@@ -86,6 +105,7 @@ class provider implements
             return;
         }
         $DB->delete_records('block_pharos_tutor_sessions', ['courseid' => $context->instanceid]);
+        $DB->delete_records('block_pharos_tutor_memory',   ['courseid' => $context->instanceid]);
     }
 
     public static function delete_data_for_user(approved_contextlist $contextlist): void {
@@ -96,6 +116,10 @@ class provider implements
                 continue;
             }
             $DB->delete_records('block_pharos_tutor_sessions', [
+                'userid'   => $userid,
+                'courseid' => $context->instanceid,
+            ]);
+            $DB->delete_records('block_pharos_tutor_memory', [
                 'userid'   => $userid,
                 'courseid' => $context->instanceid,
             ]);
@@ -112,6 +136,11 @@ class provider implements
         $params['courseid'] = $context->instanceid;
         $DB->delete_records_select(
             'block_pharos_tutor_sessions',
+            "userid $insql AND courseid = :courseid",
+            $params
+        );
+        $DB->delete_records_select(
+            'block_pharos_tutor_memory',
             "userid $insql AND courseid = :courseid",
             $params
         );

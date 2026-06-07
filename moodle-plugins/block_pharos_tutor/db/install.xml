@@ -21,5 +21,22 @@
         <INDEX NAME="ix_timecreated"     UNIQUE="false" FIELDS="timecreated"/>
       </INDEXES>
     </TABLE>
+    <TABLE NAME="block_pharos_tutor_memory" COMMENT="Structured pedagogical memory per user/course — no conversation content stored">
+      <FIELDS>
+        <FIELD NAME="id"           TYPE="int"  LENGTH="10" NOTNULL="true" SEQUENCE="true"/>
+        <FIELD NAME="userid"       TYPE="int"  LENGTH="10" NOTNULL="true"/>
+        <FIELD NAME="courseid"     TYPE="int"  LENGTH="10" NOTNULL="true"/>
+        <FIELD NAME="profile_json" TYPE="text" NOTNULL="false"/>
+        <FIELD NAME="timecreated"  TYPE="int"  LENGTH="10" NOTNULL="true" DEFAULT="0"/>
+        <FIELD NAME="timemodified" TYPE="int"  LENGTH="10" NOTNULL="true" DEFAULT="0"/>
+      </FIELDS>
+      <KEYS>
+        <KEY NAME="primary"    TYPE="primary" FIELDS="id"/>
+        <KEY NAME="fk_userid"  TYPE="foreign" FIELDS="userid" REFTABLE="user" REFFIELDS="id"/>
+      </KEYS>
+      <INDEXES>
+        <INDEX NAME="ix_userid_courseid" UNIQUE="true" FIELDS="userid, courseid"/>
+      </INDEXES>
+    </TABLE>
   </TABLES>
 </XMLDB>
