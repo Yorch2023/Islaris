@@ -14,6 +14,7 @@ define(['core/ajax', 'core/notification'], function (Ajax, Notification) {
         wireAccordions(container);
         wireCompletionToggles(container, contextId);
         loadRecommendation(cmid, lang);
+        initReflectModal(container);
     }
 
     // Animate all XP bars on first intersection.
@@ -172,6 +173,164 @@ define(['core/ajax', 'core/notification'], function (Ajax, Notification) {
         card.appendChild(body);
         widget.innerHTML = '';
         widget.appendChild(card);
+    }
+
+    // ── Reflection modal ─────────────────────────────────────────────────────
+
+    function initReflectModal(container) {
+        const reflectUrl = container.dataset.reflectUrl;
+        const sesskey    = container.dataset.sesskey;
+        const courseid   = new URLSearchParams(new URL(reflectUrl || location.href).search).get('courseid')
+                           || container.dataset.cmid;
+        const lang       = container.dataset.lang || 'es';
+        if (!reflectUrl) return;
+
+        const modal      = document.getElementById('pharos-reflect-modal');
+        const actLabel   = modal && modal.querySelector('.pharos-reflect-activity-label');
+        const inputSec   = document.getElementById('pharos-reflect-input-section');
+        const textarea   = document.getElementById('pharos-reflect-textarea');
+        const counter    = document.getElementById('pharos-reflect-counter');
+        const submitBtn  = document.getElementById('pharos-reflect-submit');
+        const loading    = document.getElementById('pharos-reflect-loading');
+        const resultSec  = document.getElementById('pharos-reflect-result');
+        const feedbackEl = document.getElementById('pharos-reflect-feedback');
+        const xpMsg      = document.getElementById('pharos-reflect-xp-msg');
+        const evidenceMsg= document.getElementById('pharos-reflect-evidence-msg');
+        const errorEl    = document.getElementById('pharos-reflect-error');
+        if (!modal || !textarea || !submitBtn || !loading || !resultSec) return;
+
+        var currentActivityName = '';
+        var currentLevel = 1;
+
+        // Character counter.
+        textarea.addEventListener('input', function () {
+            const len = textarea.value.length;
+            if (counter) counter.textContent = len + ' / 1000';
+        });
+
+        // Open modal when a reflect button is clicked.
+        container.addEventListener('click', function (e) {
+            const btn = e.target.closest('.pharos-reflect-btn');
+            if (!btn) return;
+
+            currentActivityName = btn.dataset.activityName || '';
+            currentLevel        = parseInt(btn.dataset.level, 10) || 1;
+
+            if (actLabel) actLabel.textContent = currentActivityName;
+            textarea.value = '';
+            if (counter) counter.textContent = '0 / 1000';
+            inputSec.classList.remove('d-none');
+            loading.classList.add('d-none');
+            resultSec.classList.add('d-none');
+            errorEl.classList.add('d-none');
+
+            showModal(modal);
+            setTimeout(function () { textarea.focus(); }, 200);
+        });
+
+        // Submit reflection.
+        submitBtn.addEventListener('click', function () {
+            submitReflection();
+        });
+
+        textarea.addEventListener('keydown', function (e) {
+            if (e.key === 'Enter' && e.ctrlKey) {
+                e.preventDefault();
+                submitReflection();
+            }
+        });
+
+        modal.addEventListener('click', function (e) {
+            if (e.target.closest('[data-dismiss="modal"]') || e.target === modal) {
+                hideModal(modal);
+            }
+        });
+
+        function submitReflection() {
+            const text = textarea.value.trim();
+            if (text.length < 50) {
+                errorEl.textContent = lang === 'it'
+                    ? 'La riflessione deve essere di almeno 50 caratteri.'
+                    : 'La reflexión debe tener al menos 50 caracteres.';
+                errorEl.classList.remove('d-none');
+                return;
+            }
+            errorEl.classList.add('d-none');
+            inputSec.classList.add('d-none');
+            loading.classList.remove('d-none');
+
+            fetch(reflectUrl, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    sesskey:       sesskey,
+                    courseid:      parseInt(courseid, 10),
+                    level:         currentLevel,
+                    activity_name: currentActivityName,
+                    reflection:    text,
+                    lang:          lang,
+                }),
+            })
+            .then(function (r) { return r.json(); })
+            .then(function (data) {
+                loading.classList.add('d-none');
+
+                if (data.error) {
+                    errorEl.textContent = data.error;
+                    errorEl.classList.remove('d-none');
+                    inputSec.classList.remove('d-none');
+                    return;
+                }
+
+                feedbackEl.textContent = data.feedback || '';
+                feedbackEl.className = 'alert mb-3 ' + (data.valid ? 'alert-success' : 'alert-warning');
+
+                if (data.xp_gained && data.xp_gained > 0) {
+                    xpMsg.textContent = '+ ' + data.xp_gained + ' XP';
+                    xpMsg.classList.remove('d-none');
+                } else {
+                    xpMsg.classList.add('d-none');
+                }
+
+                if (data.evidence_count !== undefined) {
+                    const threshold = data.threshold || 3;
+                    const countText = lang === 'it'
+                        ? 'Prove registrate: ' + data.evidence_count + ' / ' + threshold
+                        : 'Evidencias registradas: ' + data.evidence_count + ' / ' + threshold;
+                    evidenceMsg.textContent = countText;
+                }
+
+                resultSec.classList.remove('d-none');
+            })
+            .catch(function () {
+                loading.classList.add('d-none');
+                inputSec.classList.remove('d-none');
+                errorEl.textContent = lang === 'it'
+                    ? 'Errore di connessione. Riprova.'
+                    : 'Error de conexión. Inténtalo de nuevo.';
+                errorEl.classList.remove('d-none');
+            });
+        }
+    }
+
+    function showModal(modal) {
+        if (typeof $ !== 'undefined') {
+            $(modal).modal('show');
+        } else {
+            modal.classList.add('show');
+            modal.style.display = 'block';
+            document.body.classList.add('modal-open');
+        }
+    }
+
+    function hideModal(modal) {
+        if (typeof $ !== 'undefined') {
+            $(modal).modal('hide');
+        } else {
+            modal.classList.remove('show');
+            modal.style.display = '';
+            document.body.classList.remove('modal-open');
+        }
     }
 
     return {init: init};

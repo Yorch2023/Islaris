@@ -266,4 +266,79 @@ router.post('/stream', validateMoodleToken, tutorLimiter, async (req, res, next)
     }
 });
 
+/**
+ * POST /api/tutor/reflect
+ *
+ * Validates a student's activity reflection and returns quality feedback.
+ * Used to record platform-only evidence (no file uploads).
+ *
+ * Body:
+ *   userId        {string}  Moodle user ID
+ *   lang          {string}  'es' | 'it'
+ *   level         {number}  Itinerary level 1-3
+ *   activity_name {string}  Name of the completed activity
+ *   reflection    {string}  Student's reflection text
+ *
+ * Returns:
+ *   { valid: bool, feedback: string, quality: 1|2|3 }
+ */
+router.post('/reflect', validateMoodleToken, tutorLimiter, async (req, res, next) => {
+    try {
+        const { userId, lang, level, activity_name, reflection } = req.body;
+
+        if (!userId || typeof userId !== 'string')
+            return res.status(400).json({ error: 'userId is required' });
+        if (!['es', 'it'].includes(lang))
+            return res.status(400).json({ error: 'lang must be "es" or "it"' });
+        if (![1, 2, 3].includes(level))
+            return res.status(400).json({ error: 'level must be 1, 2 or 3' });
+        if (typeof reflection !== 'string' || reflection.trim().length < 30)
+            return res.status(400).json({ error: 'reflection too short' });
+
+        const actName = (typeof activity_name === 'string' ? activity_name : '').slice(0, 200);
+        const text    = reflection.trim().slice(0, 1000);
+
+        const levelLabels = { 1: 'N1 — Fundamentos', 2: 'N2 — IA en la práctica', 3: 'N3 — Facilitación crítica' };
+
+        const systemEs = `Eres un evaluador pedagógico para el curso PHAROS-AI (${levelLabels[level]}).
+Recibirás la reflexión de un/a participante sobre una actividad completada en la plataforma.
+Tu tarea es: 1) determinar si es genuina y muestra comprensión real (no una frase genérica de relleno),
+2) asignar una calidad: 1=insuficiente, 2=válida, 3=excelente,
+3) dar un feedback breve, directo y alentador (2-3 frases) en español.
+Responde ÚNICAMENTE con JSON: {"valid":bool,"quality":1|2|3,"feedback":"..."}`;
+
+        const systemIt = `Sei un valutatore pedagogico per il corso PHAROS-AI (${levelLabels[level]}).
+Riceverai la riflessione di un/a partecipante su un'attività completata nella piattaforma.
+Il tuo compito è: 1) determinare se è genuina e mostra vera comprensione (non frasi generiche di riempimento),
+2) assegnare una qualità: 1=insufficiente, 2=valida, 3=eccellente,
+3) dare un feedback breve, diretto e incoraggiante (2-3 frasi) in italiano.
+Rispondi SOLO con JSON: {"valid":bool,"quality":1|2|3,"feedback":"..."}`;
+
+        const system = lang === 'it' ? systemIt : systemEs;
+        const userMsg = actName
+            ? `Actividad: "${actName}"\nReflexión del participante: ${text}`
+            : `Reflexión del participante: ${text}`;
+
+        const raw = await callAI(system, [{ role: 'user', content: userMsg }]);
+
+        let result;
+        try {
+            const jsonMatch = raw.match(/\{[\s\S]*\}/);
+            result = JSON.parse(jsonMatch ? jsonMatch[0] : raw);
+        } catch {
+            return res.status(502).json({ error: 'Invalid AI response' });
+        }
+
+        const quality = Math.min(3, Math.max(1, parseInt(result.quality, 10) || 1));
+        res.json({
+            valid:    result.valid === true && quality >= 2,
+            quality,
+            feedback: typeof result.feedback === 'string' ? result.feedback.slice(0, 500) : '',
+        });
+
+    } catch (err) {
+        next(err);
+    }
+});
+
 module.exports = router;

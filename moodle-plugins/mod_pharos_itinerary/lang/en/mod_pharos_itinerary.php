@@ -47,3 +47,12 @@ $string['event_level_up']             = 'Level up';
 $string['recommend_heading']          = 'What to do next?';
 $string['recommend_loading']          = 'Loading recommendation…';
 $string['recommend_error']            = 'Could not load recommendation.';
+
+// Reflection system
+$string['reflect_btn']         = 'Reflect';
+$string['reflect_title']       = 'Activity reflection';
+$string['reflect_label']       = 'Write your reflection on this activity';
+$string['reflect_placeholder'] = 'Describe what you learned, what surprised you, how you connect it to your life or work… (min. 50 characters)';
+$string['reflect_hint']        = 'Min. 50 chars · Max. 1000 · Ctrl+Enter to submit';
+$string['reflect_submit']      = 'Submit reflection';
+$string['reflect_close']       = 'Close';

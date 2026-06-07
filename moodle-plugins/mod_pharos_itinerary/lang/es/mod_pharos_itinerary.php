@@ -55,3 +55,12 @@ $string['event_level_up']             = 'Subida de nivel';
 $string['recommend_heading']          = '¿Qué hacer a continuación?';
 $string['recommend_loading']          = 'Cargando recomendación…';
 $string['recommend_error']            = 'No se pudo cargar la recomendación.';
+
+// Reflection system
+$string['reflect_btn']         = 'Reflexionar';
+$string['reflect_title']       = 'Reflexión de actividad';
+$string['reflect_label']       = 'Escribe tu reflexión sobre esta actividad';
+$string['reflect_placeholder'] = 'Describe qué aprendiste, qué te sorprendió, cómo lo conectas con tu vida o trabajo… (mín. 50 caracteres)';
+$string['reflect_hint']        = 'Mín. 50 caracteres · Máx. 1000 · Ctrl+Enter para enviar';
+$string['reflect_submit']      = 'Enviar reflexión';
+$string['reflect_close']       = 'Cerrar';

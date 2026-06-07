@@ -55,3 +55,12 @@ $string['ws_award_xp']                = 'Assegna XP all\'utente nell\'itinerario
 $string['recommend_heading']          = 'Cosa fare dopo?';
 $string['recommend_loading']          = 'Caricamento raccomandazione…';
 $string['recommend_error']            = 'Impossibile caricare la raccomandazione.';
+
+// Reflection system
+$string['reflect_btn']         = 'Rifletti';
+$string['reflect_title']       = 'Riflessione sull\'attività';
+$string['reflect_label']       = 'Scrivi la tua riflessione su questa attività';
+$string['reflect_placeholder'] = 'Descrivi cosa hai imparato, cosa ti ha sorpreso, come lo colleghi alla tua vita o al tuo lavoro… (min. 50 caratteri)';
+$string['reflect_hint']        = 'Min. 50 caratteri · Max. 1000 · Ctrl+Invio per inviare';
+$string['reflect_submit']      = 'Invia riflessione';
+$string['reflect_close']       = 'Chiudi';

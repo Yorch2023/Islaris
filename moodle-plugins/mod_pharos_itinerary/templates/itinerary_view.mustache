@@ -27,7 +27,9 @@
      role="region"
      aria-labelledby="pharos-itinerary-heading"
      data-cmid="{{cmid}}"
-     data-lang="{{lang}}">
+     data-lang="{{lang}}"
+     data-reflect-url="{{reflect_url}}"
+     data-sesskey="{{sesskey}}">
 
     {{! Header }}
     <div class="d-flex align-items-center justify-content-between mb-3 flex-wrap">
@@ -101,17 +103,29 @@
                 <ul class="list-group list-group-flush">
                     {{#activities}}
                     <li class="list-group-item pharos-activity-item {{#completed}}pharos-activity-item--done{{/completed}}">
-                        <div class="d-flex align-items-center">
-                            <input type="checkbox"
-                                   id="activity-{{cmid}}"
-                                   class="mr-2"
-                                   data-cmid="{{cmid}}"
-                                   {{#completed}}checked{{/completed}}
-                                   {{#is_locked}}disabled aria-disabled="true"{{/is_locked}}
-                                   aria-label="{{name}}">
-                            <label for="activity-{{cmid}}" class="mb-0 {{#completed}}text-muted{{/completed}}">
-                                <a href="{{url}}">{{name}}</a>
-                            </label>
+                        <div class="d-flex align-items-center justify-content-between">
+                            <div class="d-flex align-items-center">
+                                <input type="checkbox"
+                                       id="activity-{{cmid}}"
+                                       class="mr-2"
+                                       data-cmid="{{cmid}}"
+                                       {{#completed}}checked{{/completed}}
+                                       {{#is_locked}}disabled aria-disabled="true"{{/is_locked}}
+                                       aria-label="{{name}}">
+                                <label for="activity-{{cmid}}" class="mb-0 {{#completed}}text-muted{{/completed}}">
+                                    <a href="{{url}}">{{name}}</a>
+                                </label>
+                            </div>
+                            {{^is_locked}}
+                            <button type="button"
+                                    class="pharos-reflect-btn btn btn-outline-primary btn-sm py-0 px-2 ml-2 flex-shrink-0"
+                                    style="font-size:0.7rem"
+                                    data-activity-name="{{name}}"
+                                    data-level="{{../level}}"
+                                    aria-label="{{#str}}reflect_btn, mod_pharos_itinerary{{/str}}: {{name}}">
+                                {{#str}}reflect_btn, mod_pharos_itinerary{{/str}}
+                            </button>
+                            {{/is_locked}}
                         </div>
                     </li>
                     {{/activities}}
@@ -133,4 +147,74 @@
         </a>
     </div>
 
+</div>
+
+{{! Reflection modal — AI validates student reflection and records evidence }}
+<div class="modal fade" id="pharos-reflect-modal" tabindex="-1"
+     role="dialog"
+     aria-labelledby="pharos-reflect-title"
+     aria-modal="true">
+    <div class="modal-dialog" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="pharos-reflect-title">
+                    {{#str}}reflect_title, mod_pharos_itinerary{{/str}}
+                </h5>
+                <button type="button" class="close" data-dismiss="modal"
+                        aria-label="{{#str}}closebuttontitle, core{{/str}}">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+            <div class="modal-body">
+                <p class="pharos-reflect-activity-label text-muted small mb-1"></p>
+
+                <div id="pharos-reflect-input-section">
+                    <label for="pharos-reflect-textarea" class="small font-weight-bold">
+                        {{#str}}reflect_label, mod_pharos_itinerary{{/str}}
+                    </label>
+                    <textarea id="pharos-reflect-textarea"
+                              class="form-control form-control-sm mb-1"
+                              rows="5"
+                              maxlength="1000"
+                              minlength="50"
+                              placeholder="{{#str}}reflect_placeholder, mod_pharos_itinerary{{/str}}"
+                              aria-label="{{#str}}reflect_label, mod_pharos_itinerary{{/str}}"
+                              aria-describedby="pharos-reflect-counter pharos-reflect-hint"></textarea>
+                    <div class="d-flex justify-content-between mb-2">
+                        <small id="pharos-reflect-hint" class="text-muted">
+                            {{#str}}reflect_hint, mod_pharos_itinerary{{/str}}
+                        </small>
+                        <small id="pharos-reflect-counter" class="text-muted" aria-live="polite">0 / 1000</small>
+                    </div>
+                    <button type="button"
+                            id="pharos-reflect-submit"
+                            class="btn btn-primary btn-sm"
+                            aria-label="{{#str}}reflect_submit, mod_pharos_itinerary{{/str}}">
+                        {{#str}}reflect_submit, mod_pharos_itinerary{{/str}}
+                    </button>
+                </div>
+
+                <div id="pharos-reflect-loading" class="text-center py-3 d-none">
+                    <div class="spinner-border text-primary" role="status">
+                        <span class="sr-only">{{#str}}loading, core{{/str}}</span>
+                    </div>
+                </div>
+
+                <div id="pharos-reflect-result" class="d-none" aria-live="polite">
+                    <div id="pharos-reflect-feedback"
+                         class="alert mb-3"
+                         role="alert"></div>
+                    <div id="pharos-reflect-xp-msg" class="small text-success font-weight-bold mb-1 d-none"></div>
+                    <div id="pharos-reflect-evidence-msg" class="small text-muted"></div>
+                    <button type="button"
+                            class="btn btn-outline-secondary btn-sm mt-2"
+                            data-dismiss="modal">
+                        {{#str}}reflect_close, mod_pharos_itinerary{{/str}}
+                    </button>
+                </div>
+
+                <div id="pharos-reflect-error" class="alert alert-danger d-none" role="alert"></div>
+            </div>
+        </div>
+    </div>
 </div>

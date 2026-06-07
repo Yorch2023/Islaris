@@ -127,6 +127,9 @@ $currentLevelLabel = $levelMeta[$progress->level]['label'];
 
 $userLang = in_array(current_language(), ['it'], true) ? 'it' : 'es';
 
+$reflectUrl = (new moodle_url('/blocks/pharos_tutor/ajax-reflect.php',
+    ['courseid' => $course->id]))->out(false);
+
 $templateData = [
     'fullname'        => fullname($USER),
     'level'           => $progress->level,
@@ -141,6 +144,8 @@ $templateData = [
     'badges_url'      => $badgesUrl,
     'cmid'            => $cm->id,
     'lang'            => $userLang,
+    'reflect_url'     => $reflectUrl,
+    'sesskey'         => sesskey(),
 ];
 
 echo $OUTPUT->render_from_template('mod_pharos_itinerary/itinerary_view', $templateData);
