@@ -117,6 +117,13 @@ class block_pharos_tutor extends block_base {
             $templateData
         );
 
+        $progressUrl = (new moodle_url('/blocks/pharos_tutor/progress.php', ['courseid' => $COURSE->id]))->out(false);
+        $this->content->footer = html_writer::link(
+            $progressUrl,
+            get_string('progress_link', 'block_pharos_tutor'),
+            ['class' => 'small text-muted']
+        );
+
         $PAGE->requires->js_call_amd('block_pharos_tutor/tutor-chat', 'init');
 
         return $this->content;
