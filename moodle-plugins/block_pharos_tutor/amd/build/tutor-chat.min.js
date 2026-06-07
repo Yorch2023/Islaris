@@ -1,12 +1,12 @@
 // AMD module: block_pharos_tutor/tutor-chat
-// Handles the PHAROS-AI tutor chat UI with SSE streaming support.
-// Falls back to non-streaming if the browser does not support ReadableStream.
+// Handles the PHAROS-AI tutor chat UI with session tracking for evidence auto-creation.
 define([], function () {
     'use strict';
 
-    const MAX_HISTORY = 20;
-    const STREAM_SUPPORTED = typeof ReadableStream !== 'undefined' &&
-                             typeof TextDecoder    !== 'undefined';
+    const MAX_HISTORY       = 20;
+    const EVIDENCE_THRESHOLD = 5;   // User messages in one session to trigger evidence creation.
+    const STREAM_SUPPORTED  = typeof ReadableStream !== 'undefined' &&
+                              typeof TextDecoder    !== 'undefined';
 
     function init() {
         const root = document.querySelector('.pharos-tutor');
@@ -15,6 +15,8 @@ define([], function () {
         const config = {
             proxyUrl:       root.dataset.proxyUrl,
             streamProxyUrl: root.dataset.streamProxyUrl,
+            sessionUrl:     root.dataset.sessionUrl,
+            courseId:       root.dataset.courseId,
             userId:         root.dataset.userId,
             level:          parseInt(root.dataset.level, 10) || 1,
             lang:           root.dataset.lang || 'es',
@@ -22,20 +24,27 @@ define([], function () {
         };
 
         const ui = {
-            messages: root.querySelector('#pharos-tutor-messages'),
-            status:   root.querySelector('#pharos-tutor-status'),
-            form:     root.querySelector('#pharos-tutor-form'),
-            input:    root.querySelector('#pharos-tutor-input'),
-            send:     root.querySelector('.pharos-tutor__send'),
+            messages:      root.querySelector('#pharos-tutor-messages'),
+            status:        root.querySelector('#pharos-tutor-status'),
+            form:          root.querySelector('#pharos-tutor-form'),
+            input:         root.querySelector('#pharos-tutor-input'),
+            send:          root.querySelector('.pharos-tutor__send'),
+            sessionBar:    root.querySelector('#pharos-tutor-session-progress'),
+            evidenceToast: root.querySelector('#pharos-tutor-evidence-toast'),
         };
 
         const history = [];
+        const session = {
+            start:        Date.now(),
+            messageCount: 0,
+            saved:        false,
+        };
 
         ui.form.addEventListener('submit', function (e) {
             e.preventDefault();
             const text = ui.input.value.trim();
             if (!text) return;
-            handleSend(text, config, ui, history);
+            handleSend(text, config, ui, history, session);
         });
 
         ui.input.addEventListener('keydown', function (e) {
@@ -54,16 +63,22 @@ define([], function () {
                 charCount.textContent = remaining + ' / ' + maxLen;
             });
         }
+
+        // Save session on page unload if any messages were sent.
+        window.addEventListener('beforeunload', function () {
+            if (session.messageCount > 0 && !session.saved && config.sessionUrl) {
+                saveSession(config, session, ui);
+            }
+        });
     }
 
-    async function handleSend(text, config, ui, history) {
+    async function handleSend(text, config, ui, history, session) {
         setLoading(ui, true);
         appendMessage(ui.messages, 'user', text);
         history.push({ role: 'user', content: text });
         ui.input.value = '';
         trimHistory(history);
 
-        // Create an empty assistant bubble that will be filled progressively.
         const bubble = appendMessage(ui.messages, 'assistant', '');
         bubble.classList.add('pharos-tutor__bubble--streaming');
 
@@ -79,19 +94,80 @@ define([], function () {
             history.push({ role: 'assistant', content: finalText });
             trimHistory(history);
             bubble.classList.remove('pharos-tutor__bubble--streaming');
-            // Move focus to the reply so keyboard/screen-reader users are aware of it.
             bubble.setAttribute('tabindex', '-1');
             bubble.focus();
+
+            // Count only successful user messages.
+            session.messageCount++;
+            updateSessionBar(ui, session);
+
+            // Auto-save when threshold reached (and only once per session).
+            if (session.messageCount >= EVIDENCE_THRESHOLD && !session.saved) {
+                await saveSession(config, session, ui);
+            }
 
         } catch (_err) {
             bubble.textContent = ui.status.dataset.errorText || 'Error de conexión.';
             bubble.classList.add('pharos-tutor__bubble--error');
             bubble.classList.remove('pharos-tutor__bubble--streaming');
-            history.pop(); // Remove the failed user message.
+            history.pop();
         } finally {
             setLoading(ui, false);
             scrollToBottom(ui.messages);
         }
+    }
+
+    async function saveSession(config, session, ui) {
+        if (!config.sessionUrl || session.saved) return;
+        session.saved = true; // Prevent duplicate saves.
+
+        const duration = Math.round((Date.now() - session.start) / 1000);
+
+        try {
+            const resp = await fetch(config.sessionUrl, {
+                method:  'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    sesskey:       config.sesskey,
+                    courseid:      config.courseId,
+                    level:         config.level,
+                    message_count: session.messageCount,
+                    duration:      duration,
+                }),
+                keepalive: true, // Ensures delivery even on beforeunload.
+            });
+
+            if (resp.ok) {
+                const data = await resp.json();
+                if (data.evidence_created && ui.evidenceToast) {
+                    showEvidenceToast(ui, data.badge_issued);
+                }
+            }
+        } catch (_e) {
+            // Non-critical — session metadata could not be saved.
+        }
+    }
+
+    function updateSessionBar(ui, session) {
+        if (!ui.sessionBar) return;
+        const pct   = Math.min(100, Math.round(session.messageCount / EVIDENCE_THRESHOLD * 100));
+        const filled = Math.min(session.messageCount, EVIDENCE_THRESHOLD);
+        ui.sessionBar.innerHTML =
+            '<div class="pharos-session-bar" aria-hidden="true">' +
+            '<div class="pharos-session-bar__fill" style="width:' + pct + '%"></div>' +
+            '</div>' +
+            '<small class="pharos-session-bar__label">' + filled + ' / ' + EVIDENCE_THRESHOLD + '</small>';
+    }
+
+    function showEvidenceToast(ui, badgeIssued) {
+        if (!ui.evidenceToast) return;
+        ui.evidenceToast.classList.remove('pharos-tutor__evidence-toast--hidden');
+        if (badgeIssued) {
+            ui.evidenceToast.classList.add('pharos-tutor__evidence-toast--badge');
+        }
+        setTimeout(function () {
+            ui.evidenceToast.classList.add('pharos-tutor__evidence-toast--hidden');
+        }, 6000);
     }
 
     // Streaming path: reads SSE chunks and fills the bubble progressively.
@@ -117,7 +193,7 @@ define([], function () {
 
             buffer += decoder.decode(value, { stream: true });
             const lines = buffer.split('\n');
-            buffer = lines.pop(); // Keep incomplete last line.
+            buffer = lines.pop();
 
             for (const line of lines) {
                 if (!line.startsWith('data: ')) continue;
