@@ -8,7 +8,8 @@
     "dev": "nodemon ai-layer/server.js",
     "test": "jest --testPathPattern=tests/",
     "test:watch": "jest --watch",
-    "lint": "eslint ai-layer/**/*.js"
+    "lint": "eslint --no-warn-ignored",
+    "lint:fix": "eslint --no-warn-ignored --fix"
   },
   "dependencies": {
     "@anthropic-ai/sdk": "^0.36.0",

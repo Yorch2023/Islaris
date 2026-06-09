@@ -28,7 +28,7 @@ jobs:
         run: npm ci
 
       - name: Run ESLint
-        run: npx eslint "ai-layer/**/*.js" "tests/**/*.js" "moodle-plugins/**/amd/src/*.js" --max-warnings 0
+        run: npx eslint --no-warn-ignored
 
       - name: Run Jest tests
         run: npm test -- --forceExit --ci --coverage
@@ -59,9 +59,18 @@ jobs:
 
       - name: Check PHP syntax (all plugin files)
         run: |
-          find moodle-plugins moodle-theme -name "*.php" -print0 \
-            | xargs -0 -P4 php -l \
-            | grep -v "No syntax errors" || true
+          errors=0
+          while IFS= read -r -d '' file; do
+            if ! php -l "$file" > /dev/null 2>&1; then
+              php -l "$file" >&2
+              errors=$((errors + 1))
+            fi
+          done < <(find moodle-plugins moodle-theme -name "*.php" -print0)
+          if [ "$errors" -gt 0 ]; then
+            echo "::error::$errors PHP file(s) have syntax errors" >&2
+            exit 1
+          fi
+          echo "All PHP files pass syntax check."
 
   validate-json:
     name: Validate JSON files
