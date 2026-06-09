@@ -18,10 +18,8 @@ $context = context_course::instance($courseId);
 require_capability('block/pharos_teacher:view', $context);
 
 $now         = time();
-$weekAgo     = $now - (7  * DAYSECS);
-$monthAgo    = $now - (30 * DAYSECS);
-$twoWeeksAgo = $now - (14 * DAYSECS);
-$cutoff      = $now - (7  * DAYSECS);
+$weekAgo = $now - (7 * DAYSECS);
+$cutoff  = $now - (7 * DAYSECS);
 
 $thresholds  = [1 => 100, 2 => 250, 3 => 250];
 $levelNames  = [1 => 'N1', 2 => 'N2', 3 => 'N3'];
@@ -99,22 +97,11 @@ foreach ($students as $student) {
         } catch (Throwable $e) {}
     }
 
-    // Risk score (same 4-factor formula as block and scheduled task).
-    $risk = 0;
-    if ($daysSince === null)    { $risk += 35; }
-    elseif ($daysSince > 21)    { $risk += 40; }
-    elseif ($daysSince > 14)    { $risk += 28; }
-    elseif ($daysSince > 7)     { $risk += 15; }
-    elseif ($daysSince > 4)     { $risk += 5;  }
-
-    if ($lastAi === 0)                   { $risk += 20; }
-    elseif ($lastAi < $twoWeeksAgo)      { $risk += 30; }
-    elseif ($lastAi < $weekAgo)          { $risk += 14; }
-
-    if ($xp === 0)              { $risk += 20; } elseif ($xpPercent < 15) { $risk += 8; }
-    if (!$hasEvidence)          { $risk += 10; }
-    $risk = min(100, $risk);
-    $riskLevel = $risk >= 65 ? 'high' : ($risk >= 35 ? 'medium' : 'low');
+    $riskResult = \block_pharos_teacher\risk_scorer::compute(
+        $daysSince, $lastAi, $xp, $xpPercent, $hasEvidence, $now
+    );
+    $risk      = $riskResult['score'];
+    $riskLevel = $riskResult['level'];
 
     $profileUrl = (new moodle_url('/user/view.php', ['id'=>$sid,'course'=>$courseId]))->out(false);
 

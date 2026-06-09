@@ -17,8 +17,7 @@ defined('MOODLE_INTERNAL') || die();
  */
 class check_dropout_risk extends \core\task\scheduled_task {
 
-    private const RISK_HIGH_THRESHOLD  = 65;
-    private const ALERT_COOLDOWN_DAYS  = 7;
+    private const ALERT_COOLDOWN_DAYS = 7;
 
     public function get_name(): string {
         return get_string('task_check_dropout_risk', 'block_pharos_teacher');
@@ -28,9 +27,7 @@ class check_dropout_risk extends \core\task\scheduled_task {
         global $DB;
 
         $now       = time();
-        $weekAgo   = $now - (self::ALERT_COOLDOWN_DAYS * DAYSECS);
-        $monthAgo  = $now - (30 * DAYSECS);
-        $twoWeeksAgo = $now - (14 * DAYSECS);
+        $weekAgo = $now - (self::ALERT_COOLDOWN_DAYS * DAYSECS);
         $cutoff    = $now - (7 * DAYSECS);
 
         // Find all courses that have the pharos_teacher block.
@@ -87,11 +84,8 @@ class check_dropout_risk extends \core\task\scheduled_task {
             foreach ($students as $student) {
                 $studentId = (int) $student->id;
 
-                // ── Compute risk score (same factors as block_pharos_teacher.php) ──
-
-                $risk     = 0;
-                $lastSeen = 0;
-                $xp       = 0;
+                $lastSeen  = 0;
+                $xp        = 0;
                 $xpPercent = 0;
 
                 // Factor 1: days since last itinerary activity.
@@ -115,18 +109,6 @@ class check_dropout_risk extends \core\task\scheduled_task {
 
                 $daysSince = $lastSeen ? (int) floor(($now - $lastSeen) / DAYSECS) : null;
 
-                if ($daysSince === null) {
-                    $risk += 35;
-                } elseif ($daysSince > 21) {
-                    $risk += 40;
-                } elseif ($daysSince > 14) {
-                    $risk += 28;
-                } elseif ($daysSince > 7) {
-                    $risk += 15;
-                } elseif ($daysSince > 4) {
-                    $risk += 5;
-                }
-
                 // Factor 2: AI session recency.
                 $lastAiSession = 0;
                 if ($sessionsTableExists) {
@@ -142,22 +124,7 @@ class check_dropout_risk extends \core\task\scheduled_task {
                     }
                 }
 
-                if ($lastAiSession === 0) {
-                    $risk += 20;
-                } elseif ($lastAiSession < $twoWeeksAgo) {
-                    $risk += 30;
-                } elseif ($lastAiSession < $weekAgo) {
-                    $risk += 14;
-                }
-
-                // Factor 3: zero XP.
-                if ($xp === 0) {
-                    $risk += 20;
-                } elseif ($xpPercent < 15) {
-                    $risk += 8;
-                }
-
-                // Factor 4: no evidence.
+                // Factor 4: evidence submitted.
                 $hasEvidence = false;
                 if ($evidenceTableExists) {
                     try {
@@ -169,13 +136,13 @@ class check_dropout_risk extends \core\task\scheduled_task {
                         // Non-critical.
                     }
                 }
-                if (!$hasEvidence) {
-                    $risk += 10;
-                }
 
-                $risk = min(100, $risk);
+                $riskResult = \block_pharos_teacher\risk_scorer::compute(
+                    $daysSince, $lastAiSession, $xp, $xpPercent, $hasEvidence, $now
+                );
+                $risk = $riskResult['score'];
 
-                if ($risk < self::RISK_HIGH_THRESHOLD) {
+                if ($risk < \block_pharos_teacher\risk_scorer::THRESHOLD_HIGH) {
                     continue;
                 }
 

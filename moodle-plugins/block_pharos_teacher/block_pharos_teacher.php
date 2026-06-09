@@ -186,46 +186,16 @@ class block_pharos_teacher extends block_base {
                 $aiStatus = 'recent';
             }
 
-            // ── Dropout risk score (0-100) ───────────────────────────────────
-            $risk = 0;
-
-            // Factor 1: days since last itinerary activity (0-40 pts)
-            if ($daysSince === null) {
-                $risk += 35;
-            } elseif ($daysSince > 21) {
-                $risk += 40;
-            } elseif ($daysSince > 14) {
-                $risk += 28;
-            } elseif ($daysSince > 7) {
-                $risk += 15;
-            } elseif ($daysSince > 4) {
-                $risk += 5;
-            }
-
-            // Factor 2: AI session recency (0-30 pts)
-            $twoWeeksAgo = $now - 14 * DAYSECS;
-            if ($lastAiSession === 0) {
-                $risk += 20;
-            } elseif ($lastAiSession < $twoWeeksAgo) {
-                $risk += 30;
-            } elseif ($lastAiSession < $weekAgo) {
-                $risk += 14;
-            }
-
-            // Factor 3: zero XP progress (0-20 pts)
-            if ($xp === 0) {
-                $risk += 20;
-            } elseif ($xpPercent < 15) {
-                $risk += 8;
-            }
-
-            // Factor 4: no evidence submitted yet (0-10 pts)
-            if (empty($evidenceRows)) {
-                $risk += 10;
-            }
-
-            $risk      = min(100, $risk);
-            $riskLevel = ($risk >= 65) ? 'high' : (($risk >= 35) ? 'medium' : 'low');
+            $riskResult = \block_pharos_teacher\risk_scorer::compute(
+                $daysSince,
+                $lastAiSession,
+                $xp,
+                $xpPercent,
+                !empty($evidenceRows),
+                $now
+            );
+            $risk      = $riskResult['score'];
+            $riskLevel = $riskResult['level'];
 
             $profileUrl = new moodle_url('/user/view.php', ['id' => $student->id, 'course' => $COURSE->id]);
 
