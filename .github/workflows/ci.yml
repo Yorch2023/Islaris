@@ -48,13 +48,17 @@ jobs:
     name: PHP syntax check
     runs-on: ubuntu-latest
 
+    strategy:
+      matrix:
+        php-version: ["8.1", "8.2"]
+
     steps:
       - uses: actions/checkout@v4
 
-      - name: Set up PHP 8.1
+      - name: Set up PHP ${{ matrix.php-version }}
         uses: shivammathur/setup-php@v2
         with:
-          php-version: "8.1"
+          php-version: ${{ matrix.php-version }}
           tools: composer
 
       - name: Check PHP syntax (all plugin files)
@@ -85,10 +89,10 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - name: Set up PHP 8.1
+      - name: Set up PHP 8.2
         uses: shivammathur/setup-php@v2
         with:
-          php-version: "8.1"
+          php-version: "8.2"
       - name: Check install.xml is well-formed XML
         run: |
           find moodle-plugins -name "install.xml" -print0 \
