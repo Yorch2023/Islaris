@@ -16,7 +16,6 @@ const SYSTEM_PROMPT = fs.readFileSync(
 
 const MAX_MESSAGES         = 20;
 const MAX_MESSAGE_LENGTH   = 3000;
-const MAX_PROFILE_LENGTH   = 4000;
 
 let anthropicClient = null;
 function getAnthropic() {
@@ -98,7 +97,7 @@ router.post('/extract', validateMoodleToken, memoryLimiter, async (req, res, nex
         let profile;
         try {
             profile = await extractMemory(sanitized, existing);
-        } catch (parseErr) {
+        } catch (_parseErr) {
             // JSON.parse throws SyntaxError when the AI returns non-JSON text.
             return res.status(500).json({ error: 'Invalid profile structure from AI' });
         }

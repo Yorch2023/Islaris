@@ -120,7 +120,7 @@ define([], function () {
 
     // ── AI Advisor chat modal ──────────────────────────────────────────────
 
-    var advisorState = {
+    const advisorState = {
         studentId:   null,
         studentName: null,
         courseId:    null,

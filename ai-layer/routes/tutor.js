@@ -198,7 +198,7 @@ function sanitize(messages) {
 }
 
 function validateBody(body, res) {
-    const { userId, level, lang, messages, learnerMemory } = body;
+    const { userId, level, lang, messages } = body;
     if (!userId || typeof userId !== 'string')
         return res.status(400).json({ error: 'userId is required' });
     if (![1, 2, 3].includes(level))

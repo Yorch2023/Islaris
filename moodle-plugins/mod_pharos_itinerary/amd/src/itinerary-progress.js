@@ -199,8 +199,8 @@ define(['core/ajax', 'core/notification'], function (Ajax, Notification) {
         const errorEl    = document.getElementById('pharos-reflect-error');
         if (!modal || !textarea || !submitBtn || !loading || !resultSec) return;
 
-        var currentActivityName = '';
-        var currentLevel = 1;
+        let currentActivityName = '';
+        let currentLevel = 1;
 
         // Character counter.
         textarea.addEventListener('input', function () {

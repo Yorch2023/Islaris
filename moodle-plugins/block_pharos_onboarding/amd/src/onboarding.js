@@ -11,9 +11,9 @@ define([], function () {
     // ── XP bar ──────────────────────────────────────────────────────────────
 
     function animateXpBar() {
-        var bar = document.querySelector('.pharos-onboarding--compact [data-xp-target]');
+        const bar = document.querySelector('.pharos-onboarding--compact [data-xp-target]');
         if (!bar) return;
-        var fill = bar.querySelector('.pharos-xp-bar__fill');
+        const fill = bar.querySelector('.pharos-xp-bar__fill');
         if (!fill) return;
         requestAnimationFrame(function () {
             fill.style.transition = 'width 0.6s ease';
@@ -24,18 +24,18 @@ define([], function () {
     // ── Wizard ───────────────────────────────────────────────────────────────
 
     function initWizard() {
-        var root = document.querySelector('.pharos-onboarding:not(.pharos-onboarding--compact)');
+        const root = document.querySelector('.pharos-onboarding:not(.pharos-onboarding--compact)');
         if (!root) return;
 
-        var saveUrl      = root.dataset.saveUrl;
-        var sesskey      = root.dataset.sesskey;
-        var itineraryUrl = root.dataset.itineraryUrl;
+        const saveUrl      = root.dataset.saveUrl;
+        const sesskey      = root.dataset.sesskey;
+        const itineraryUrl = root.dataset.itineraryUrl;
         if (!saveUrl) return;
 
         // Navigation buttons.
         root.querySelectorAll('.pharos-ob-next').forEach(function (btn) {
             btn.addEventListener('click', function () {
-                var currentStep = parseInt(btn.closest('fieldset').id.replace('pharos-ob-step-', ''), 10);
+                const currentStep = parseInt(btn.closest('fieldset').id.replace('pharos-ob-step-', ''), 10);
                 if (!validateStep(root, currentStep)) return;
                 showStep(root, parseInt(btn.dataset.next, 10));
             });
@@ -48,20 +48,20 @@ define([], function () {
         });
 
         // Submit.
-        var form = document.getElementById('pharos-ob-form');
+        const form = document.getElementById('pharos-ob-form');
         if (!form) return;
 
         form.addEventListener('submit', function (e) {
             e.preventDefault();
             if (!validateStep(root, 3)) return;
 
-            var submitBtn = document.getElementById('pharos-ob-submit');
+            const submitBtn = document.getElementById('pharos-ob-submit');
             if (submitBtn) {
                 submitBtn.disabled = true;
                 submitBtn.textContent = '…';
             }
 
-            var payload = collectAnswers(form);
+            const payload = collectAnswers(form);
             payload.sesskey = sesskey;
 
             fetch(saveUrl, {
@@ -89,26 +89,26 @@ define([], function () {
         root.querySelectorAll('.pharos-ob-panel').forEach(function (panel) {
             panel.classList.add('d-none');
         });
-        var target = document.getElementById('pharos-ob-step-' + stepNum);
+        const target = document.getElementById('pharos-ob-step-' + stepNum);
         if (target) {
             target.classList.remove('d-none');
             target.querySelector('select, input') && target.querySelector('select, input').focus();
         }
         // Update step dots.
         root.querySelectorAll('.pharos-ob-step').forEach(function (dot) {
-            var s = parseInt(dot.dataset.step, 10);
+            const s = parseInt(dot.dataset.step, 10);
             dot.classList.toggle('pharos-ob-step--active', s === stepNum);
             dot.classList.toggle('pharos-ob-step--done', s < stepNum);
         });
     }
 
     function validateStep(root, stepNum) {
-        var panel = document.getElementById('pharos-ob-step-' + stepNum);
+        const panel = document.getElementById('pharos-ob-step-' + stepNum);
         if (!panel) return true;
 
         // Check required selects.
-        var selects = panel.querySelectorAll('select[required]');
-        for (var i = 0; i < selects.length; i++) {
+        const selects = panel.querySelectorAll('select[required]');
+        for (let i = 0; i < selects.length; i++) {
             if (!selects[i].value) {
                 selects[i].classList.add('is-invalid');
                 selects[i].focus();
@@ -118,13 +118,13 @@ define([], function () {
         }
 
         // Check required radio groups.
-        var radioNames = {};
+        const radioNames = {};
         panel.querySelectorAll('input[type="radio"][required]').forEach(function (r) {
             radioNames[r.name] = true;
         });
-        for (var name in radioNames) {
+        for (const name in radioNames) {
             if (!panel.querySelector('input[type="radio"][name="' + name + '"]:checked')) {
-                var firstRadio = panel.querySelector('input[type="radio"][name="' + name + '"]');
+                const firstRadio = panel.querySelector('input[type="radio"][name="' + name + '"]');
                 if (firstRadio) firstRadio.focus();
                 highlightRadioGroup(panel, name);
                 return false;
@@ -135,9 +135,9 @@ define([], function () {
     }
 
     function highlightRadioGroup(panel, name) {
-        var group = panel.querySelector('input[type="radio"][name="' + name + '"]');
+        const group = panel.querySelector('input[type="radio"][name="' + name + '"]');
         if (group) {
-            var container = group.closest('.pharos-ob-radio-group');
+            const container = group.closest('.pharos-ob-radio-group');
             if (container) {
                 container.style.outline = '2px solid #C8102E';
                 container.style.outlineOffset = '2px';
@@ -147,7 +147,7 @@ define([], function () {
     }
 
     function collectAnswers(form) {
-        var fd = new FormData(form);
+        const fd = new FormData(form);
         return {
             employment:  fd.get('employment')  || 'professional',
             digital_exp: fd.get('digital_exp') || 'basic',
@@ -169,13 +169,13 @@ define([], function () {
             dot.classList.add('pharos-ob-step--done');
         });
 
-        var resultDiv = document.getElementById('pharos-ob-result');
+        const resultDiv = document.getElementById('pharos-ob-result');
         if (!resultDiv) return;
 
-        var levelColors = { 1: '#C8102E', 2: '#e07b00', 3: '#0D1520' };
-        var color = levelColors[data.recommended_level] || '#C8102E';
+        const levelColors = { 1: '#C8102E', 2: '#e07b00', 3: '#0D1520' };
+        const color = levelColors[data.recommended_level] || '#C8102E';
 
-        var ctaHtml = itineraryUrl
+        const ctaHtml = itineraryUrl
             ? '<a href="' + itineraryUrl + '" class="btn btn-danger btn-sm btn-block mt-3">' + getLabelStart(root) + '</a>'
             : '';
 
@@ -195,14 +195,14 @@ define([], function () {
     }
 
     function showError(root, msg) {
-        var result = document.getElementById('pharos-ob-result');
+        const result = document.getElementById('pharos-ob-result');
         if (!result) return;
         result.innerHTML = '<p class="text-danger small">' + msg + '</p>';
         result.classList.remove('d-none');
     }
 
-    function getSubmitLabel(root) {
-        var btn = document.getElementById('pharos-ob-submit');
+    function getSubmitLabel(_root) {
+        const btn = document.getElementById('pharos-ob-submit');
         return btn ? btn.textContent : 'Finalizar';
     }
 
