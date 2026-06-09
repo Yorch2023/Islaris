@@ -39,18 +39,7 @@ class mod_pharos_itinerary_privacy_provider_test extends advanced_testcase {
         $generator = $this->getDataGenerator();
         $user      = $generator->create_user();
         $course    = $generator->create_course();
-
-        // Create itinerary module instance manually (no mod generator needed).
-        $instanceId = $DB->insert_record('pharos_itinerary', (object) [
-            'course'       => $course->id,
-            'name'         => 'Test itinerary',
-            'intro'        => '',
-            'introformat'  => FORMAT_HTML,
-            'timecreated'  => time(),
-            'timemodified' => time(),
-        ]);
-
-        $cm = $generator->create_module('pharos_itinerary', ['course' => $course->id]);
+        $cm        = $generator->create_module('pharos_itinerary', ['course' => $course->id]);
 
         $DB->insert_record('pharos_itinerary_progress', (object) [
             'itineraryid'  => $cm->instance,
@@ -100,6 +89,61 @@ class mod_pharos_itinerary_privacy_provider_test extends advanced_testcase {
         $this->assertEquals(1, $DB->count_records('pharos_itinerary_progress', [
             'itineraryid' => $cm->instance,
         ]));
+    }
+
+    public function test_delete_all_users_clears_progress_for_module_context(): void {
+        global $DB;
+
+        $generator = $this->getDataGenerator();
+        $u1        = $generator->create_user();
+        $u2        = $generator->create_user();
+        $course    = $generator->create_course();
+        $cm        = $generator->create_module('pharos_itinerary', ['course' => $course->id]);
+
+        foreach ([$u1, $u2] as $u) {
+            $DB->insert_record('pharos_itinerary_progress', (object) [
+                'itineraryid'  => $cm->instance,
+                'userid'       => $u->id,
+                'level'        => 1,
+                'xp'           => 30,
+                'timemodified' => time(),
+            ]);
+        }
+
+        \mod_pharos_itinerary\privacy\provider::delete_data_for_all_users_in_context(
+            context_module::instance($cm->id)
+        );
+
+        $this->assertEquals(0, $DB->count_records('pharos_itinerary_progress', [
+            'itineraryid' => $cm->instance,
+        ]));
+    }
+
+    // ── get_users_in_context ──────────────────────────────────────────────
+
+    public function test_get_users_in_context_finds_users_with_progress(): void {
+        global $DB;
+
+        $generator = $this->getDataGenerator();
+        $u1        = $generator->create_user();
+        $u2        = $generator->create_user();
+        $course    = $generator->create_course();
+        $cm        = $generator->create_module('pharos_itinerary', ['course' => $course->id]);
+
+        foreach ([$u1, $u2] as $u) {
+            $DB->insert_record('pharos_itinerary_progress', (object) [
+                'itineraryid'  => $cm->instance,
+                'userid'       => $u->id,
+                'level'        => 1,
+                'xp'           => 20,
+                'timemodified' => time(),
+            ]);
+        }
+
+        $ctx      = context_module::instance($cm->id);
+        $userlist = new \core_privacy\local\request\userlist($ctx, 'mod_pharos_itinerary');
+        \mod_pharos_itinerary\privacy\provider::get_users_in_context($userlist);
+        $this->assertCount(2, $userlist);
     }
 
     // ── delete_data_for_user ──────────────────────────────────────────────

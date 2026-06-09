@@ -51,7 +51,6 @@ class mod_pharos_badges_privacy_provider_test extends advanced_testcase {
         $generator = $this->getDataGenerator();
         $user      = $generator->create_user();
         $course    = $generator->create_course();
-        $cm        = $generator->create_module('pharos_badges', ['course' => $course->id]);
 
         $DB->insert_record('pharos_badges_evidence', (object) [
             'courseid'    => $course->id,
@@ -62,11 +61,41 @@ class mod_pharos_badges_privacy_provider_test extends advanced_testcase {
             'timecreated' => time(),
         ]);
 
+        // Passing a course context must be a no-op.
         \mod_pharos_badges\privacy\provider::delete_data_for_all_users_in_context(
             context_course::instance($course->id)
         );
 
         $this->assertEquals(1, $DB->count_records('pharos_badges_evidence', [
+            'courseid' => $course->id,
+        ]));
+    }
+
+    public function test_delete_all_users_clears_evidence_for_module_context(): void {
+        global $DB;
+
+        $generator = $this->getDataGenerator();
+        $u1        = $generator->create_user();
+        $u2        = $generator->create_user();
+        $course    = $generator->create_course();
+        $cm        = $generator->create_module('pharos_badges', ['course' => $course->id]);
+
+        foreach ([$u1, $u2] as $u) {
+            $DB->insert_record('pharos_badges_evidence', (object) [
+                'courseid'    => $course->id,
+                'userid'      => $u->id,
+                'level'       => 1,
+                'type'        => 'process',
+                'description' => 'test',
+                'timecreated' => time(),
+            ]);
+        }
+
+        \mod_pharos_badges\privacy\provider::delete_data_for_all_users_in_context(
+            context_module::instance($cm->id)
+        );
+
+        $this->assertEquals(0, $DB->count_records('pharos_badges_evidence', [
             'courseid' => $course->id,
         ]));
     }
