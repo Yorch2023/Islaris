@@ -1,0 +1,39 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<XMLDB PATH="mod/pharos_badges/db" VERSION="20250528" COMMENT="XMLDB file for mod_pharos_badges">
+  <TABLES>
+    <TABLE NAME="pharos_badges_instance" COMMENT="One row per activity instance (course module)">
+      <FIELDS>
+        <FIELD NAME="id"           TYPE="int"  LENGTH="10" NOTNULL="true" SEQUENCE="true"/>
+        <FIELD NAME="course"       TYPE="int"  LENGTH="10" NOTNULL="true"/>
+        <FIELD NAME="name"         TYPE="char" LENGTH="255" NOTNULL="true"/>
+        <FIELD NAME="intro"        TYPE="text"              NOTNULL="false"/>
+        <FIELD NAME="introformat"  TYPE="int"  LENGTH="4"   NOTNULL="true" DEFAULT="0"/>
+        <FIELD NAME="timecreated"  TYPE="int"  LENGTH="10" NOTNULL="true"/>
+        <FIELD NAME="timemodified" TYPE="int"  LENGTH="10" NOTNULL="true"/>
+      </FIELDS>
+      <KEYS>
+        <KEY NAME="primary" TYPE="primary" FIELDS="id"/>
+        <KEY NAME="course"  TYPE="foreign" FIELDS="course" REFTABLE="course" REFFIELDS="id"/>
+      </KEYS>
+    </TABLE>
+    <TABLE NAME="pharos_badges_evidence" COMMENT="Evidence records submitted by students">
+      <FIELDS>
+        <FIELD NAME="id"          TYPE="int"  LENGTH="10" NOTNULL="true" SEQUENCE="true"/>
+        <FIELD NAME="userid"      TYPE="int"  LENGTH="10" NOTNULL="true"/>
+        <FIELD NAME="courseid"    TYPE="int"  LENGTH="10" NOTNULL="true"/>
+        <FIELD NAME="level"       TYPE="int"  LENGTH="1"  NOTNULL="true"/>
+        <FIELD NAME="type"        TYPE="char" LENGTH="16" NOTNULL="true"/>
+        <FIELD NAME="description" TYPE="text"             NOTNULL="true"/>
+        <FIELD NAME="timecreated" TYPE="int"  LENGTH="10" NOTNULL="true"/>
+      </FIELDS>
+      <KEYS>
+        <KEY NAME="primary"  TYPE="primary" FIELDS="id"/>
+        <KEY NAME="userid"   TYPE="foreign" FIELDS="userid"   REFTABLE="user"   REFFIELDS="id"/>
+        <KEY NAME="courseid" TYPE="foreign" FIELDS="courseid" REFTABLE="course" REFFIELDS="id"/>
+      </KEYS>
+      <INDEXES>
+        <INDEX NAME="user_course_level" UNIQUE="false" FIELDS="userid, courseid, level"/>
+      </INDEXES>
+    </TABLE>
+  </TABLES>
+</XMLDB>

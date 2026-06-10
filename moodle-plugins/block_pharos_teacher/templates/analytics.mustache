@@ -1,0 +1,208 @@
+{{!
+    Template: block_pharos_teacher/analytics
+    Context:
+      course_name    - Full name of the course
+      student_count  - Total enrolled students
+      high_count     - Students with risk >= 65
+      medium_count   - Students with risk 35-64
+      active_count   - Students active within the last 7 days
+      students       - Array of student rows (sorted by risk desc), each with:
+                         id, name, email, profile_url, level, level_label,
+                         xp, xp_percent, days_inactive, last_seen_str,
+                         ai_total, ai_week, ai_messages, evidence_count,
+                         risk_score, risk_level, risk_high, risk_medium, risk_low, is_inactive
+      csv_url        - Download as CSV link
+      back_url       - Back to course link
+      generated_date - Localised date string
+}}
+<div class="pharos-analytics container-fluid py-4" role="main">
+
+    {{! Page header }}
+    <div class="d-flex flex-wrap justify-content-between align-items-center mb-4 gap-2">
+        <div>
+            <a href="{{back_url}}"
+               class="btn btn-outline-secondary btn-sm mb-2"
+               aria-label="{{#str}}back_to_course, block_pharos_teacher{{/str}}">
+                &larr; {{#str}}back_to_course, block_pharos_teacher{{/str}}
+            </a>
+            <h1 class="h3 mb-0">{{#str}}analytics_title, block_pharos_teacher{{/str}}</h1>
+            <p class="text-muted small mb-0">
+                {{course_name}} &mdash;
+                {{#str}}analytics_generated, block_pharos_teacher{{/str}} {{generated_date}}
+            </p>
+        </div>
+        <a href="{{csv_url}}"
+           class="btn btn-outline-success btn-sm"
+           download
+           aria-label="{{#str}}analytics_csv_aria, block_pharos_teacher{{/str}}">
+            &#8595; {{#str}}analytics_csv, block_pharos_teacher{{/str}}
+        </a>
+    </div>
+
+    {{! Summary strip }}
+    <div class="row mb-4" role="list" aria-label="{{#str}}analytics_summary, block_pharos_teacher{{/str}}">
+        <div class="col-6 col-md-3 mb-3" role="listitem">
+            <div class="card text-center h-100">
+                <div class="card-body py-3">
+                    <p class="h2 mb-1 font-weight-bold text-dark">{{student_count}}</p>
+                    <small class="text-muted">{{#str}}analytics_total_students, block_pharos_teacher{{/str}}</small>
+                </div>
+            </div>
+        </div>
+        <div class="col-6 col-md-3 mb-3" role="listitem">
+            <div class="card text-center h-100 {{#high_count}}border-danger{{/high_count}}">
+                <div class="card-body py-3">
+                    <p class="h2 mb-1 font-weight-bold {{#high_count}}text-danger{{/high_count}}{{^high_count}}text-dark{{/high_count}}">{{high_count}}</p>
+                    <small class="text-muted">{{#str}}analytics_high_risk, block_pharos_teacher{{/str}}</small>
+                </div>
+            </div>
+        </div>
+        <div class="col-6 col-md-3 mb-3" role="listitem">
+            <div class="card text-center h-100 {{#medium_count}}border-warning{{/medium_count}}">
+                <div class="card-body py-3">
+                    <p class="h2 mb-1 font-weight-bold {{#medium_count}}text-warning{{/medium_count}}{{^medium_count}}text-dark{{/medium_count}}">{{medium_count}}</p>
+                    <small class="text-muted">{{#str}}analytics_medium_risk, block_pharos_teacher{{/str}}</small>
+                </div>
+            </div>
+        </div>
+        <div class="col-6 col-md-3 mb-3" role="listitem">
+            <div class="card text-center h-100 {{#active_count}}border-success{{/active_count}}">
+                <div class="card-body py-3">
+                    <p class="h2 mb-1 font-weight-bold {{#active_count}}text-success{{/active_count}}{{^active_count}}text-dark{{/active_count}}">{{active_count}}</p>
+                    <small class="text-muted">{{#str}}analytics_active_7d, block_pharos_teacher{{/str}}</small>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    {{! Student table }}
+    <div class="card">
+        <div class="card-body p-0">
+            <div class="table-responsive">
+                <table class="table table-hover table-sm mb-0"
+                       aria-label="{{#str}}student_list, block_pharos_teacher{{/str}}">
+                    <thead class="thead-light">
+                        <tr>
+                            <th scope="col">{{#str}}analytics_col_student, block_pharos_teacher{{/str}}</th>
+                            <th scope="col" class="text-center pharos-hide-mobile">{{#str}}analytics_col_level, block_pharos_teacher{{/str}}</th>
+                            <th scope="col" style="min-width:110px">{{#str}}analytics_col_xp, block_pharos_teacher{{/str}}</th>
+                            <th scope="col" class="text-center pharos-hide-mobile">{{#str}}analytics_col_last_seen, block_pharos_teacher{{/str}}</th>
+                            <th scope="col" class="text-center">{{#str}}analytics_col_ai, block_pharos_teacher{{/str}}</th>
+                            <th scope="col" class="text-center pharos-hide-mobile">{{#str}}analytics_col_evidence, block_pharos_teacher{{/str}}</th>
+                            <th scope="col" class="text-center">{{#str}}analytics_col_risk, block_pharos_teacher{{/str}}</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {{#students}}
+                        <tr class="{{#is_inactive}}pharos-row-inactive{{/is_inactive}}"
+                            aria-label="{{name}}">
+                            {{! Student name + email }}
+                            <td>
+                                <a href="{{profile_url}}"
+                                   class="font-weight-bold"
+                                   target="_blank"
+                                   rel="noopener noreferrer">{{name}}</a>
+                                <br>
+                                <small class="text-muted">{{email}}</small>
+                            </td>
+
+                            {{! Level badge }}
+                            <td class="text-center align-middle pharos-hide-mobile">
+                                <span class="pharos-level-badge pharos-level-badge--n{{level}}"
+                                      aria-label="{{level_label}}">
+                                    {{level_label}}
+                                </span>
+                            </td>
+
+                            {{! XP bar }}
+                            <td class="align-middle">
+                                <div class="pharos-xp-bar"
+                                     role="progressbar"
+                                     aria-valuenow="{{xp_percent}}"
+                                     aria-valuemin="0"
+                                     aria-valuemax="100"
+                                     aria-label="XP {{xp_percent}}%">
+                                    <div class="pharos-xp-bar__fill" style="width:{{xp_percent}}%"></div>
+                                </div>
+                                <small class="text-muted">{{xp}} XP ({{xp_percent}}%)</small>
+                            </td>
+
+                            {{! Last seen }}
+                            <td class="text-center align-middle pharos-hide-mobile">
+                                <span class="{{#is_inactive}}text-danger{{/is_inactive}}{{^is_inactive}}text-success{{/is_inactive}}"
+                                      aria-label="{{last_seen_str}}">
+                                    {{last_seen_str}}
+                                </span>
+                                {{#days_inactive}}
+                                <br><small class="text-muted">{{days_inactive}}d</small>
+                                {{/days_inactive}}
+                            </td>
+
+                            {{! AI usage }}
+                            <td class="text-center align-middle">
+                                <span class="d-block font-weight-bold"
+                                      title="{{#str}}analytics_ai_total_hint, block_pharos_teacher{{/str}}">
+                                    {{ai_total}}
+                                </span>
+                                <small class="text-muted d-block">
+                                    {{ai_week}}w / {{ai_messages}}msg
+                                </small>
+                            </td>
+
+                            {{! Evidence count }}
+                            <td class="text-center align-middle pharos-hide-mobile">
+                                <span class="{{#evidence_count}}text-success font-weight-bold{{/evidence_count}}{{^evidence_count}}text-muted{{/evidence_count}}">
+                                    {{evidence_count}}
+                                </span>
+                            </td>
+
+                            {{! Risk score }}
+                            <td class="text-center align-middle">
+                                {{#risk_high}}
+                                <span class="badge badge-danger pharos-risk-badge"
+                                      aria-label="{{#str}}risk_high, block_pharos_teacher{{/str}} {{risk_score}}">
+                                    {{risk_score}}
+                                </span>
+                                {{/risk_high}}
+                                {{#risk_medium}}
+                                <span class="badge badge-warning pharos-risk-badge"
+                                      aria-label="{{#str}}risk_medium, block_pharos_teacher{{/str}} {{risk_score}}">
+                                    {{risk_score}}
+                                </span>
+                                {{/risk_medium}}
+                                {{#risk_low}}
+                                <span class="badge badge-success pharos-risk-badge"
+                                      aria-label="{{#str}}risk_low, block_pharos_teacher{{/str}} {{risk_score}}">
+                                    {{risk_score}}
+                                </span>
+                                {{/risk_low}}
+                            </td>
+                        </tr>
+                        {{/students}}
+                        {{^students}}
+                        <tr>
+                            <td colspan="7" class="text-center text-muted py-4">
+                                {{#str}}no_students, block_pharos_teacher{{/str}}
+                            </td>
+                        </tr>
+                        {{/students}}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    {{! Footer: CSV download + back }}
+    <div class="d-flex justify-content-between align-items-center mt-3">
+        <a href="{{back_url}}" class="btn btn-outline-secondary btn-sm">
+            &larr; {{#str}}back_to_course, block_pharos_teacher{{/str}}
+        </a>
+        <a href="{{csv_url}}"
+           class="btn btn-outline-success btn-sm"
+           download
+           aria-label="{{#str}}analytics_csv_aria, block_pharos_teacher{{/str}}">
+            &#8595; {{#str}}analytics_csv, block_pharos_teacher{{/str}}
+        </a>
+    </div>
+
+</div>

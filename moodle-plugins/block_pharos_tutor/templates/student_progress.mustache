@@ -1,0 +1,251 @@
+{{!
+    Template: block_pharos_tutor/student_progress
+    Context:
+      student_name, course_name, level, level_label, xp, xp_next, xp_percent,
+      days_inactive (null if never), never_active,
+      ai_sessions_total, ai_sessions_week, ai_messages_total, ai_minutes_total, ai_status_class,
+      recent_sessions[] { level_label, level_color, message_count, duration_min, date },
+      has_sessions,
+      levels_progress[] { level, level_label, count, threshold, percent, is_current, badge_earned },
+      recent_reflections[] { description, date }, has_reflections,
+      memory_strengths, memory_concepts[] { concept }, has_concepts, memory_style,
+      back_url
+}}
+<div class="pharos-progress container-fluid py-3" role="main">
+
+    {{! Back link }}
+    <a href="{{back_url}}" class="btn btn-link btn-sm pl-0 mb-3">
+        ← {{#str}}back_to_course, block_pharos_teacher{{/str}}
+    </a>
+
+    <h1 class="h4 mb-1">{{#str}}progress_title, block_pharos_tutor{{/str}}</h1>
+    <p class="text-muted small mb-4">{{course_name}}</p>
+
+    {{! ── Top stat strip ──────────────────────────────────────────────── }}
+    <div class="row text-center mb-4" role="list" aria-label="{{#str}}progress_summary, block_pharos_tutor{{/str}}">
+        <div class="col-6 col-md-3 mb-3" role="listitem">
+            <div class="card h-100">
+                <div class="card-body py-3">
+                    <p class="h3 mb-0 text-danger">{{level_label}}</p>
+                    <small class="text-muted">{{#str}}progress_level, block_pharos_tutor{{/str}}</small>
+                </div>
+            </div>
+        </div>
+        <div class="col-6 col-md-3 mb-3" role="listitem">
+            <div class="card h-100">
+                <div class="card-body py-3">
+                    <p class="h3 mb-0 text-danger">{{xp}}</p>
+                    <small class="text-muted">{{#str}}progress_xp, block_pharos_tutor{{/str}}</small>
+                </div>
+            </div>
+        </div>
+        <div class="col-6 col-md-3 mb-3" role="listitem">
+            <div class="card h-100">
+                <div class="card-body py-3">
+                    <p class="h3 mb-0 {{ai_status_class}}">{{ai_sessions_total}}</p>
+                    <small class="text-muted">{{#str}}progress_sessions, block_pharos_tutor{{/str}}</small>
+                </div>
+            </div>
+        </div>
+        <div class="col-6 col-md-3 mb-3" role="listitem">
+            <div class="card h-100">
+                <div class="card-body py-3">
+                    <p class="h3 mb-0 text-danger">{{ai_minutes_total}}</p>
+                    <small class="text-muted">{{#str}}progress_minutes, block_pharos_tutor{{/str}}</small>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="row">
+
+        {{! ── Left column ─────────────────────────────────────────────── }}
+        <div class="col-md-7 mb-4">
+
+            {{! XP progress bar }}
+            <div class="card mb-4">
+                <div class="card-header font-weight-bold small">
+                    {{#str}}progress_xp_heading, block_pharos_tutor{{/str}}
+                </div>
+                <div class="card-body">
+                    <div class="d-flex justify-content-between small text-muted mb-1">
+                        <span>{{xp}} XP</span>
+                        <span>{{xp_next}} XP</span>
+                    </div>
+                    <div class="pharos-xp-bar mb-2"
+                         role="progressbar"
+                         aria-valuenow="{{xp_percent}}"
+                         aria-valuemin="0"
+                         aria-valuemax="100"
+                         aria-label="{{xp_percent}}%">
+                        <div class="pharos-xp-bar__fill" style="width:{{xp_percent}}%"></div>
+                    </div>
+                    <small class="text-muted">
+                        {{xp_percent}}% {{#str}}progress_to_next_level, block_pharos_tutor{{/str}}
+                    </small>
+                    {{#never_active}}
+                    <p class="text-warning small mt-2 mb-0">
+                        {{#str}}progress_not_started, block_pharos_tutor{{/str}}
+                    </p>
+                    {{/never_active}}
+                    {{^never_active}}
+                    <p class="text-muted small mt-2 mb-0">
+                        {{days_inactive}} {{#str}}days_inactive, block_pharos_teacher{{/str}}
+                    </p>
+                    {{/never_active}}
+                </div>
+            </div>
+
+            {{! Badge progress per level }}
+            <div class="card mb-4">
+                <div class="card-header font-weight-bold small">
+                    {{#str}}progress_badges, block_pharos_tutor{{/str}}
+                </div>
+                <div class="card-body">
+                    {{#levels_progress}}
+                    <div class="mb-3">
+                        <div class="d-flex justify-content-between align-items-center mb-1">
+                            <span class="pharos-level-badge pharos-level-badge--n{{level}} small">
+                                {{level_label}}
+                            </span>
+                            {{#badge_earned}}
+                            <span class="badge badge-success">
+                                🎖 {{#str}}badge_earned, mod_pharos_badges{{/str}}
+                            </span>
+                            {{/badge_earned}}
+                            {{^badge_earned}}
+                            <small class="text-muted">{{count}} / {{threshold}}</small>
+                            {{/badge_earned}}
+                        </div>
+                        <div class="pharos-xp-bar"
+                             style="height:6px"
+                             role="progressbar"
+                             aria-valuenow="{{percent}}"
+                             aria-valuemin="0"
+                             aria-valuemax="100">
+                            <div class="pharos-xp-bar__fill" style="width:{{percent}}%"></div>
+                        </div>
+                    </div>
+                    {{/levels_progress}}
+                </div>
+            </div>
+
+            {{! Recent AI sessions }}
+            <div class="card mb-4">
+                <div class="card-header font-weight-bold small">
+                    {{#str}}progress_recent_sessions, block_pharos_tutor{{/str}}
+                </div>
+                <div class="card-body p-0">
+                    {{#has_sessions}}
+                    <table class="table table-sm table-borderless mb-0">
+                        <thead>
+                            <tr>
+                                <th class="pl-3 small">{{#str}}progress_date, block_pharos_tutor{{/str}}</th>
+                                <th class="small">{{#str}}progress_level_col, block_pharos_tutor{{/str}}</th>
+                                <th class="small text-right">Msg</th>
+                                <th class="small text-right pr-3">Min</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {{#recent_sessions}}
+                            <tr>
+                                <td class="pl-3 small text-muted" style="white-space:nowrap">{{date}}</td>
+                                <td>
+                                    <span class="badge"
+                                          style="background:{{level_color}};color:#fff">
+                                        {{level_label}}
+                                    </span>
+                                </td>
+                                <td class="small text-right">{{message_count}}</td>
+                                <td class="small text-right pr-3">{{duration_min}}</td>
+                            </tr>
+                            {{/recent_sessions}}
+                        </tbody>
+                    </table>
+                    {{/has_sessions}}
+                    {{^has_sessions}}
+                    <p class="text-muted small p-3 mb-0">
+                        {{#str}}progress_no_sessions, block_pharos_tutor{{/str}}
+                    </p>
+                    {{/has_sessions}}
+                </div>
+            </div>
+
+        </div>
+
+        {{! ── Right column ────────────────────────────────────────────── }}
+        <div class="col-md-5 mb-4">
+
+            {{! AI usage this week }}
+            <div class="card mb-4">
+                <div class="card-header font-weight-bold small">
+                    {{#str}}progress_this_week, block_pharos_tutor{{/str}}
+                </div>
+                <div class="card-body">
+                    <div class="d-flex justify-content-around text-center">
+                        <div>
+                            <p class="h4 mb-0 {{ai_status_class}}">{{ai_sessions_week}}</p>
+                            <small class="text-muted">{{#str}}progress_sessions_week, block_pharos_tutor{{/str}}</small>
+                        </div>
+                        <div>
+                            <p class="h4 mb-0 text-danger">{{ai_messages_total}}</p>
+                            <small class="text-muted">{{#str}}progress_messages_total, block_pharos_tutor{{/str}}</small>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            {{! Learner profile (read-only) }}
+            {{#memory_strengths}}
+            <div class="card mb-4">
+                <div class="card-header font-weight-bold small">
+                    {{#str}}progress_profile, block_pharos_tutor{{/str}}
+                </div>
+                <div class="card-body">
+                    <p class="small mb-2">
+                        <strong>{{#str}}progress_strengths, block_pharos_tutor{{/str}}:</strong>
+                        {{memory_strengths}}
+                    </p>
+                    {{#memory_style}}
+                    <p class="small mb-2">
+                        <strong>{{#str}}progress_style, block_pharos_tutor{{/str}}:</strong>
+                        {{memory_style}}
+                    </p>
+                    {{/memory_style}}
+                    {{#has_concepts}}
+                    <div class="mt-2">
+                        <strong class="small">{{#str}}progress_topics, block_pharos_tutor{{/str}}:</strong>
+                        <div class="mt-1">
+                            {{#memory_concepts}}
+                            <span class="badge badge-light border mr-1 mb-1 font-weight-normal small">
+                                {{concept}}
+                            </span>
+                            {{/memory_concepts}}
+                        </div>
+                    </div>
+                    {{/has_concepts}}
+                </div>
+            </div>
+            {{/memory_strengths}}
+
+            {{! Recent reflections }}
+            {{#has_reflections}}
+            <div class="card mb-4">
+                <div class="card-header font-weight-bold small">
+                    {{#str}}progress_reflections, block_pharos_tutor{{/str}}
+                </div>
+                <ul class="list-group list-group-flush">
+                    {{#recent_reflections}}
+                    <li class="list-group-item py-2">
+                        <p class="small mb-0">{{description}}</p>
+                        <time class="text-muted" style="font-size:0.7rem">{{date}}</time>
+                    </li>
+                    {{/recent_reflections}}
+                </ul>
+            </div>
+            {{/has_reflections}}
+
+        </div>
+    </div>
+
+</div>

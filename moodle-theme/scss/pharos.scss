@@ -1,0 +1,580 @@
+// PHAROS-AI theme — main SCSS
+// Appended after the Boost parent SCSS. Mobile-first, Bootstrap 4 compatible.
+
+// === Navbar ===
+.navbar {
+    background: linear-gradient(135deg, $pharos-navy 0%, lighten($pharos-navy, 6%) 100%) !important;
+    box-shadow: 0 2px 12px rgba(0, 0, 0, 0.22);
+    border-bottom: 3px solid $pharos-red;
+}
+
+.navbar-brand {
+    font-weight: 700;
+    font-size: 1.25rem;
+    letter-spacing: 0.04em;
+    color: #fff !important;
+
+    &::before {
+        content: '';
+    }
+}
+
+// === Page header (hero) ===
+#page-header {
+    background: linear-gradient(135deg, $pharos-navy 0%, lighten($pharos-navy, 10%) 100%);
+    color: #fff;
+    padding: 1.75rem 0 1.5rem;
+    margin-bottom: 0;
+    border-bottom: 4px solid $pharos-red;
+
+    .page-header-headings h1,
+    h1.h2 {
+        color: #fff;
+        font-weight: 700;
+    }
+
+    .breadcrumb {
+        background: transparent;
+        padding: 0;
+        margin-bottom: 0.5rem;
+
+        .breadcrumb-item,
+        .breadcrumb-item a,
+        .breadcrumb-item + .breadcrumb-item::before {
+            color: rgba(255, 255, 255, 0.72);
+        }
+    }
+
+    .action-menu .dropdown-toggle,
+    .btn-outline-secondary {
+        color: rgba(255, 255, 255, 0.85);
+        border-color: rgba(255, 255, 255, 0.3);
+
+        &:hover { background: rgba(255, 255, 255, 0.1); }
+    }
+}
+
+// === Blocks ===
+.block {
+    border: none;
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.07);
+    border-radius: $border-radius-lg;
+    overflow: hidden;
+    margin-bottom: 1.25rem;
+
+    .card-header,
+    .block-header {
+        background: $pharos-navy;
+        color: #fff;
+        font-weight: 600;
+        padding: 0.75rem 1rem;
+        border-bottom: 2px solid $pharos-red;
+
+        .title,
+        h5,
+        h3 {
+            color: #fff;
+            margin: 0;
+        }
+
+        a { color: rgba(255, 255, 255, 0.85); }
+
+        .action-menu .icon,
+        .icon { filter: brightness(0) invert(1); }
+    }
+
+    .block-controls .dropdown .icon {
+        color: #fff;
+    }
+
+    .card-body,
+    .content {
+        padding: 1rem;
+    }
+}
+
+// === Sidebar / drawers ===
+#nav-drawer {
+    background: darken($pharos-navy, 4%);
+
+    .list-group-item {
+        background: transparent;
+        color: rgba(255, 255, 255, 0.82);
+        border-color: rgba(255, 255, 255, 0.08);
+
+        &:hover,
+        &:focus {
+            background: rgba(255, 255, 255, 0.08);
+            color: #fff;
+        }
+
+        &.active {
+            background: $pharos-red;
+            color: #fff;
+            border-color: $pharos-red;
+        }
+    }
+}
+
+// === Course cards ===
+.card {
+    border-color: $pharos-border;
+    box-shadow: 0 1px 4px rgba(0, 0, 0, 0.06);
+    transition: box-shadow 0.15s ease;
+
+    &:hover {
+        box-shadow: 0 4px 16px rgba(0, 0, 0, 0.1);
+    }
+}
+
+.card-header {
+    font-weight: 600;
+    border-bottom-color: $pharos-border;
+}
+
+// === Buttons ===
+.btn-primary {
+    background-color: $pharos-navy;
+    border-color: $pharos-navy;
+
+    &:hover,
+    &:focus {
+        background-color: lighten($pharos-navy, 8%);
+        border-color: lighten($pharos-navy, 8%);
+    }
+}
+
+.btn-pharos-primary {
+    background-color: $pharos-navy;
+    border-color: $pharos-navy;
+    color: #fff;
+
+    &:hover,
+    &:focus {
+        background-color: lighten($pharos-navy, 8%);
+        border-color: lighten($pharos-navy, 8%);
+        color: #fff;
+    }
+}
+
+.btn-danger,
+.btn-pharos-red {
+    background-color: $pharos-red;
+    border-color: $pharos-red;
+    color: #fff;
+
+    &:hover,
+    &:focus {
+        background-color: darken($pharos-red, 8%);
+        border-color: darken($pharos-red, 8%);
+        color: #fff;
+    }
+}
+
+// === Itinerary level badges ===
+.pharos-level-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.35rem;
+    padding: 0.25rem 0.65rem;
+    border-radius: 2rem;
+    font-size: 0.8rem;
+    font-weight: 600;
+
+    &--n1 { background: #e8f4fd; color: #1565c0; }
+    &--n2 { background: #fdf3e8; color: #a0520c; }
+    &--n3 { background: #f3e8fd; color: #6a0dad; }
+
+    &--locked {
+        background: #ebebeb;
+        color: #888;
+    }
+}
+
+// === XP / progress ===
+.pharos-xp-bar {
+    height: 8px;
+    border-radius: 4px;
+    background: $pharos-border;
+
+    &__fill {
+        height: 100%;
+        border-radius: 4px;
+        background: linear-gradient(90deg, $pharos-navy, $pharos-red);
+        transition: width 0.4s ease;
+    }
+}
+
+.pharos-xp-label {
+    font-size: 0.82rem;
+    color: #6c757d;
+    margin-top: 0.2rem;
+}
+
+// === Badges / microcredentials ===
+.pharos-badge-card {
+    text-align: center;
+    padding: 1.25rem 1rem;
+    border-radius: $border-radius-lg;
+    border: 2px solid $pharos-border;
+
+    &--earned {
+        border-color: $pharos-gold;
+        background: lighten($pharos-gold, 40%);
+    }
+
+    img {
+        width: 72px;
+        height: 72px;
+        margin-bottom: 0.5rem;
+    }
+}
+
+// === Dashboard alerts ===
+.pharos-alert-inactive {
+    border-left: 4px solid $pharos-red;
+    background: lighten($pharos-red, 48%);
+    padding: 0.65rem 1rem;
+    border-radius: 0 $border-radius $border-radius 0;
+    font-size: 0.9rem;
+}
+
+// === Itinerary view ===
+.pharos-itinerary {
+    &__level--locked {
+        opacity: 0.55;
+        pointer-events: none; // clicks fall through to the disabled button
+
+        // Restore pointer events on the header so the button is still reachable
+        // by AT (aria-disabled conveys the locked state).
+        .card-header {
+            pointer-events: auto;
+        }
+    }
+}
+
+.pharos-activity-item {
+    &--done > .d-flex > a {
+        text-decoration: line-through;
+        color: $text-muted;
+    }
+}
+
+// === Activity Generator ===
+.pharos-generator {
+    &__back { padding-left: 0; }
+
+    &__title { color: $pharos-navy; }
+
+    &__output {
+        white-space: pre-wrap;
+        word-break: break-word;
+        font-family: $font-family-sans-serif;
+        font-size: 0.9rem;
+        line-height: 1.65;
+        background: $pharos-light;
+        border: 1px solid $pharos-border;
+        border-radius: $border-radius;
+        padding: 1rem;
+        max-height: 600px;
+        overflow-y: auto;
+    }
+
+    &__spinner { font-size: 0.9rem; }
+}
+
+// === Teacher dashboard row state ===
+.pharos-row-inactive td { background: lighten($pharos-red, 48%); }
+
+// === Responsive helpers ===
+// !important is intentional here: matches Bootstrap's own .d-none pattern so
+// these utility classes can reliably override component-level display rules.
+@media (max-width: 767.98px) {
+    .pharos-hide-mobile {
+        display: none !important;
+    }
+}
+
+@media (min-width: 768px) {
+    .pharos-hide-desktop {
+        display: none !important;
+    }
+}
+
+// === AI Recommendation widget ===
+// .border-primary (Bootstrap 4) sets border-color with !important on all sides;
+// we reinforce only the left edge to create a clear visual accent.
+.pharos-recommend-card {
+    border-left-width: 4px !important;
+    background: lighten($pharos-navy, 72%);
+
+    .card-title {
+        font-size: 0.875rem;
+    }
+}
+
+// === Community block ===
+.pharos-community {
+    font-size: 0.9rem;
+}
+
+.pharos-section-title {
+    display: flex;
+    align-items: center;
+    gap: 0.4rem;
+    font-size: 0.78rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    color: $pharos-navy;
+    padding-bottom: 0.4rem;
+    border-bottom: 2px solid $pharos-border;
+    margin-bottom: 0.65rem;
+}
+
+.pharos-community {
+    &__level { margin-bottom: 0.5rem; }
+
+    &__forum-item,
+    &__webinar-item,
+    &__resource-item {
+        padding: 0.3rem 0;
+        border-bottom: 1px solid $pharos-border;
+
+        &:last-child { border-bottom: 0; }
+    }
+
+    &__flag {
+        min-width: 1.5rem;
+        text-align: center;
+        line-height: 1;
+    }
+}
+
+
+// === Teacher dashboard: AI activity dot indicator ===
+.pharos-ai-dot {
+    display: inline-block;
+    width: 10px;
+    height: 10px;
+    border-radius: 50%;
+    margin-bottom: 2px;
+
+    &--active { background: #28a745; }  // active this week
+    &--recent { background: #ffc107; }  // active this month
+    &--none   { background: #dee2e6; }  // no recent activity
+}
+
+// === Teacher AI Advisor chat ===
+.pharos-advisor-messages {
+    overflow-y: auto;
+    max-height: 340px;
+    min-height: 120px;
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+    padding: 0.25rem 0;
+}
+
+.pharos-advisor-msg {
+    max-width: 85%;
+    padding: 0.5rem 0.75rem;
+    border-radius: 0.75rem;
+    font-size: 0.875rem;
+    line-height: 1.45;
+    white-space: pre-wrap;
+    word-break: break-word;
+
+    &--user {
+        align-self: flex-end;
+        background: $pharos-red;
+        color: #fff;
+        border-bottom-right-radius: 0.2rem;
+    }
+
+    &--assistant {
+        align-self: flex-start;
+        background: #f1f3f5;
+        color: $pharos-navy;
+        border-bottom-left-radius: 0.2rem;
+    }
+
+    &--error {
+        align-self: flex-start;
+        background: #fff3cd;
+        color: #856404;
+        border-radius: 0.5rem;
+    }
+
+    &--typing {
+        align-self: flex-start;
+        background: #f1f3f5;
+        border-bottom-left-radius: 0.2rem;
+        padding: 0.6rem 0.75rem;
+
+        span {
+            display: inline-block;
+            width: 6px;
+            height: 6px;
+            border-radius: 50%;
+            background: #adb5bd;
+            margin: 0 1px;
+            animation: pharos-typing-dot 1.2s ease-in-out infinite;
+
+            &:nth-child(2) { animation-delay: 0.2s; }
+            &:nth-child(3) { animation-delay: 0.4s; }
+        }
+    }
+}
+
+@keyframes pharos-typing-dot {
+    0%, 60%, 100% { transform: translateY(0); opacity: 0.5; }
+    30%            { transform: translateY(-4px); opacity: 1; }
+}
+
+// === Student onboarding wizard ===
+.pharos-onboarding {
+    font-size: 0.875rem;
+
+    &__beacon {
+        display: block;
+        font-size: 1.4rem;
+        margin-bottom: 0.25rem;
+    }
+
+    &__header {
+        text-align: center;
+    }
+}
+
+.pharos-ob-steps {
+    align-items: center;
+    gap: 0;
+}
+
+.pharos-ob-step {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    flex: 0 0 auto;
+    min-width: 36px;
+
+    &__dot {
+        width: 20px;
+        height: 20px;
+        border-radius: 50%;
+        border: 2px solid #dee2e6;
+        background: #fff;
+        transition: background 0.2s, border-color 0.2s;
+    }
+
+    &__label {
+        font-size: 0.6rem;
+        color: #adb5bd;
+        margin-top: 2px;
+        text-align: center;
+    }
+
+    &__line {
+        height: 2px;
+        background: #dee2e6;
+        flex: 1 1 auto;
+        margin-bottom: 16px;  // align with dot centers
+    }
+
+    &--active {
+        .pharos-ob-step__dot {
+            border-color: $pharos-red;
+            background: $pharos-red;
+        }
+        .pharos-ob-step__label { color: $pharos-red; font-weight: 700; }
+    }
+
+    &--done {
+        .pharos-ob-step__dot {
+            border-color: $pharos-red;
+            background: $pharos-red;
+        }
+    }
+}
+
+.pharos-ob-panel__title {
+    color: $pharos-navy;
+    border-bottom: 1px solid #dee2e6;
+    padding-bottom: 0.4rem;
+}
+
+.pharos-ob-radio-group {
+    display: flex;
+    flex-direction: column;
+    gap: 0.4rem;
+}
+
+.pharos-ob-radio,
+.pharos-ob-check {
+    display: flex;
+    align-items: flex-start;
+    gap: 0.5rem;
+    cursor: pointer;
+    padding: 0.35rem 0.5rem;
+    border-radius: 0.4rem;
+    border: 1px solid #dee2e6;
+    transition: border-color 0.15s, background 0.15s;
+
+    input { margin-top: 0.1rem; flex-shrink: 0; }
+    span  { font-size: 0.8rem; line-height: 1.3; }
+
+    &:hover { border-color: $pharos-red; background: lighten($pharos-red, 48%); }
+
+    input:checked ~ span { color: $pharos-navy; font-weight: 600; }
+    input:checked + span,
+    &:has(input:checked) {
+        // Highlight selected option
+    }
+}
+
+// === Student progress page ===
+
+.pharos-progress {
+    max-width: 960px;
+    margin: 0 auto;
+}
+
+// === Reflection modal ===
+
+.pharos-reflect-btn {
+    font-size: 0.68rem;
+    white-space: nowrap;
+    line-height: 1;
+}
+
+// === Risk badges in teacher dashboard ===
+
+.pharos-risk-badge {
+    font-size: 0.65rem;
+    vertical-align: middle;
+}
+
+// === Motivation message box ===
+
+.pharos-motivate-message {
+    font-size: 0.9rem;
+    line-height: 1.6;
+    background: #f8f8f8;
+    border-left: 3px solid $pharos-red;
+    white-space: pre-wrap;
+}
+
+// === Student notification badges in block footer ===
+
+.pharos-progress-link {
+    display: block;
+    text-align: center;
+    padding: 0.25rem 0;
+    font-size: 0.75rem;
+    color: $pharos-navy;
+    opacity: 0.7;
+    transition: opacity 0.15s;
+
+    &:hover { opacity: 1; text-decoration: none; color: $pharos-red; }
+}

@@ -1,0 +1,60 @@
+# PHAROS-AI · Entorno local completo
+# Uso: docker-compose up -d
+# Acceso: http://localhost  (admin / PharosAdmin2024!)
+
+services:
+
+  # ── Base de datos ────────────────────────────────────────────────────────────
+  db:
+    image: postgres:15
+    environment:
+      POSTGRES_DB:       pharos_moodle
+      POSTGRES_USER:     pharos
+      POSTGRES_PASSWORD: pharos_db
+    volumes:
+      - db_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U pharos -d pharos_moodle"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+
+  # ── Moodle 4.3 + plugins PHAROS ──────────────────────────────────────────────
+  moodle:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    ports:
+      - "80:80"
+    environment:
+      DB_HOST:          db
+      DB_NAME:          pharos_moodle
+      DB_USER:          pharos
+      DB_PASS:          pharos_db
+      MOODLE_WWWROOT:   http://localhost
+      MOODLE_ADMINPASS: PharosAdmin2024!
+    volumes:
+      - moodledata:/var/moodledata
+    depends_on:
+      db:
+        condition: service_healthy
+    restart: unless-stopped
+
+  # ── Middleware IA (Node.js → Claude API) ─────────────────────────────────────
+  middleware:
+    build:
+      context: .
+      dockerfile: Dockerfile.middleware
+    ports:
+      - "3001:3001"
+    env_file:
+      - .env
+    environment:
+      NODE_ENV:         development
+      PORT:             3001
+      ALLOWED_ORIGINS:  "http://localhost"
+    restart: unless-stopped
+
+volumes:
+  db_data:
+  moodledata:

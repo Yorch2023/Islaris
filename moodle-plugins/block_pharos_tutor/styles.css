@@ -1,0 +1,204 @@
+/* block_pharos_tutor styles — mobile-first, Bootstrap 4 compatible */
+
+:root {
+    --pharos-red:   #C8102E;
+    --pharos-navy:  #0D1520;
+    --pharos-light: #f4f6f9;
+    --pharos-border: #dde2ea;
+}
+
+.pharos-tutor {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+    font-size: 0.9375rem;
+}
+
+/* Message list */
+.pharos-tutor__messages {
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+    max-height: 320px;
+    overflow-y: auto;
+    padding: 0.75rem;
+    border: 1px solid var(--pharos-border);
+    border-radius: 0.5rem;
+    background: var(--pharos-light);
+    scroll-behavior: smooth;
+}
+
+/* Individual messages */
+.pharos-tutor__message {
+    display: flex;
+    align-items: flex-start;
+    gap: 0.5rem;
+}
+
+.pharos-tutor__message--user {
+    flex-direction: row-reverse;
+}
+
+.pharos-tutor__avatar {
+    flex-shrink: 0;
+    width: 28px;
+    height: 28px;
+    border-radius: 50%;
+    background: var(--pharos-navy);
+    display: inline-block;
+}
+
+.pharos-tutor__message--user .pharos-tutor__avatar {
+    background: var(--pharos-red);
+}
+
+.pharos-tutor__bubble {
+    max-width: 85%;
+    padding: 0.5rem 0.75rem;
+    border-radius: 1rem;
+    line-height: 1.45;
+    white-space: pre-wrap;
+    word-break: break-word;
+    background: #ffffff;
+    border: 1px solid var(--pharos-border);
+}
+
+.pharos-tutor__message--user .pharos-tutor__bubble {
+    background: var(--pharos-navy);
+    color: #ffffff;
+    border-color: var(--pharos-navy);
+}
+
+/* Status / thinking indicator */
+.pharos-tutor__status {
+    font-size: 0.85rem;
+    color: #6c757d;
+    padding-left: 0.25rem;
+    min-height: 1.25rem;
+}
+
+.pharos-tutor__status--hidden {
+    visibility: hidden;
+}
+
+/* Input form */
+.pharos-tutor__form {
+    display: flex;
+    gap: 0.5rem;
+    align-items: flex-end;
+}
+
+.pharos-tutor__input {
+    flex: 1;
+    resize: none;
+    border-color: var(--pharos-border);
+    border-radius: 0.5rem;
+    padding: 0.5rem 0.75rem;
+    font-size: 0.9375rem;
+    line-height: 1.4;
+}
+
+.pharos-tutor__input:focus {
+    border-color: var(--pharos-navy);
+    box-shadow: 0 0 0 0.2rem rgba(13, 21, 32, 0.2);
+    outline: none;
+}
+
+.pharos-tutor__send {
+    flex-shrink: 0;
+    background-color: var(--pharos-red);
+    border-color: var(--pharos-red);
+    border-radius: 0.5rem;
+    padding: 0.5rem 1rem;
+    font-size: 0.9375rem;
+    white-space: nowrap;
+}
+
+.pharos-tutor__send:hover,
+.pharos-tutor__send:focus {
+    background-color: #a00d24;
+    border-color: #a00d24;
+}
+
+.pharos-tutor__send:disabled {
+    opacity: 0.65;
+    cursor: not-allowed;
+}
+
+/* Streaming state: blinking cursor while text arrives */
+.pharos-tutor__bubble--streaming::after {
+    content: '▋';
+    display: inline-block;
+    animation: pharos-blink 0.7s step-end infinite;
+    margin-left: 1px;
+    opacity: 1;
+}
+
+@keyframes pharos-blink {
+    50% { opacity: 0; }
+}
+
+.pharos-tutor__bubble--error {
+    color: #dc3545;
+    font-style: italic;
+}
+
+.pharos-tutor-error {
+    font-size: 0.9rem;
+}
+
+/* Responsive: wider screens get a taller message area */
+@media (min-width: 768px) {
+    .pharos-tutor__messages {
+        max-height: 420px;
+    }
+}
+
+/* Session progress bar — shows how close the user is to earning an evidence */
+.pharos-session-bar {
+    height: 4px;
+    background: var(--pharos-border);
+    border-radius: 2px;
+    overflow: hidden;
+}
+
+.pharos-session-bar__fill {
+    height: 100%;
+    background: var(--pharos-red);
+    border-radius: 2px;
+    transition: width 0.3s ease;
+}
+
+.pharos-session-bar__label {
+    font-size: 0.7rem;
+    color: #6c757d;
+}
+
+.pharos-tutor__session-progress {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0 0.25rem;
+    min-height: 1rem;
+}
+
+/* Evidence toast — shown briefly when an AI session creates evidence */
+.pharos-tutor__evidence-toast {
+    padding: 0.5rem 0.75rem;
+    border-radius: 0.5rem;
+    background: #d4edda;
+    border: 1px solid #c3e6cb;
+    color: #155724;
+    font-size: 0.875rem;
+    transition: opacity 0.4s ease;
+}
+
+.pharos-tutor__evidence-toast--badge {
+    background: #fff3cd;
+    border-color: #ffeeba;
+    color: #856404;
+}
+
+.pharos-tutor__evidence-toast--hidden {
+    display: none;
+}

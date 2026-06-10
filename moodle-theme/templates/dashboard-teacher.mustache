@@ -1,0 +1,126 @@
+{{!
+    Template: theme_pharos/dashboard-teacher
+    Context:
+      fullname        - Teacher full name
+      course_name     - Course/group name
+      students        - Array of {
+                          name, profile_url,
+                          level (1/2/3), level_label,
+                          xp_percent (0-100),
+                          days_inactive,
+                          evidence_pending (bool)
+                        }
+      inactive_count  - Number of students inactive > 7 days
+      pending_count   - Number of students with evidence pending review
+      generator_url   - URL to the activity generator page
+}}
+<div class="pharos-dashboard-teacher">
+
+    {{! Summary cards }}
+    <div class="row mb-4">
+        <div class="col-6 col-md-3 mb-3">
+            <div class="card text-center">
+                <div class="card-body">
+                    <p class="h3 mb-0 text-primary">{{student_count}}</p>
+                    <p class="small text-muted mb-0">{{#str}}alumnos, theme_pharos{{/str}}</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-6 col-md-3 mb-3">
+            <div class="card text-center">
+                <div class="card-body">
+                    <p class="h3 mb-0 {{#inactive_count}}text-danger{{/inactive_count}}">{{inactive_count}}</p>
+                    <p class="small text-muted mb-0">{{#str}}inactivos_7d, theme_pharos{{/str}}</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-6 col-md-3 mb-3">
+            <div class="card text-center">
+                <div class="card-body">
+                    <p class="h3 mb-0 {{#pending_count}}text-warning{{/pending_count}}">{{pending_count}}</p>
+                    <p class="small text-muted mb-0">{{#str}}evidencias_pendientes, theme_pharos{{/str}}</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-6 col-md-3 mb-3">
+            <div class="card text-center">
+                <div class="card-body p-3">
+                    <a href="{{generator_url}}" class="btn btn-danger btn-sm btn-block">
+                        {{#str}}generar_actividad, theme_pharos{{/str}}
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    {{! Inactive alert }}
+    {{#inactive_count}}
+    <div class="pharos-alert-inactive mb-3" role="alert">
+        <strong>{{inactive_count}} {{#str}}alumnos_sin_actividad, theme_pharos{{/str}}</strong>
+    </div>
+    {{/inactive_count}}
+
+    {{! Student table }}
+    <div class="card">
+        <div class="card-header">{{#str}}seguimiento_alumnado, theme_pharos{{/str}}</div>
+        <div class="table-responsive">
+            <table class="table table-hover mb-0"
+                   aria-label="{{#str}}seguimiento_alumnado, theme_pharos{{/str}}">
+                <thead>
+                    <tr>
+                        <th scope="col">{{#str}}alumno, theme_pharos{{/str}}</th>
+                        <th scope="col">{{#str}}nivel, theme_pharos{{/str}}</th>
+                        <th scope="col" class="pharos-hide-mobile">{{#str}}progreso, theme_pharos{{/str}}</th>
+                        <th scope="col">{{#str}}actividad, theme_pharos{{/str}}</th>
+                        <th scope="col">{{#str}}evidencias, theme_pharos{{/str}}</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {{#students}}
+                    <tr class="{{#is_inactive}}pharos-row-inactive{{/is_inactive}}">
+                        <td>
+                            <a href="{{profile_url}}">{{name}}</a>
+                        </td>
+                        <td>
+                            <span class="pharos-level-badge pharos-level-badge--n{{level}}">
+                                {{level_label}}
+                            </span>
+                        </td>
+                        <td class="pharos-hide-mobile" style="min-width:100px">
+                            <div class="pharos-xp-bar"
+                                 style="width:100px"
+                                 role="progressbar"
+                                 aria-valuenow="{{xp_percent}}"
+                                 aria-valuemin="0"
+                                 aria-valuemax="100"
+                                 aria-label="{{#str}}xp_progress, theme_pharos{{/str}}: {{xp_percent}}%">
+                                <div class="pharos-xp-bar__fill" style="width:{{xp_percent}}%"></div>
+                            </div>
+                        </td>
+                        <td>
+                            {{#is_inactive}}
+                            <span class="badge badge-danger">{{days_inactive}}d</span>
+                            {{/is_inactive}}
+                            {{^is_inactive}}
+                            {{#days_inactive}}
+                            <span class="badge badge-warning">{{days_inactive}}d</span>
+                            {{/days_inactive}}
+                            {{^days_inactive}}
+                            <span class="badge badge-success">{{#str}}hoy, theme_pharos{{/str}}</span>
+                            {{/days_inactive}}
+                            {{/is_inactive}}
+                        </td>
+                        <td>
+                            {{#evidence_pending}}
+                            <span class="badge badge-warning">{{#str}}pendiente, theme_pharos{{/str}}</span>
+                            {{/evidence_pending}}
+                            {{^evidence_pending}}&mdash;{{/evidence_pending}}
+                        </td>
+                    </tr>
+                    {{/students}}
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+</div>

@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<XMLDB PATH="block/pharos_teacher/db" VERSION="20250604" COMMENT="XMLDB file for block_pharos_teacher">
+  <TABLES>
+    <TABLE NAME="block_pharos_teacher_alerts" COMMENT="Tracks dropout-risk notifications sent to teachers">
+      <FIELDS>
+        <FIELD NAME="id"          TYPE="int"  LENGTH="10" NOTNULL="true" SEQUENCE="true"/>
+        <FIELD NAME="courseid"    TYPE="int"  LENGTH="10" NOTNULL="true"/>
+        <FIELD NAME="studentid"   TYPE="int"  LENGTH="10" NOTNULL="true"/>
+        <FIELD NAME="teacherid"   TYPE="int"  LENGTH="10" NOTNULL="true"/>
+        <FIELD NAME="risk_score"  TYPE="int"  LENGTH="3"  NOTNULL="true" DEFAULT="0"/>
+        <FIELD NAME="timecreated" TYPE="int"  LENGTH="10" NOTNULL="true"/>
+      </FIELDS>
+      <KEYS>
+        <KEY NAME="primary"   TYPE="primary" FIELDS="id"/>
+        <KEY NAME="studentid" TYPE="foreign" FIELDS="studentid" REFTABLE="user" REFFIELDS="id"/>
+        <KEY NAME="teacherid" TYPE="foreign" FIELDS="teacherid" REFTABLE="user" REFFIELDS="id"/>
+      </KEYS>
+      <INDEXES>
+        <INDEX NAME="course_student" UNIQUE="false" FIELDS="courseid, studentid, timecreated"/>
+        <INDEX NAME="teacher_course" UNIQUE="false" FIELDS="teacherid, courseid, timecreated"/>
+      </INDEXES>
+    </TABLE>
+  </TABLES>
+</XMLDB>

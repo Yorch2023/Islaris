@@ -1,0 +1,63 @@
+<?php
+defined('MOODLE_INTERNAL') || die();
+
+$string['pluginname']          = 'PHAROS Itinerary';
+$string['modulename']          = 'PHAROS Itinerary';
+$string['modulenameplural']    = 'PHAROS Itineraries';
+$string['modulename_help']     = 'The PHAROS Itinerary module displays the personalised learning path with progressive levels, XP and microcredentials.';
+$string['pharos_itinerary:view']         = 'View itinerary';
+$string['pharos_itinerary:addinstance']  = 'Add itinerary';
+$string['startlevel']          = 'Starting level';
+$string['nivel']               = 'Level';
+$string['xp_per_evidence']     = 'XP per evidence';
+$string['mi_itinerario']       = 'My itinerary';
+$string['actividades']         = 'Activities';
+$string['microcredenciales']       = 'My microcredentials';
+$string['level1_desc']             = 'Basic AI concepts, everyday tools and first steps.';
+$string['level2_desc']             = 'Professional applications, critical use and AI tool evaluation.';
+$string['level3_desc']             = 'Activity design, pedagogical leadership and educational policy impact.';
+$string['nivel_bloqueado']         = 'Level locked — complete the previous level first';
+$string['nivel_actual']            = 'Current level';
+$string['skip_to_levels']          = 'Skip to itinerary levels';
+$string['current_level']           = 'Current level';
+$string['xp_progress']             = 'XP Progress';
+$string['no_activities']           = 'No activities assigned to this level.';
+$string['ver_microcredenciales']   = 'View my microcredentials';
+$string['manage_activities']           = 'Manage itinerary activities';
+$string['manage_activities_intro']     = 'Assign course activities to each itinerary level.';
+$string['available_activities']        = 'Available activities to assign';
+$string['no_available_activities']     = 'All course activities are already assigned to the itinerary.';
+$string['assign_to_level']             = 'Assign to level';
+$string['remove']                      = 'Remove';
+$string['move_up']                     = 'Move up';
+$string['move_down']                   = 'Move down';
+$string['activity_assigned']           = 'Activity added to itinerary.';
+$string['activity_removed']            = 'Activity removed from itinerary.';
+$string['manage_activities_link']      = 'Manage activities';
+$string['privacy:metadata']                                   = 'The PHAROS Itinerary module stores user progress data.';
+$string['privacy:metadata:pharos_itinerary_progress']         = 'User progress in the itinerary (level and accumulated XP).';
+$string['privacy:metadata:pharos_itinerary_progress:userid']  = 'Moodle user ID.';
+$string['privacy:metadata:pharos_itinerary_progress:level']   = 'Current itinerary level (1, 2 or 3).';
+$string['privacy:metadata:pharos_itinerary_progress:xp']      = 'Accumulated experience points (XP).';
+$string['privacy:metadata:pharos_itinerary_progress:timemodified'] = 'Date and time of last progress update.';
+$string['ws_get_user_progress']       = 'Get user progress in the itinerary';
+$string['ws_award_xp']                = 'Award XP to user in the itinerary';
+$string['event_xp_awarded']           = 'XP awarded';
+$string['event_level_up']             = 'Level up';
+$string['recommend_heading']          = 'What to do next?';
+$string['recommend_loading']          = 'Loading recommendation…';
+$string['recommend_error']            = 'Could not load recommendation.';
+
+// Reflection system
+$string['reflect_btn']         = 'Reflect';
+$string['reflect_title']       = 'Activity reflection';
+$string['reflect_label']       = 'Write your reflection on this activity';
+$string['reflect_placeholder'] = 'Describe what you learned, what surprised you, how you connect it to your life or work… (min. 50 characters)';
+$string['reflect_hint']        = 'Min. 50 chars · Max. 1000 · Ctrl+Enter to submit';
+$string['reflect_submit']      = 'Submit reflection';
+$string['reflect_close']       = 'Close';
+
+// Notifications
+$string['messageprovider:level_up']      = 'PHAROS level-up notifications';
+$string['notify_level_up_subject']       = '🚀 You unlocked {$a->level} in PHAROS-AI!';
+$string['notify_level_up_body']          = "Hi {$a->name}!\n\nCongratulations! You have reached {$a->level} — {$a->leveldesc} in your PHAROS-AI itinerary.\n\nThis new level gives you access to more advanced activities and resources. Keep it up!\n\nGo to the course: {$a->courseurl}\n\nThe PHAROS-AI Team";

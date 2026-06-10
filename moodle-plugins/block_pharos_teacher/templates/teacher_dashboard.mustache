@@ -1,0 +1,304 @@
+{{!
+    Template: block_pharos_teacher/teacher_dashboard
+    Context:
+      students        - Array of { id, name, profile_url, message_url, level, level_label,
+                          xp_percent, xp_aria_label, days_inactive, is_inactive,
+                          evidence_pending, ai_sessions_week, ai_messages_total,
+                          ai_status_active, ai_status_recent, ai_status_none,
+                          risk_score, risk_high, risk_medium, risk_low }
+      inactive_count  - Students inactive > 7 days
+      pending_count   - Students with pending evidence
+      generator_url   - URL to the activity generator
+      manage_url      - URL to manage_activities.php (teachers only, may be empty)
+      ai_detail_url   - AJAX endpoint for AI session detail
+      advisor_url     - AJAX endpoint for AI advisor chat
+      motivate_url    - AJAX endpoint for motivation message generator
+      sesskey         - Moodle session key
+}}
+<div class="pharos-teacher-dashboard"
+     data-ai-detail-url="{{ai_detail_url}}"
+     data-advisor-url="{{advisor_url}}"
+     data-motivate-url="{{motivate_url}}"
+     data-advisor-lang="{{advisor_lang}}"
+     data-sesskey="{{sesskey}}"
+     role="region"
+     aria-labelledby="pharos-teacher-heading">
+
+    <h3 id="pharos-teacher-heading" class="sr-only">{{#str}}pluginname, block_pharos_teacher{{/str}}</h3>
+
+    {{! Summary strip }}
+    <div class="row mb-3 text-center" role="list" aria-label="{{#str}}pluginname, block_pharos_teacher{{/str}}">
+        <div class="col-4" role="listitem">
+            <p class="h4 mb-0 {{#inactive_count}}text-danger{{/inactive_count}}"
+               aria-label="{{inactive_count}} {{#str}}inactivos_7d, block_pharos_teacher{{/str}}">
+                {{inactive_count}}
+            </p>
+            <small class="text-muted">{{#str}}inactivos_7d, block_pharos_teacher{{/str}}</small>
+        </div>
+        <div class="col-4" role="listitem">
+            <p class="h4 mb-0 {{#pending_count}}text-warning{{/pending_count}}"
+               aria-label="{{pending_count}} {{#str}}pendientes, block_pharos_teacher{{/str}}">
+                {{pending_count}}
+            </p>
+            <small class="text-muted">{{#str}}pendientes, block_pharos_teacher{{/str}}</small>
+        </div>
+        <div class="col-4" role="listitem">
+            <a href="{{generator_url}}"
+               class="btn btn-danger btn-sm btn-block mt-1"
+               target="_blank"
+               rel="noopener noreferrer">
+                {{#str}}generar_ia, block_pharos_teacher{{/str}}
+            </a>
+        </div>
+    </div>
+
+    {{! Inactive alert }}
+    {{#inactive_count}}
+    <div class="pharos-alert-inactive mb-2" role="alert" aria-live="polite">
+        <strong>{{inactive_count}}</strong> {{#str}}alumnos_inactivos_aviso, block_pharos_teacher{{/str}}
+    </div>
+    {{/inactive_count}}
+
+    {{! Student list }}
+    <ul class="list-group list-group-flush" aria-label="{{#str}}student_list, block_pharos_teacher{{/str}}">
+        {{#students}}
+        <li class="list-group-item px-0 py-2 {{#is_inactive}}list-group-item-warning{{/is_inactive}}">
+            <div class="d-flex justify-content-between align-items-start">
+                <div style="min-width:0">
+                    <a href="{{profile_url}}" class="font-weight-bold d-block text-truncate"
+                       style="max-width:100px">{{name}}</a>
+                    <span class="pharos-level-badge pharos-level-badge--n{{level}} small"
+                          aria-hidden="true">{{level_label}}</span>
+                    {{#risk_high}}<span class="badge badge-danger ml-1 pharos-risk-badge"
+                          title="{{#str}}risk_high, block_pharos_teacher{{/str}}"
+                          aria-label="{{#str}}risk_high, block_pharos_teacher{{/str}}">&#9888;</span>{{/risk_high}}
+                    {{#risk_medium}}<span class="badge badge-warning ml-1 pharos-risk-badge"
+                          title="{{#str}}risk_medium, block_pharos_teacher{{/str}}"
+                          aria-label="{{#str}}risk_medium, block_pharos_teacher{{/str}}">&#9888;</span>{{/risk_medium}}
+                </div>
+
+                {{! AI usage indicator — clickable to show session detail modal }}
+                <button type="button"
+                        class="pharos-ai-detail-btn btn btn-link p-0 text-center mx-1 flex-shrink-0"
+                        style="min-width:40px;border:none;background:none"
+                        data-student-id="{{id}}"
+                        data-student-name="{{name}}"
+                        aria-label="{{#str}}ai_sessions_week, block_pharos_teacher{{/str}}: {{ai_sessions_week}}">
+                    <span class="pharos-ai-dot
+                        {{#ai_status_active}}pharos-ai-dot--active{{/ai_status_active}}
+                        {{#ai_status_recent}}pharos-ai-dot--recent{{/ai_status_recent}}
+                        {{#ai_status_none}}pharos-ai-dot--none{{/ai_status_none}}"
+                          aria-hidden="true"></span>
+                    <small class="d-block text-center text-muted" style="font-size:0.65rem;line-height:1.1">
+                        {{ai_sessions_week}}s
+                    </small>
+                </button>
+
+                <div class="text-right ml-1 flex-shrink-0">
+                    {{#is_inactive}}
+                    <a href="{{message_url}}"
+                       class="btn btn-outline-secondary btn-sm py-0 px-1 d-block mb-1"
+                       style="font-size:0.7rem"
+                       title="{{#str}}contact_student, block_pharos_teacher{{/str}}"
+                       aria-label="{{#str}}contact_student, block_pharos_teacher{{/str}}: {{name}}">
+                        ✉
+                    </a>
+                    {{/is_inactive}}
+                    {{#evidence_pending}}
+                    <span class="badge badge-warning d-block"
+                          aria-label="{{#str}}evidencia, block_pharos_teacher{{/str}}">
+                        {{#str}}evidencia, block_pharos_teacher{{/str}}
+                    </span>
+                    {{/evidence_pending}}
+                    <button type="button"
+                            class="pharos-advisor-btn btn btn-outline-danger btn-sm py-0 px-1 d-block mt-1"
+                            style="font-size:0.65rem;white-space:nowrap"
+                            data-student-id="{{id}}"
+                            data-student-name="{{name}}"
+                            aria-label="{{#str}}advisor_consult, block_pharos_teacher{{/str}}: {{name}}">
+                        {{#str}}advisor_consult, block_pharos_teacher{{/str}}
+                    </button>
+                    {{#risk_high}}
+                    <button type="button"
+                            class="pharos-motivate-btn btn btn-danger btn-sm py-0 px-1 d-block mt-1"
+                            style="font-size:0.65rem;white-space:nowrap"
+                            data-student-id="{{id}}"
+                            data-student-name="{{name}}"
+                            data-message-url="{{message_url}}"
+                            aria-label="{{#str}}motivate_btn, block_pharos_teacher{{/str}}: {{name}}">
+                        {{#str}}motivate_btn, block_pharos_teacher{{/str}}
+                    </button>
+                    {{/risk_high}}
+                    {{#risk_medium}}
+                    <button type="button"
+                            class="pharos-motivate-btn btn btn-outline-warning btn-sm py-0 px-1 d-block mt-1"
+                            style="font-size:0.65rem;white-space:nowrap"
+                            data-student-id="{{id}}"
+                            data-student-name="{{name}}"
+                            data-message-url="{{message_url}}"
+                            aria-label="{{#str}}motivate_btn, block_pharos_teacher{{/str}}: {{name}}">
+                        {{#str}}motivate_btn, block_pharos_teacher{{/str}}
+                    </button>
+                    {{/risk_medium}}
+                </div>
+            </div>
+            <div class="pharos-xp-bar mt-1"
+                 style="height:4px"
+                 role="progressbar"
+                 aria-valuenow="{{xp_percent}}"
+                 aria-valuemin="0"
+                 aria-valuemax="100"
+                 aria-label="{{xp_aria_label}}"
+                 data-xp-target="{{xp_percent}}">
+                <div class="pharos-xp-bar__fill" style="width:0%"></div>
+            </div>
+        </li>
+        {{/students}}
+        {{^students}}
+        <li class="list-group-item px-0 text-muted small" role="status">
+            {{#str}}no_students, block_pharos_teacher{{/str}}
+        </li>
+        {{/students}}
+    </ul>
+
+    {{! Link to manage activities (teachers only) }}
+    {{#manage_url}}
+    <div class="mt-3 text-right">
+        <a href="{{manage_url}}" class="small text-muted">
+            {{#str}}manage_activities, block_pharos_teacher{{/str}}
+        </a>
+    </div>
+    {{/manage_url}}
+
+    {{! Link to full analytics page }}
+    {{#analytics_url}}
+    <div class="mt-2 text-center">
+        <a href="{{analytics_url}}"
+           class="pharos-progress-link"
+           aria-label="{{#str}}analytics_link, block_pharos_teacher{{/str}}">
+            &#128202; {{#str}}analytics_link, block_pharos_teacher{{/str}}
+        </a>
+    </div>
+    {{/analytics_url}}
+
+</div>
+
+{{! AI Advisor modal — teacher chat with PHAROS AI about a specific student }}
+<div class="modal fade" id="pharos-advisor-modal" tabindex="-1"
+     role="dialog"
+     aria-labelledby="pharos-advisor-title"
+     aria-modal="true">
+    <div class="modal-dialog modal-dialog-scrollable modal-lg" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="pharos-advisor-title">
+                    {{#str}}advisor_title, block_pharos_teacher{{/str}}
+                </h5>
+                <button type="button" class="close" data-dismiss="modal"
+                        aria-label="{{#str}}closebuttontitle, core{{/str}}">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+            <div class="modal-body d-flex flex-column" style="min-height:320px">
+                <p class="pharos-advisor-subtitle text-muted small mb-2"></p>
+                <div id="pharos-advisor-messages"
+                     class="pharos-advisor-messages flex-grow-1 mb-2"
+                     role="log"
+                     aria-live="polite"
+                     aria-label="{{#str}}advisor_conversation, block_pharos_teacher{{/str}}">
+                </div>
+                <div class="input-group">
+                    <input type="text"
+                           id="pharos-advisor-input"
+                           class="form-control form-control-sm"
+                           placeholder="{{#str}}advisor_placeholder, block_pharos_teacher{{/str}}"
+                           aria-label="{{#str}}advisor_placeholder, block_pharos_teacher{{/str}}"
+                           maxlength="500">
+                    <div class="input-group-append">
+                        <button type="button"
+                                id="pharos-advisor-send"
+                                class="btn btn-danger btn-sm"
+                                aria-label="{{#str}}advisor_send, block_pharos_teacher{{/str}}">
+                            {{#str}}advisor_send, block_pharos_teacher{{/str}}
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+{{! Motivation modal — AI generates a ready-to-send motivational message for a student }}
+<div class="modal fade" id="pharos-motivate-modal" tabindex="-1"
+     role="dialog"
+     aria-labelledby="pharos-motivate-title"
+     aria-modal="true">
+    <div class="modal-dialog" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="pharos-motivate-title">
+                    {{#str}}motivate_title, block_pharos_teacher{{/str}}
+                </h5>
+                <button type="button" class="close" data-dismiss="modal"
+                        aria-label="{{#str}}closebuttontitle, core{{/str}}">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+            <div class="modal-body">
+                <p class="pharos-motivate-subtitle text-muted small mb-2"></p>
+                <div id="pharos-motivate-loading" class="text-center py-3 d-none">
+                    <div class="spinner-border text-danger" role="status">
+                        <span class="sr-only">{{#str}}loading, core{{/str}}</span>
+                    </div>
+                </div>
+                <div id="pharos-motivate-result" class="d-none">
+                    <div id="pharos-motivate-message"
+                         class="pharos-motivate-message p-3 mb-3 rounded"
+                         style="background:#f8f8f8;border-left:3px solid #C8102E;white-space:pre-wrap"></div>
+                    <div class="d-flex gap-2">
+                        <button type="button"
+                                id="pharos-motivate-copy"
+                                class="btn btn-outline-secondary btn-sm"
+                                aria-label="{{#str}}motivate_copy, block_pharos_teacher{{/str}}">
+                            {{#str}}motivate_copy, block_pharos_teacher{{/str}}
+                        </button>
+                        <a id="pharos-motivate-send-link"
+                           href="#"
+                           target="_blank"
+                           rel="noopener noreferrer"
+                           class="btn btn-danger btn-sm ml-2"
+                           aria-label="{{#str}}motivate_send, block_pharos_teacher{{/str}}">
+                            {{#str}}motivate_send, block_pharos_teacher{{/str}}
+                        </a>
+                    </div>
+                </div>
+                <div id="pharos-motivate-error" class="alert alert-danger d-none"></div>
+            </div>
+        </div>
+    </div>
+</div>
+
+{{! AI detail modal — rendered once, populated by JS }}
+<div class="modal fade" id="pharos-ai-detail-modal" tabindex="-1"
+     role="dialog"
+     aria-labelledby="pharos-ai-detail-title"
+     aria-modal="true">
+    <div class="modal-dialog modal-dialog-scrollable" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="pharos-ai-detail-title"></h5>
+                <button type="button" class="close" data-dismiss="modal"
+                        aria-label="{{#str}}closebuttontitle, core{{/str}}">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+            <div class="modal-body" id="pharos-ai-detail-body">
+                <div class="text-center py-3">
+                    <div class="spinner-border text-danger" role="status">
+                        <span class="sr-only">{{#str}}loading, core{{/str}}</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>

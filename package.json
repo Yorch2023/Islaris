@@ -1,0 +1,36 @@
+{
+  "name": "pharos-ai-middleware",
+  "version": "0.1.0",
+  "description": "AI middleware layer for PHAROS-AI platform (Tutor IA + Generador de actividades)",
+  "main": "ai-layer/server.js",
+  "scripts": {
+    "start": "node ai-layer/server.js",
+    "dev": "nodemon ai-layer/server.js",
+    "test": "jest --testPathPattern=tests/",
+    "test:watch": "jest --watch",
+    "lint": "eslint --no-warn-ignored",
+    "lint:fix": "eslint --no-warn-ignored --fix"
+  },
+  "dependencies": {
+    "@anthropic-ai/sdk": "^0.36.0",
+    "cors": "^2.8.5",
+    "docx": "^8.5.0",
+    "dotenv": "^16.4.5",
+    "express": "^4.19.2",
+    "express-rate-limit": "^7.3.1",
+    "helmet": "^7.1.0",
+    "morgan": "^1.10.0",
+    "winston": "^3.13.0"
+  },
+  "devDependencies": {
+    "eslint": "^9.5.0",
+    "jest": "^29.7.0",
+    "nodemon": "^3.1.4",
+    "supertest": "^7.0.0"
+  },
+  "engines": {
+    "node": ">=20.0.0"
+  },
+  "keywords": ["pharos-ai", "moodle", "elearning", "erasmus", "adult-education"],
+  "license": "GPL-3.0"
+}

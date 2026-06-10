@@ -1,0 +1,11 @@
+<!-- Solo outline blanco — minimalista premium -->
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 36" fill="none" stroke="white" stroke-width="1.8" stroke-linejoin="round" stroke-linecap="round">
+  <path d="M11 10 Q16 2 21 10"/>
+  <path d="M16 10 L30 3 L28 8 Z" fill="#F5A623" stroke="none"/>
+  <rect x="10" y="10" width="12" height="6" rx="2"/>
+  <path d="M11 16 L21 16 L22.5 29 L9.5 29 Z"/>
+  <line x1="10.5" y1="21" x2="21.5" y2="21"/>
+  <line x1="10.5" y1="25" x2="21.5" y2="25"/>
+  <rect x="8" y="29" width="16" height="3.5" rx="2"/>
+  <circle cx="16" cy="13" r="1.5" fill="#F5A623" stroke="none"/>
+</svg>

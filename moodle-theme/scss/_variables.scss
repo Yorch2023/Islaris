@@ -1,0 +1,41 @@
+// PHAROS-AI theme — SCSS variables
+// These are injected before the Boost parent SCSS so Bootstrap variables
+// are overridden at the source level.
+
+// === Brand colours ===
+$pharos-red:    #C8102E;
+$pharos-navy:   #0D1520;
+$pharos-light:  #f4f6f9;
+$pharos-border: #dde2ea;
+$pharos-gold:   #F5A623; // XP / badge accent
+
+// === Bootstrap overrides ===
+$primary:   $pharos-navy;
+$secondary: $pharos-red;
+$body-bg:   $pharos-light;
+$body-color: #1a1a2e;
+
+$font-family-sans-serif: 'Inter', 'Segoe UI', system-ui, -apple-system, sans-serif;
+$font-size-base: 1rem;
+$line-height-base: 1.55;
+
+$border-radius:    0.5rem;
+$border-radius-lg: 0.75rem;
+$border-radius-sm: 0.375rem;
+
+$navbar-dark-color:             rgba(255, 255, 255, 0.85);
+$navbar-dark-hover-color:       #fff;
+$navbar-dark-active-color:      #fff;
+$navbar-dark-brand-color:       #fff;
+$navbar-dark-brand-hover-color: #fff;
+
+// === Component tokens ===
+$card-border-color: $pharos-border;
+$card-cap-bg:       #fff;
+$input-border-color: $pharos-border;
+$input-focus-border-color: $pharos-navy;
+$input-focus-box-shadow: 0 0 0 0.2rem rgba(13, 21, 32, 0.2);
+
+$btn-border-radius: $border-radius;
+$link-color: $pharos-navy;
+$link-hover-color: $pharos-red;

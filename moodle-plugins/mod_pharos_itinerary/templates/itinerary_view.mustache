@@ -1,0 +1,220 @@
+{{!
+    Template: mod_pharos_itinerary/itinerary_view
+    Context:
+      fullname      - Student name
+      level         - Current level (1/2/3)
+      level_label   - "N1 — Fundamentos" etc.
+      xp_current    - XP earned
+      xp_next       - XP needed for next level threshold
+      xp_percent       - Integer 0-100
+      xp_aria_label    - Pre-formatted accessible label for the XP bar (passed from PHP)
+      level_aria_label - Pre-formatted accessible label for the level badge (passed from PHP)
+      levels        - Array of {
+                        level, level_label, is_current (bool), is_locked (bool),
+                        description,
+                        activities: [{ cmid, name, url, completed (bool) }]
+                      }
+      badges_url    - URL to mod_pharos_badges view
+      cmid          - Course module ID (used by JS for AJAX calls)
+      lang          - 'es' or 'it'
+}}
+{{! Skip link for keyboard users }}
+<a href="#pharos-itinerary-levels" class="sr-only sr-only-focusable">
+    {{#str}}skip_to_levels, mod_pharos_itinerary{{/str}}
+</a>
+
+<div class="pharos-itinerary"
+     role="region"
+     aria-labelledby="pharos-itinerary-heading"
+     data-cmid="{{cmid}}"
+     data-lang="{{lang}}"
+     data-reflect-url="{{reflect_url}}"
+     data-sesskey="{{sesskey}}">
+
+    {{! Header }}
+    <div class="d-flex align-items-center justify-content-between mb-3 flex-wrap">
+        <h2 id="pharos-itinerary-heading" class="h5 mb-0">
+            {{#str}}mi_itinerario, mod_pharos_itinerary{{/str}}
+        </h2>
+        <span class="pharos-level-badge pharos-level-badge--n{{level}}"
+              aria-label="{{level_aria_label}}">{{level_label}}</span>
+    </div>
+
+    {{! XP progress bar }}
+    <div class="mb-4">
+        <div class="pharos-xp-bar"
+             role="progressbar"
+             aria-valuenow="{{xp_percent}}"
+             aria-valuemin="0"
+             aria-valuemax="100"
+             aria-label="{{xp_aria_label}}"
+             aria-describedby="pharos-itinerary-xp-label">
+            <div class="pharos-xp-bar__fill" data-target-width="{{xp_percent}}%"></div>
+        </div>
+        <p id="pharos-itinerary-xp-label" class="pharos-xp-label" aria-hidden="true">
+            {{xp_current}} / {{xp_next}} XP
+        </p>
+    </div>
+
+    {{! AI recommendation widget — filled asynchronously by itinerary-progress.js }}
+    <div id="pharos-recommend-widget"
+         class="mb-4"
+         role="status"
+         aria-live="polite"
+         aria-atomic="false"
+         aria-label="{{#str}}recommend_heading, mod_pharos_itinerary{{/str}}">
+    </div>
+
+    {{! Level panels }}
+    <div id="pharos-itinerary-levels">
+        {{#levels}}
+        <div class="card mb-3 {{#is_locked}}pharos-itinerary__level--locked{{/is_locked}}"
+             aria-labelledby="pharos-level-{{level}}-btn">
+            <div class="card-header d-flex align-items-center justify-content-between">
+                <button class="btn btn-link p-0 text-left font-weight-bold"
+                        type="button"
+                        id="pharos-level-{{level}}-btn"
+                        data-itinerary-toggle="pharos-level-{{level}}"
+                        aria-expanded="{{#is_current}}true{{/is_current}}{{^is_current}}false{{/is_current}}"
+                        aria-controls="pharos-level-{{level}}"
+                        {{#is_locked}}disabled aria-disabled="true"{{/is_locked}}>
+                    <span class="pharos-level-badge pharos-level-badge--n{{level}} mr-2"
+                          aria-hidden="true">{{level_label}}</span>
+                    {{description}}
+                </button>
+                {{#is_locked}}
+                <span class="ml-2"
+                      role="img"
+                      aria-label="{{#str}}nivel_bloqueado, mod_pharos_itinerary{{/str}}">
+                    &#128274;
+                </span>
+                {{/is_locked}}
+                {{^is_locked}}
+                {{#is_current}}
+                <span class="sr-only">{{#str}}nivel_actual, mod_pharos_itinerary{{/str}}</span>
+                {{/is_current}}
+                {{/is_locked}}
+            </div>
+
+            <div id="pharos-level-{{level}}"
+                 role="region"
+                 aria-labelledby="pharos-level-{{level}}-btn"
+                 {{^is_current}}hidden{{/is_current}}>
+                <ul class="list-group list-group-flush">
+                    {{#activities}}
+                    <li class="list-group-item pharos-activity-item {{#completed}}pharos-activity-item--done{{/completed}}">
+                        <div class="d-flex align-items-center justify-content-between">
+                            <div class="d-flex align-items-center">
+                                <input type="checkbox"
+                                       id="activity-{{cmid}}"
+                                       class="mr-2"
+                                       data-cmid="{{cmid}}"
+                                       {{#completed}}checked{{/completed}}
+                                       {{#is_locked}}disabled aria-disabled="true"{{/is_locked}}
+                                       aria-label="{{name}}">
+                                <label for="activity-{{cmid}}" class="mb-0 {{#completed}}text-muted{{/completed}}">
+                                    <a href="{{url}}">{{name}}</a>
+                                </label>
+                            </div>
+                            {{^is_locked}}
+                            <button type="button"
+                                    class="pharos-reflect-btn btn btn-outline-primary btn-sm py-0 px-2 ml-2 flex-shrink-0"
+                                    style="font-size:0.7rem"
+                                    data-activity-name="{{name}}"
+                                    data-level="{{../level}}"
+                                    aria-label="{{#str}}reflect_btn, mod_pharos_itinerary{{/str}}: {{name}}">
+                                {{#str}}reflect_btn, mod_pharos_itinerary{{/str}}
+                            </button>
+                            {{/is_locked}}
+                        </div>
+                    </li>
+                    {{/activities}}
+                    {{^activities}}
+                    <li class="list-group-item text-muted small">
+                        {{#str}}no_activities, mod_pharos_itinerary{{/str}}
+                    </li>
+                    {{/activities}}
+                </ul>
+            </div>
+        </div>
+        {{/levels}}
+    </div>
+
+    {{! Link to badges }}
+    <div class="text-right mt-3">
+        <a href="{{badges_url}}" class="btn btn-outline-secondary btn-sm">
+            {{#str}}ver_microcredenciales, mod_pharos_itinerary{{/str}}
+        </a>
+    </div>
+
+</div>
+
+{{! Reflection modal — AI validates student reflection and records evidence }}
+<div class="modal fade" id="pharos-reflect-modal" tabindex="-1"
+     role="dialog"
+     aria-labelledby="pharos-reflect-title"
+     aria-modal="true">
+    <div class="modal-dialog" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="pharos-reflect-title">
+                    {{#str}}reflect_title, mod_pharos_itinerary{{/str}}
+                </h5>
+                <button type="button" class="close" data-dismiss="modal"
+                        aria-label="{{#str}}closebuttontitle, core{{/str}}">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+            <div class="modal-body">
+                <p class="pharos-reflect-activity-label text-muted small mb-1"></p>
+
+                <div id="pharos-reflect-input-section">
+                    <label for="pharos-reflect-textarea" class="small font-weight-bold">
+                        {{#str}}reflect_label, mod_pharos_itinerary{{/str}}
+                    </label>
+                    <textarea id="pharos-reflect-textarea"
+                              class="form-control form-control-sm mb-1"
+                              rows="5"
+                              maxlength="1000"
+                              minlength="50"
+                              placeholder="{{#str}}reflect_placeholder, mod_pharos_itinerary{{/str}}"
+                              aria-label="{{#str}}reflect_label, mod_pharos_itinerary{{/str}}"
+                              aria-describedby="pharos-reflect-counter pharos-reflect-hint"></textarea>
+                    <div class="d-flex justify-content-between mb-2">
+                        <small id="pharos-reflect-hint" class="text-muted">
+                            {{#str}}reflect_hint, mod_pharos_itinerary{{/str}}
+                        </small>
+                        <small id="pharos-reflect-counter" class="text-muted" aria-live="polite">0 / 1000</small>
+                    </div>
+                    <button type="button"
+                            id="pharos-reflect-submit"
+                            class="btn btn-primary btn-sm"
+                            aria-label="{{#str}}reflect_submit, mod_pharos_itinerary{{/str}}">
+                        {{#str}}reflect_submit, mod_pharos_itinerary{{/str}}
+                    </button>
+                </div>
+
+                <div id="pharos-reflect-loading" class="text-center py-3 d-none">
+                    <div class="spinner-border text-primary" role="status">
+                        <span class="sr-only">{{#str}}loading, core{{/str}}</span>
+                    </div>
+                </div>
+
+                <div id="pharos-reflect-result" class="d-none" aria-live="polite">
+                    <div id="pharos-reflect-feedback"
+                         class="alert mb-3"
+                         role="alert"></div>
+                    <div id="pharos-reflect-xp-msg" class="small text-success font-weight-bold mb-1 d-none"></div>
+                    <div id="pharos-reflect-evidence-msg" class="small text-muted"></div>
+                    <button type="button"
+                            class="btn btn-outline-secondary btn-sm mt-2"
+                            data-dismiss="modal">
+                        {{#str}}reflect_close, mod_pharos_itinerary{{/str}}
+                    </button>
+                </div>
+
+                <div id="pharos-reflect-error" class="alert alert-danger d-none" role="alert"></div>
+            </div>
+        </div>
+    </div>
+</div>

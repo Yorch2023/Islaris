@@ -1,0 +1,42 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<XMLDB PATH="blocks/pharos_tutor/db" VERSION="20250602"
+       COMMENT="PHAROS-AI Tutor block tables — session metadata only, no conversation content">
+  <TABLES>
+    <TABLE NAME="block_pharos_tutor_sessions" COMMENT="AI tutor session metadata (no conversation content stored)">
+      <FIELDS>
+        <FIELD NAME="id"               TYPE="int"  LENGTH="10" NOTNULL="true"  SEQUENCE="true"/>
+        <FIELD NAME="userid"           TYPE="int"  LENGTH="10" NOTNULL="true"/>
+        <FIELD NAME="courseid"         TYPE="int"  LENGTH="10" NOTNULL="true"/>
+        <FIELD NAME="level"            TYPE="int"  LENGTH="2"  NOTNULL="true"  DEFAULT="1"/>
+        <FIELD NAME="message_count"    TYPE="int"  LENGTH="5"  NOTNULL="true"  DEFAULT="0"/>
+        <FIELD NAME="duration_seconds" TYPE="int"  LENGTH="6"  NOTNULL="true"  DEFAULT="0"/>
+        <FIELD NAME="timecreated"      TYPE="int"  LENGTH="10" NOTNULL="true"  DEFAULT="0"/>
+      </FIELDS>
+      <KEYS>
+        <KEY NAME="primary" TYPE="primary" FIELDS="id"/>
+        <KEY NAME="fk_userid" TYPE="foreign" FIELDS="userid" REFTABLE="user" REFFIELDS="id"/>
+      </KEYS>
+      <INDEXES>
+        <INDEX NAME="ix_courseid_userid" UNIQUE="false" FIELDS="courseid, userid"/>
+        <INDEX NAME="ix_timecreated"     UNIQUE="false" FIELDS="timecreated"/>
+      </INDEXES>
+    </TABLE>
+    <TABLE NAME="block_pharos_tutor_memory" COMMENT="Structured pedagogical memory per user/course — no conversation content stored">
+      <FIELDS>
+        <FIELD NAME="id"           TYPE="int"  LENGTH="10" NOTNULL="true" SEQUENCE="true"/>
+        <FIELD NAME="userid"       TYPE="int"  LENGTH="10" NOTNULL="true"/>
+        <FIELD NAME="courseid"     TYPE="int"  LENGTH="10" NOTNULL="true"/>
+        <FIELD NAME="profile_json" TYPE="text" NOTNULL="false"/>
+        <FIELD NAME="timecreated"  TYPE="int"  LENGTH="10" NOTNULL="true" DEFAULT="0"/>
+        <FIELD NAME="timemodified" TYPE="int"  LENGTH="10" NOTNULL="true" DEFAULT="0"/>
+      </FIELDS>
+      <KEYS>
+        <KEY NAME="primary"    TYPE="primary" FIELDS="id"/>
+        <KEY NAME="fk_userid"  TYPE="foreign" FIELDS="userid" REFTABLE="user" REFFIELDS="id"/>
+      </KEYS>
+      <INDEXES>
+        <INDEX NAME="ix_userid_courseid" UNIQUE="true" FIELDS="userid, courseid"/>
+      </INDEXES>
+    </TABLE>
+  </TABLES>
+</XMLDB>

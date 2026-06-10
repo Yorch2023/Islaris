@@ -1,0 +1,59 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<XMLDB PATH="mod/pharos_itinerary/db" VERSION="20250528" COMMENT="XMLDB file for mod_pharos_itinerary">
+  <TABLES>
+    <TABLE NAME="pharos_itinerary" COMMENT="One row per activity instance">
+      <FIELDS>
+        <FIELD NAME="id"              TYPE="int"  LENGTH="10" NOTNULL="true" SEQUENCE="true"/>
+        <FIELD NAME="course"          TYPE="int"  LENGTH="10" NOTNULL="true"/>
+        <FIELD NAME="name"            TYPE="char" LENGTH="255" NOTNULL="true"/>
+        <FIELD NAME="intro"           TYPE="text"             NOTNULL="false"/>
+        <FIELD NAME="introformat"     TYPE="int"  LENGTH="4"  NOTNULL="true" DEFAULT="0"/>
+        <FIELD NAME="startlevel"      TYPE="int"  LENGTH="1"  NOTNULL="true" DEFAULT="1"/>
+        <FIELD NAME="xp_per_evidence" TYPE="int"  LENGTH="4"  NOTNULL="true" DEFAULT="10"/>
+        <FIELD NAME="timecreated"     TYPE="int"  LENGTH="10" NOTNULL="true"/>
+        <FIELD NAME="timemodified"    TYPE="int"  LENGTH="10" NOTNULL="true"/>
+      </FIELDS>
+      <KEYS>
+        <KEY NAME="primary" TYPE="primary" FIELDS="id"/>
+        <KEY NAME="course"  TYPE="foreign" FIELDS="course" REFTABLE="course" REFFIELDS="id"/>
+      </KEYS>
+    </TABLE>
+    <TABLE NAME="pharos_itinerary_progress" COMMENT="Per-user XP and level progress">
+      <FIELDS>
+        <FIELD NAME="id"           TYPE="int" LENGTH="10" NOTNULL="true" SEQUENCE="true"/>
+        <FIELD NAME="itineraryid"  TYPE="int" LENGTH="10" NOTNULL="true"/>
+        <FIELD NAME="userid"       TYPE="int" LENGTH="10" NOTNULL="true"/>
+        <FIELD NAME="level"        TYPE="int" LENGTH="1"  NOTNULL="true" DEFAULT="1"/>
+        <FIELD NAME="xp"           TYPE="int" LENGTH="10" NOTNULL="true" DEFAULT="0"/>
+        <FIELD NAME="timecreated"  TYPE="int" LENGTH="10" NOTNULL="true"/>
+        <FIELD NAME="timemodified" TYPE="int" LENGTH="10" NOTNULL="true"/>
+      </FIELDS>
+      <KEYS>
+        <KEY NAME="primary"      TYPE="primary" FIELDS="id"/>
+        <KEY NAME="itineraryid"  TYPE="foreign" FIELDS="itineraryid" REFTABLE="pharos_itinerary" REFFIELDS="id"/>
+        <KEY NAME="userid"       TYPE="foreign" FIELDS="userid"       REFTABLE="user"             REFFIELDS="id"/>
+      </KEYS>
+      <INDEXES>
+        <INDEX NAME="itinerary_user" UNIQUE="true" FIELDS="itineraryid, userid"/>
+      </INDEXES>
+    </TABLE>
+    <TABLE NAME="pharos_itinerary_activity" COMMENT="Assigns course modules to itinerary levels">
+      <FIELDS>
+        <FIELD NAME="id"           TYPE="int" LENGTH="10" NOTNULL="true" SEQUENCE="true"/>
+        <FIELD NAME="itineraryid"  TYPE="int" LENGTH="10" NOTNULL="true"/>
+        <FIELD NAME="cmid"         TYPE="int" LENGTH="10" NOTNULL="true"/>
+        <FIELD NAME="level"        TYPE="int" LENGTH="1"  NOTNULL="true" DEFAULT="1"/>
+        <FIELD NAME="sortorder"    TYPE="int" LENGTH="4"  NOTNULL="true" DEFAULT="0"/>
+      </FIELDS>
+      <KEYS>
+        <KEY NAME="primary"     TYPE="primary" FIELDS="id"/>
+        <KEY NAME="itineraryid" TYPE="foreign" FIELDS="itineraryid" REFTABLE="pharos_itinerary" REFFIELDS="id"/>
+        <KEY NAME="cmid"        TYPE="foreign" FIELDS="cmid"        REFTABLE="course_modules"   REFFIELDS="id"/>
+      </KEYS>
+      <INDEXES>
+        <INDEX NAME="itinerary_level" UNIQUE="false" FIELDS="itineraryid, level, sortorder"/>
+        <INDEX NAME="cmid_unique"     UNIQUE="true"  FIELDS="itineraryid, cmid"/>
+      </INDEXES>
+    </TABLE>
+  </TABLES>
+</XMLDB>
