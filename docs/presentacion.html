@@ -1,0 +1,516 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>PHAROS-AI — Plataforma de alfabetización crítica en IA</title>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --red:    #C8102E;
+      --navy:   #0D1520;
+      --white:  #FFFFFF;
+      --light:  #F4F6F9;
+      --mid:    #E2E8F0;
+      --text:   #1A2233;
+      --muted:  #5A6A82;
+      --accent: #1A73E8;
+    }
+
+    html, body { height: 100%; font-family: 'Segoe UI', system-ui, sans-serif; background: var(--navy); color: var(--text); }
+
+    /* ── Slider shell ── */
+    #slider { width: 100vw; height: 100vh; overflow: hidden; position: relative; }
+
+    .slide {
+      position: absolute; inset: 0;
+      display: flex; flex-direction: column; justify-content: center; align-items: center;
+      padding: 48px 64px;
+      opacity: 0; pointer-events: none;
+      transition: opacity .5s ease;
+      text-align: center;
+    }
+    .slide.active { opacity: 1; pointer-events: auto; }
+
+    /* ── Backgrounds ── */
+    .bg-navy  { background: var(--navy); color: var(--white); }
+    .bg-white { background: var(--white); }
+    .bg-light { background: var(--light); }
+    .bg-red   { background: var(--red);  color: var(--white); }
+    .bg-grad  { background: linear-gradient(135deg, var(--navy) 0%, #1b3055 100%); color: var(--white); }
+
+    /* ── Typography ── */
+    .eyebrow {
+      font-size: .75rem; font-weight: 700; letter-spacing: .12em;
+      text-transform: uppercase; opacity: .65; margin-bottom: 12px;
+    }
+    h1 { font-size: clamp(2rem, 5vw, 3.5rem); font-weight: 800; line-height: 1.1; margin-bottom: 16px; }
+    h2 { font-size: clamp(1.5rem, 3.5vw, 2.25rem); font-weight: 700; line-height: 1.2; margin-bottom: 20px; }
+    .subtitle { font-size: clamp(1rem, 2vw, 1.3rem); opacity: .8; max-width: 720px; line-height: 1.55; }
+    .label-red { color: var(--red); }
+    .label-white { color: var(--white); }
+
+    /* ── Cards grid ── */
+    .cards {
+      display: flex; flex-wrap: wrap; gap: 16px;
+      justify-content: center; margin-top: 24px; width: 100%; max-width: 960px;
+    }
+    .card {
+      background: var(--white); border-radius: 12px; padding: 20px 22px;
+      flex: 1 1 200px; max-width: 280px; text-align: left;
+      box-shadow: 0 2px 12px rgba(0,0,0,.08);
+    }
+    .bg-navy .card, .bg-grad .card { background: rgba(255,255,255,.08); color: var(--white); }
+    .card-icon { font-size: 1.8rem; margin-bottom: 10px; }
+    .card-title { font-size: .95rem; font-weight: 700; margin-bottom: 6px; }
+    .card-body  { font-size: .82rem; opacity: .75; line-height: 1.5; }
+
+    /* ── List ── */
+    .bullet-list { list-style: none; margin-top: 20px; max-width: 700px; text-align: left; }
+    .bullet-list li {
+      padding: 10px 0 10px 32px; position: relative;
+      font-size: clamp(.9rem, 1.8vw, 1.05rem); border-bottom: 1px solid rgba(0,0,0,.06);
+      line-height: 1.5;
+    }
+    .bg-navy .bullet-list li, .bg-grad .bullet-list li { border-bottom-color: rgba(255,255,255,.1); }
+    .bullet-list li::before {
+      content: '▸'; position: absolute; left: 0; color: var(--red); font-size: 1rem;
+    }
+    .bg-navy .bullet-list li::before, .bg-grad .bullet-list li::before { color: #f87171; }
+
+    /* ── Timeline ── */
+    .timeline { margin-top: 24px; display: flex; flex-direction: column; gap: 12px; max-width: 680px; width: 100%; text-align: left; }
+    .tl-item { display: flex; gap: 16px; align-items: flex-start; }
+    .tl-dot {
+      min-width: 36px; height: 36px; border-radius: 50%;
+      background: var(--red); color: var(--white);
+      font-size: .75rem; font-weight: 800;
+      display: flex; align-items: center; justify-content: center;
+      flex-shrink: 0;
+    }
+    .tl-text strong { font-size: .95rem; display: block; margin-bottom: 2px; }
+    .tl-text span   { font-size: .83rem; opacity: .75; }
+
+    /* ── Stat boxes ── */
+    .stats { display: flex; gap: 24px; justify-content: center; flex-wrap: wrap; margin-top: 24px; }
+    .stat  { background: rgba(200,16,46,.12); border: 2px solid var(--red); border-radius: 12px; padding: 20px 28px; min-width: 140px; }
+    .stat-num { font-size: 2rem; font-weight: 800; color: var(--red); }
+    .stat-lbl { font-size: .8rem; opacity: .7; margin-top: 4px; }
+
+    /* ── Logos row ── */
+    .logos { display: flex; gap: 28px; align-items: center; justify-content: center; flex-wrap: wrap; margin-top: 24px; }
+    .logo-badge {
+      background: rgba(255,255,255,.12); border: 1px solid rgba(255,255,255,.2);
+      border-radius: 10px; padding: 12px 24px;
+      font-weight: 700; font-size: .9rem; color: var(--white);
+    }
+
+    /* ── CTA button ── */
+    .cta {
+      margin-top: 32px; display: inline-block;
+      background: var(--red); color: var(--white);
+      font-size: 1rem; font-weight: 700; padding: 14px 36px;
+      border-radius: 50px; text-decoration: none;
+      letter-spacing: .03em; box-shadow: 0 4px 20px rgba(200,16,46,.4);
+    }
+    .cta:hover { background: #a80d26; }
+
+    /* ── Tag pills ── */
+    .tags { display: flex; flex-wrap: wrap; gap: 10px; justify-content: center; margin-top: 16px; }
+    .tag {
+      background: rgba(26,115,232,.12); color: var(--accent);
+      border: 1px solid rgba(26,115,232,.3);
+      border-radius: 50px; padding: 5px 14px; font-size: .78rem; font-weight: 600;
+    }
+    .bg-navy .tag, .bg-grad .tag {
+      background: rgba(255,255,255,.1); color: var(--white); border-color: rgba(255,255,255,.25);
+    }
+
+    /* ── Navigation ── */
+    #nav {
+      position: fixed; bottom: 28px; left: 50%; transform: translateX(-50%);
+      display: flex; align-items: center; gap: 16px;
+      background: rgba(13,21,32,.85); backdrop-filter: blur(12px);
+      border: 1px solid rgba(255,255,255,.12); border-radius: 50px;
+      padding: 10px 24px; z-index: 100;
+    }
+    .nav-btn {
+      background: none; border: none; cursor: pointer;
+      color: var(--white); font-size: 1.2rem; opacity: .6; padding: 4px 8px;
+      transition: opacity .2s;
+    }
+    .nav-btn:hover { opacity: 1; }
+    #counter { color: var(--white); font-size: .8rem; opacity: .5; min-width: 52px; text-align: center; }
+
+    /* ── Dots ── */
+    #dots { position: fixed; right: 20px; top: 50%; transform: translateY(-50%); display: flex; flex-direction: column; gap: 8px; z-index: 100; }
+    .dot {
+      width: 8px; height: 8px; border-radius: 50%;
+      background: rgba(255,255,255,.25); cursor: pointer; transition: all .2s;
+    }
+    .dot.active { background: var(--red); transform: scale(1.4); }
+
+    /* ── Keyboard hint ── */
+    #hint {
+      position: fixed; top: 20px; right: 24px;
+      color: rgba(255,255,255,.3); font-size: .7rem;
+    }
+
+    @media (max-width: 600px) {
+      .slide { padding: 32px 24px; }
+      #dots  { display: none; }
+    }
+  </style>
+</head>
+<body>
+
+<div id="slider">
+
+  <!-- 0 · Cover -->
+  <div class="slide bg-grad active">
+    <div class="eyebrow">Proyecto Erasmus+ · Candidatura 2025</div>
+    <h1>PHAROS<span class="label-red">-AI</span></h1>
+    <p class="subtitle">La plataforma que prepara a personas adultas y docentes<br>para vivir y trabajar en la era de la inteligencia artificial</p>
+    <div class="tags">
+      <span class="tag">Moodle 4.3</span>
+      <span class="tag">Claude AI</span>
+      <span class="tag">Open Badges 3.0</span>
+      <span class="tag">RGPD · Datos en la UE</span>
+      <span class="tag">GPL-3.0 · Código abierto</span>
+    </div>
+    <div class="logos" style="margin-top:36px">
+      <span class="logo-badge">🎓 Univ. Europea de Canarias</span>
+      <span class="logo-badge">🇮🇹 INAPP Italia</span>
+      <span class="logo-badge">🌊 OCECAN</span>
+    </div>
+  </div>
+
+  <!-- 1 · El problema -->
+  <div class="slide bg-white">
+    <div class="eyebrow" style="color:var(--red)">El problema</div>
+    <h2>La brecha de alfabetización en IA<br>es real y urgente</h2>
+    <div class="stats">
+      <div class="stat">
+        <div class="stat-num">67%</div>
+        <div class="stat-lbl">adultos europeos no identifican contenido generado por IA</div>
+      </div>
+      <div class="stat">
+        <div class="stat-num">Art. 4</div>
+        <div class="stat-lbl">AI Act europeo: alfabetización en IA obligatoria para todos</div>
+      </div>
+      <div class="stat">
+        <div class="stat-num">EPA</div>
+        <div class="stat-lbl">docentes sin herramientas pedagógicas adaptadas a la IA</div>
+      </div>
+    </div>
+    <ul class="bullet-list" style="margin-top:28px">
+      <li>Los adultos son los más afectados por la automatización laboral y los menos equipados para entenderla</li>
+      <li>Las herramientas existentes están diseñadas para jóvenes o entornos corporativos, no para EPA</li>
+      <li>El marco regulatorio europeo exige acción formativa sistémica e inmediata</li>
+    </ul>
+  </div>
+
+  <!-- 2 · La solución -->
+  <div class="slide bg-light">
+    <div class="eyebrow" style="color:var(--red)">La solución</div>
+    <h2>Tres dimensiones simultáneas<br>de alfabetización</h2>
+    <div class="cards">
+      <div class="card">
+        <div class="card-icon">🔧</div>
+        <div class="card-title">Técnica-funcional</div>
+        <div class="card-body">Qué es la IA, cómo funciona, qué herramientas existen y cómo usarlas en el día a día</div>
+      </div>
+      <div class="card">
+        <div class="card-icon">⚖️</div>
+        <div class="card-title">Crítica-ética</div>
+        <div class="card-body">Sesgos algorítmicos, privacidad, derechos digitales y pensamiento crítico ante la IA</div>
+      </div>
+      <div class="card">
+        <div class="card-icon">🌍</div>
+        <div class="card-title">Ciudadana</div>
+        <div class="card-body">Equidad, brecha digital, participación democrática y soberanía tecnológica</div>
+      </div>
+    </div>
+    <div class="tags" style="margin-top:24px; color: var(--text)">
+      <span class="tag" style="background:rgba(200,16,46,.08);color:var(--red);border-color:rgba(200,16,46,.25)">DigComp 3.0</span>
+      <span class="tag" style="background:rgba(200,16,46,.08);color:var(--red);border-color:rgba(200,16,46,.25)">DigCompEdu</span>
+      <span class="tag" style="background:rgba(200,16,46,.08);color:var(--red);border-color:rgba(200,16,46,.25)">EQF</span>
+      <span class="tag" style="background:rgba(200,16,46,.08);color:var(--red);border-color:rgba(200,16,46,.25)">AI Act Art. 4</span>
+    </div>
+  </div>
+
+  <!-- 3 · Los 6 módulos -->
+  <div class="slide bg-navy">
+    <div class="eyebrow">La plataforma</div>
+    <h2>6 módulos integrados</h2>
+    <div class="cards">
+      <div class="card">
+        <div class="card-icon">🗺️</div>
+        <div class="card-title">Mi Itinerario</div>
+        <div class="card-body">3 niveles progresivos. Desbloqueo por evidencias, no por tiempo. Gamificación con XP.</div>
+      </div>
+      <div class="card">
+        <div class="card-icon">🤖</div>
+        <div class="card-title">Tutor IA</div>
+        <div class="card-body">Chat 24/7 en español e italiano. Responde sobre IA crítica desde la vida cotidiana del adulto.</div>
+      </div>
+      <div class="card">
+        <div class="card-icon">✏️</div>
+        <div class="card-title">Generador de actividades</div>
+        <div class="card-body">El docente elige nivel, tema y objetivo. La IA genera la actividad completa en segundos.</div>
+      </div>
+      <div class="card">
+        <div class="card-icon">🏅</div>
+        <div class="card-title">Microcredenciales</div>
+        <div class="card-body">Open Badges 3.0 alineados con el EQF. Emisión automática. Reconocidos en Europa.</div>
+      </div>
+      <div class="card">
+        <div class="card-icon">📊</div>
+        <div class="card-title">Panel docente</div>
+        <div class="card-body">Seguimiento en tiempo real. Detección automática de riesgo de abandono. Alertas tempranas.</div>
+      </div>
+      <div class="card">
+        <div class="card-icon">🌐</div>
+        <div class="card-title">Comunidad transnacional</div>
+        <div class="card-body">Foros España-Italia, webinars BigBlueButton, recursos compartidos entre socios.</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 4 · Tutor IA detalle -->
+  <div class="slide bg-white">
+    <div class="eyebrow" style="color:var(--red)">Módulo destacado</div>
+    <h2>El Tutor IA:<br>siempre disponible, siempre relevante</h2>
+    <div class="cards" style="max-width:800px">
+      <div class="card" style="flex-basis:100%; max-width:100%; display:flex; gap:32px; align-items:flex-start; flex-wrap:wrap">
+        <div style="flex:1; min-width:200px">
+          <p style="font-size:.9rem; line-height:1.7; color:var(--muted)">
+            Conversaciones en lenguaje natural sobre cualquier aspecto de la IA: cómo funciona ChatGPT, si un texto fue generado por una máquina, qué dice el AI Act sobre tus derechos, cómo afecta la IA a tu sector laboral…
+          </p>
+          <ul class="bullet-list" style="margin-top:16px">
+            <li>Disponible en <strong>español e italiano</strong></li>
+            <li>Sin memoria entre sesiones <strong>(privacidad por diseño)</strong></li>
+            <li>Accesible desde cualquier dispositivo</li>
+            <li>Contextualizado para la vida adulta y laboral</li>
+          </ul>
+        </div>
+        <div style="flex:0 0 auto; background:var(--navy); color:var(--white); border-radius:16px; padding:20px 24px; font-size:.85rem; max-width:260px; line-height:1.6">
+          <p style="opacity:.5; font-size:.72rem; margin-bottom:8px">💬 CONVERSACIÓN DE EJEMPLO</p>
+          <p style="background:rgba(255,255,255,.08); border-radius:8px; padding:10px; margin-bottom:8px"><strong>Alumna:</strong> "¿El jefe puede usar IA para vigilarme en el trabajo?"</p>
+          <p style="background:rgba(200,16,46,.15); border-radius:8px; padding:10px"><strong>Tutor IA:</strong> "Según el AI Act y el RGPD, los sistemas de vigilancia laboral con IA deben cumplir…"</p>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 5 · Generador de actividades -->
+  <div class="slide bg-light">
+    <div class="eyebrow" style="color:var(--red)">Módulo destacado</div>
+    <h2>El Generador de actividades:<br>el docente diseña mejor, más rápido</h2>
+    <div style="display:flex; gap:32px; align-items:center; flex-wrap:wrap; justify-content:center; margin-top:16px; max-width:880px">
+      <div style="background:var(--white); border-radius:16px; padding:24px; flex:1; min-width:220px; box-shadow:0 2px 12px rgba(0,0,0,.08)">
+        <p style="font-size:.75rem; font-weight:700; text-transform:uppercase; letter-spacing:.08em; color:var(--muted); margin-bottom:12px">El docente elige</p>
+        <div style="display:flex;flex-direction:column;gap:8px;">
+          <div style="background:var(--light); border-radius:8px; padding:10px 14px; font-size:.88rem">📚 Nivel: N1 · N2 · N3</div>
+          <div style="background:var(--light); border-radius:8px; padding:10px 14px; font-size:.88rem">🏷️ Tema: sesgos, privacidad, IA y empleo…</div>
+          <div style="background:var(--light); border-radius:8px; padding:10px 14px; font-size:.88rem">🎯 Objetivo específico (opcional)</div>
+        </div>
+      </div>
+      <div style="font-size:2rem; color:var(--red)">→</div>
+      <div style="background:var(--navy); border-radius:16px; padding:24px; flex:1; min-width:220px; color:var(--white)">
+        <p style="font-size:.75rem; font-weight:700; text-transform:uppercase; letter-spacing:.08em; opacity:.5; margin-bottom:12px">La plataforma genera</p>
+        <div style="display:flex;flex-direction:column;gap:8px; font-size:.88rem; opacity:.9">
+          <div>✅ Título y duración estimada</div>
+          <div>✅ Lista de materiales</div>
+          <div>✅ Pasos pedagógicos detallados</div>
+          <div>✅ Criterios de evidencia para badge</div>
+          <div>✅ Exportable en PDF y DOCX</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 6 · Microcredenciales -->
+  <div class="slide bg-navy">
+    <div class="eyebrow">Reconocimiento europeo</div>
+    <h2>Microcredenciales que<br>viajan con el alumno</h2>
+    <div class="cards">
+      <div class="card">
+        <div class="card-icon">🥉</div>
+        <div class="card-title">Badge N1 — Fundamentos</div>
+        <div class="card-body">Comprende qué es la IA, sus aplicaciones cotidianas y sus implicaciones básicas.</div>
+      </div>
+      <div class="card">
+        <div class="card-icon">🥈</div>
+        <div class="card-title">Badge N2 — IA en la práctica</div>
+        <div class="card-body">Analiza críticamente sistemas de IA, sesgos y su impacto en el mundo laboral.</div>
+      </div>
+      <div class="card">
+        <div class="card-icon">🥇</div>
+        <div class="card-title">Badge N3 — Facilitación crítica</div>
+        <div class="card-body">Capacidad de facilitar procesos de alfabetización en IA en su propio entorno.</div>
+      </div>
+    </div>
+    <ul class="bullet-list" style="margin-top:20px; max-width:600px">
+      <li>Estándar <strong>Open Badges 3.0</strong> — verificables y portátiles en toda Europa</li>
+      <li>Alineados con el <strong>Marco Europeo de Cualificaciones (EQF)</strong></li>
+      <li>Emisión automática al superar el umbral de evidencias</li>
+    </ul>
+  </div>
+
+  <!-- 7 · Tecnología y seguridad -->
+  <div class="slide bg-white">
+    <div class="eyebrow" style="color:var(--red)">Bajo el capó</div>
+    <h2>Tecnología abierta,<br>datos protegidos</h2>
+    <div class="cards" style="max-width:900px">
+      <div class="card">
+        <div class="card-icon">🏛️</div>
+        <div class="card-title">Moodle 4.3</div>
+        <div class="card-body">LMS institucional open source, usado por millones de centros educativos en todo el mundo.</div>
+      </div>
+      <div class="card">
+        <div class="card-icon">🧠</div>
+        <div class="card-title">Anthropic Claude</div>
+        <div class="card-body">Modelo de IA de última generación. Conversaciones en español e italiano.</div>
+      </div>
+      <div class="card">
+        <div class="card-icon">🇪🇺</div>
+        <div class="card-title">Datos en la UE</div>
+        <div class="card-body">Servidores en territorio europeo. Cumplimiento RGPD total. Sin transferencias a terceros países.</div>
+      </div>
+      <div class="card">
+        <div class="card-icon">♿</div>
+        <div class="card-title">Accesibilidad WCAG 2.1 AA</div>
+        <div class="card-body">Interfaz accesible para todas las personas, desde cualquier dispositivo.</div>
+      </div>
+      <div class="card">
+        <div class="card-icon">🔓</div>
+        <div class="card-title">GPL-3.0 · Sin vendor lock-in</div>
+        <div class="card-body">Código propiedad del consorcio. Cualquier institución puede desplegarlo y adaptarlo.</div>
+      </div>
+      <div class="card">
+        <div class="card-icon">🛡️</div>
+        <div class="card-title">Privacidad por diseño</div>
+        <div class="card-body">El historial de chat se purga a los 90 días. Las conversaciones no se almacenan en Anthropic.</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 8 · Hoja de ruta -->
+  <div class="slide bg-light">
+    <div class="eyebrow" style="color:var(--red)">Hoja de ruta</div>
+    <h2>De la candidatura al escalado europeo</h2>
+    <div class="timeline">
+      <div class="tl-item">
+        <div class="tl-dot">0</div>
+        <div class="tl-text"><strong>M1-M3 · Cimientos</strong><span>Moodle, servidor, SSO, tema base PHAROS</span></div>
+      </div>
+      <div class="tl-item">
+        <div class="tl-dot">1</div>
+        <div class="tl-text"><strong>M3-M6 · MVP</strong><span>Itinerarios + Tutor IA + Panel docente</span></div>
+      </div>
+      <div class="tl-item">
+        <div class="tl-dot">2</div>
+        <div class="tl-text"><strong>M6-M12 · IA completa</strong><span>Generador de actividades + Badges + Comunidad transnacional</span></div>
+      </div>
+      <div class="tl-item">
+        <div class="tl-dot">3</div>
+        <div class="tl-text"><strong>M12-M20 · Piloto</strong><span>3-5 centros de educación de adultos por país (España e Italia)</span></div>
+      </div>
+      <div class="tl-item">
+        <div class="tl-dot">4</div>
+        <div class="tl-text"><strong>M20-M30 · Transferencia</strong><span>Open source + documentación + escalado a toda Europa</span></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 9 · El consorcio -->
+  <div class="slide bg-grad">
+    <div class="eyebrow">El consorcio</div>
+    <h2>Tres instituciones,<br>dos países, una visión</h2>
+    <div class="cards">
+      <div class="card">
+        <div class="card-icon">🎓</div>
+        <div class="card-title">Universidad Europea de Canarias</div>
+        <div class="card-body">Coordinación académica. Investigación en pedagogía digital y competencias para el siglo XXI.</div>
+      </div>
+      <div class="card">
+        <div class="card-icon">🇮🇹</div>
+        <div class="card-title">INAPP (Italia)</div>
+        <div class="card-body">Instituto Nacional para el Análisis de Políticas Públicas. Expertos en formación y mercado laboral.</div>
+      </div>
+      <div class="card">
+        <div class="card-icon">🌊</div>
+        <div class="card-title">OCECAN (Canarias)</div>
+        <div class="card-body">Coordinación técnica. Desarrollo de la plataforma y gestión del proyecto Erasmus+.</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 10 · CTA -->
+  <div class="slide bg-red">
+    <div class="eyebrow" style="color:rgba(255,255,255,.7)">¿Tu organización trabaja en educación de adultos?</div>
+    <h1 style="font-size:clamp(1.8rem,4.5vw,3rem)">PHAROS-AI puede ser<br>la herramienta que<br>estabas buscando</h1>
+    <p class="subtitle" style="margin-top:16px; opacity:.85">
+      Hablemos sobre cómo adaptar la plataforma a las necesidades de tu institución o cómo unirte al consorcio.
+    </p>
+    <a class="cta" href="mailto:jrmontoto@gmail.com" style="background:var(--white); color:var(--red); box-shadow:0 4px 20px rgba(0,0,0,.2)">
+      ✉️ jrmontoto@gmail.com
+    </a>
+  </div>
+
+</div><!-- /slider -->
+
+<!-- Navigation -->
+<div id="nav">
+  <button class="nav-btn" id="btn-prev" title="Anterior (←)">&#8592;</button>
+  <span id="counter">1 / 11</span>
+  <button class="nav-btn" id="btn-next" title="Siguiente (→)">&#8594;</button>
+</div>
+
+<div id="dots"></div>
+<div id="hint">← → para navegar · ESC para inicio</div>
+
+<script>
+  const slides = Array.from(document.querySelectorAll('.slide'));
+  const dotsEl  = document.getElementById('dots');
+  const counter = document.getElementById('counter');
+  let cur = 0;
+
+  // Build dots
+  slides.forEach((_, i) => {
+    const d = document.createElement('div');
+    d.className = 'dot' + (i === 0 ? ' active' : '');
+    d.addEventListener('click', () => go(i));
+    dotsEl.appendChild(d);
+  });
+
+  function go(n) {
+    slides[cur].classList.remove('active');
+    dotsEl.children[cur].classList.remove('active');
+    cur = (n + slides.length) % slides.length;
+    slides[cur].classList.add('active');
+    dotsEl.children[cur].classList.add('active');
+    counter.textContent = (cur + 1) + ' / ' + slides.length;
+  }
+
+  document.getElementById('btn-next').addEventListener('click', () => go(cur + 1));
+  document.getElementById('btn-prev').addEventListener('click', () => go(cur - 1));
+
+  document.addEventListener('keydown', e => {
+    if (e.key === 'ArrowRight' || e.key === 'ArrowDown' || e.key === ' ') go(cur + 1);
+    if (e.key === 'ArrowLeft'  || e.key === 'ArrowUp')                     go(cur - 1);
+    if (e.key === 'Escape')                                                 go(0);
+  });
+
+  // Touch swipe
+  let tx = 0;
+  document.addEventListener('touchstart', e => { tx = e.touches[0].clientX; }, { passive: true });
+  document.addEventListener('touchend',   e => {
+    const dx = e.changedTouches[0].clientX - tx;
+    if (Math.abs(dx) > 50) go(dx < 0 ? cur + 1 : cur - 1);
+  }, { passive: true });
+</script>
+</body>
+</html>
