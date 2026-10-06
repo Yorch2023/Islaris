@@ -1,0 +1,7 @@
+{
+  "content": [
+    { "id": 1, "mrr": false, "numeroConvocatoria": "812345", "descripcion": "Subvenciones Canarias Aporta 2026 para proyectos de internacionalización", "descripcionLeng": null, "fechaRecepcion": "2026-10-05", "nivel1": "CANARIAS", "nivel2": "CONSEJERÍA DE ECONOMÍA", "nivel3": "PROEXCA" },
+    { "id": 2, "mrr": false, "numeroConvocatoria": "812346", "descripcion": "Ayudas para la adquisición de libros de texto", "fechaRecepcion": "2026-10-05", "nivel1": "LOCAL", "nivel2": "AYUNTAMIENTO DE X", "nivel3": null }
+  ],
+  "totalElements": 2, "totalPages": 1, "number": 0
+}

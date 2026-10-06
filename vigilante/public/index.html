@@ -1,0 +1,613 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Vigilante de convocatorias</title>
+<style>
+:root {
+  --fondo: #f6f7f9; --panel: #ffffff; --texto: #1d2330; --suave: #5d6677; --borde: #dfe3ea;
+  --acento: #0f5b8f; --acento-suave: #e3eef6; --ok: #1e7a46; --ok-suave: #e2f3e9;
+  --aviso: #9a6400; --aviso-suave: #fbf0d9; --mal: #b3261e; --mal-suave: #fbe4e2;
+  --sombra: 0 1px 2px rgba(16, 24, 40, .06);
+  font-family: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+}
+@media (prefers-color-scheme: dark) {
+  :root {
+    --fondo: #12151b; --panel: #1b2029; --texto: #e5e8ee; --suave: #9aa3b2; --borde: #2c3340;
+    --acento: #6db3e8; --acento-suave: #1d3242; --ok: #6fcf97; --ok-suave: #173326;
+    --aviso: #f2c56b; --aviso-suave: #3a2f17; --mal: #f28b82; --mal-suave: #3d1f1d;
+    --sombra: none;
+  }
+}
+* { box-sizing: border-box; }
+body { margin: 0; background: var(--fondo); color: var(--texto); font-size: 14px; line-height: 1.45; }
+a { color: var(--acento); }
+button, select, input, textarea { font: inherit; color: inherit; }
+button { cursor: pointer; border: 1px solid var(--borde); background: var(--panel); border-radius: 6px; padding: 5px 10px; }
+button:hover { border-color: var(--acento); }
+button.primario { background: var(--acento); border-color: var(--acento); color: #fff; }
+@media (prefers-color-scheme: dark) { button.primario { color: #0b1620; } }
+button.peligro:hover { border-color: var(--mal); color: var(--mal); }
+button:disabled { opacity: .5; cursor: default; }
+select, input, textarea { border: 1px solid var(--borde); background: var(--panel); border-radius: 6px; padding: 5px 8px; }
+header { display: flex; align-items: center; gap: 12px; padding: 10px 20px; background: var(--panel); border-bottom: 1px solid var(--borde); position: sticky; top: 0; z-index: 5; flex-wrap: wrap; }
+header h1 { font-size: 16px; margin: 0 12px 0 0; }
+nav.secciones { display: flex; gap: 4px; flex-wrap: wrap; }
+nav.secciones button { border: none; background: none; padding: 6px 10px; color: var(--suave); }
+nav.secciones button.activa { color: var(--texto); background: var(--acento-suave); }
+.derecha { margin-left: auto; display: flex; gap: 8px; align-items: center; }
+main { padding: 16px 20px 40px; max-width: 1400px; margin: 0 auto; }
+.pestanas { display: flex; gap: 6px; flex-wrap: wrap; margin-bottom: 10px; }
+.pestanas button { border-radius: 999px; }
+.pestanas button.activa { background: var(--texto); color: var(--panel); border-color: var(--texto); }
+.cuenta { font-variant-numeric: tabular-nums; opacity: .75; margin-left: 4px; }
+.filtros { display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 14px; }
+.filtros input[type=search] { min-width: 260px; flex: 1; }
+.lista { display: flex; flex-direction: column; gap: 8px; }
+.tarjeta { background: var(--panel); border: 1px solid var(--borde); border-radius: 8px; padding: 12px 14px; box-shadow: var(--sombra); display: grid; grid-template-columns: 1fr auto; gap: 6px 16px; }
+.tarjeta h3 { margin: 0; font-size: 15px; font-weight: 600; cursor: pointer; }
+.tarjeta h3:hover { color: var(--acento); }
+.meta { color: var(--suave); font-size: 13px; display: flex; gap: 10px; flex-wrap: wrap; }
+.acciones { display: flex; gap: 6px; align-items: start; flex-wrap: wrap; justify-content: end; }
+.etiqueta { display: inline-block; font-size: 12px; padding: 1px 8px; border-radius: 999px; background: var(--acento-suave); color: var(--acento); white-space: nowrap; }
+.etiqueta.relevante, .etiqueta.alta { background: var(--ok-suave); color: var(--ok); }
+.etiqueta.dudosa, .etiqueta.media { background: var(--aviso-suave); color: var(--aviso); }
+.etiqueta.descartada, .etiqueta.baja { background: var(--mal-suave); color: var(--mal); }
+.plazo-urgente { color: var(--mal); font-weight: 600; }
+.plazo-pronto { color: var(--aviso); font-weight: 600; }
+.motivo { font-size: 13px; }
+.vacio { color: var(--suave); padding: 30px; text-align: center; background: var(--panel); border: 1px dashed var(--borde); border-radius: 8px; }
+table { width: 100%; border-collapse: collapse; background: var(--panel); border: 1px solid var(--borde); border-radius: 8px; overflow: hidden; }
+th, td { text-align: left; padding: 7px 10px; border-bottom: 1px solid var(--borde); vertical-align: top; }
+th { font-size: 12px; color: var(--suave); font-weight: 600; text-transform: uppercase; letter-spacing: .03em; }
+td.num { text-align: right; font-variant-numeric: tabular-nums; }
+.tabla-scroll { overflow-x: auto; }
+aside#ficha { position: fixed; top: 0; right: 0; bottom: 0; width: min(720px, 100%); background: var(--panel); border-left: 1px solid var(--borde); box-shadow: -8px 0 24px rgba(0,0,0,.15); overflow-y: auto; padding: 18px 22px 40px; z-index: 10; transform: translateX(100%); transition: transform .15s ease; }
+aside#ficha:not(.abierta) { visibility: hidden; box-shadow: none; }
+aside#ficha.abierta { transform: none; }
+aside#ficha h2 { font-size: 18px; margin: 6px 0 10px; }
+dl.datos { display: grid; grid-template-columns: 170px 1fr; gap: 4px 12px; margin: 0 0 14px; }
+dl.datos dt { color: var(--suave); }
+dl.datos dd { margin: 0; overflow-wrap: anywhere; }
+.bloque { border-top: 1px solid var(--borde); padding-top: 12px; margin-top: 12px; }
+.bloque h4 { margin: 0 0 8px; font-size: 13px; text-transform: uppercase; letter-spacing: .04em; color: var(--suave); }
+pre.resumen { white-space: pre-wrap; font: inherit; margin: 0; background: var(--fondo); padding: 10px; border-radius: 6px; }
+.formulario { display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 10px; background: var(--panel); border: 1px solid var(--borde); padding: 14px; border-radius: 8px; margin-bottom: 14px; }
+.formulario label { display: flex; flex-direction: column; gap: 3px; font-size: 12px; color: var(--suave); }
+.formulario .ancho { grid-column: 1 / -1; }
+#aviso { position: fixed; bottom: 16px; left: 50%; transform: translateX(-50%); background: var(--texto); color: var(--panel); padding: 8px 16px; border-radius: 8px; display: none; z-index: 20; max-width: 90%; }
+dialog { border: 1px solid var(--borde); border-radius: 10px; background: var(--panel); color: var(--texto); padding: 18px; width: min(420px, 92%); }
+dialog::backdrop { background: rgba(0,0,0,.35); }
+dialog form { display: flex; flex-direction: column; gap: 10px; }
+.fila { display: flex; gap: 8px; justify-content: end; }
+.registro { font-family: ui-monospace, monospace; font-size: 12px; white-space: pre-wrap; background: var(--panel); border: 1px solid var(--borde); border-radius: 8px; padding: 10px; max-height: 260px; overflow: auto; }
+@media (max-width: 720px) {
+  .tarjeta { grid-template-columns: 1fr; }
+  .acciones { justify-content: start; }
+  dl.datos { grid-template-columns: 1fr; }
+}
+</style>
+</head>
+<body>
+<header>
+  <h1>Vigilante de convocatorias</h1>
+  <nav class="secciones" id="secciones"></nav>
+  <div class="derecha">
+    <span id="estado-ejecucion" class="meta"></span>
+    <button id="btn-vigilar" class="primario">Vigilar ahora</button>
+    <button id="btn-usuario" title="Usuario y token"></button>
+  </div>
+</header>
+<main id="contenido"></main>
+<aside id="ficha" aria-label="Ficha de la convocatoria"></aside>
+<div id="aviso" role="status"></div>
+
+<dialog id="dlg-descartar">
+  <form method="dialog">
+    <strong>Descartar convocatoria</strong>
+    <label>Motivo <select name="motivo" required></select></label>
+    <label>Comentario (opcional) <textarea name="detalle" rows="2"></textarea></label>
+    <div class="fila"><button value="cancelar" formnovalidate>Cancelar</button><button value="ok" class="primario">Descartar</button></div>
+  </form>
+</dialog>
+<dialog id="dlg-convertir">
+  <form method="dialog">
+    <strong>Pasar a expediente</strong>
+    <label>Referencia del expediente en el ERP <input name="ref" required placeholder="EXP-2026-0001"></label>
+    <div class="fila"><button value="cancelar" formnovalidate>Cancelar</button><button value="ok" class="primario">Guardar</button></div>
+  </form>
+</dialog>
+<dialog id="dlg-usuario">
+  <form method="dialog">
+    <strong>Identificación</strong>
+    <label>Tu nombre (queda registrado en las revisiones) <input name="usuario"></label>
+    <label>Token de acceso (si el servidor lo pide) <input name="token" type="password" autocomplete="off"></label>
+    <div class="fila"><button value="ok" class="primario">Guardar</button></div>
+  </form>
+</dialog>
+
+<script>
+'use strict';
+
+// ---------- utilidades ----------
+const $ = (s, el = document) => el.querySelector(s);
+const leerLocal = (k, d = '') => { try { return localStorage.getItem(k) ?? d; } catch { return d; } };
+const guardarLocal = (k, v) => { try { localStorage.setItem(k, v); } catch { /* sin almacenamiento */ } };
+const estado = {
+  seccion: 'feed', vista: leerLocal('vista', 'relevantes'), filtros: {}, motivos: [], config: {},
+  usuario: leerLocal('usuario'), token: leerLocal('token'),
+};
+
+function esc(v) {
+  return String(v ?? '').replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+}
+function urlSegura(u) {
+  try { const x = new URL(u); return ['http:', 'https:'].includes(x.protocol) ? x.href : null; } catch { return null; }
+}
+function enlace(u, texto) {
+  const s = urlSegura(u);
+  return s ? `<a href="${esc(s)}" target="_blank" rel="noopener noreferrer">${esc(texto || s)}</a>` : esc(u || '');
+}
+function fecha(f, conHora = true) {
+  if (!f) return '';
+  return new Date(f).toLocaleString('es-ES', conHora ? { dateStyle: 'medium', timeStyle: 'short' } : { dateStyle: 'medium' });
+}
+function importe(v, moneda = 'EUR') {
+  if (v === null || v === undefined || v === '') return '';
+  try { return Number(v).toLocaleString('es-ES', { style: 'currency', currency: moneda || 'EUR', maximumFractionDigits: 0 }); }
+  catch { return `${v} ${moneda || ''}`; }
+}
+function plazo(c) {
+  if (c.ventanilla_permanente) return '<span>Ventanilla permanente</span>';
+  if (!c.fecha_limite) return '<span>Sin plazo publicado</span>';
+  const d = c.dias_restantes ?? Math.ceil((new Date(c.fecha_limite) - Date.now()) / 86400000);
+  const clase = d <= 7 ? 'plazo-urgente' : d <= 20 ? 'plazo-pronto' : '';
+  const txt = d < 0 ? 'vencida' : d === 0 ? 'hoy' : `${d} días`;
+  return `<span class="${clase}" title="${esc(fecha(c.fecha_limite))}">Plazo: ${esc(fecha(c.fecha_limite, false))} (${txt})</span>`;
+}
+function avisar(msg) {
+  const a = $('#aviso'); a.textContent = msg; a.style.display = 'block';
+  clearTimeout(avisar.t); avisar.t = setTimeout(() => { a.style.display = 'none'; }, 3500);
+}
+
+async function api(ruta, op = {}) {
+  const res = await fetch(ruta, {
+    ...op,
+    headers: {
+      'Content-Type': 'application/json',
+      ...(estado.token ? { Authorization: `Bearer ${estado.token}` } : {}),
+      ...(estado.usuario ? { 'X-Usuario': estado.usuario } : {}),
+    },
+    body: op.body && typeof op.body !== 'string' ? JSON.stringify(op.body) : op.body,
+  });
+  const datos = await res.json().catch(() => ({}));
+  if (res.status === 401) { pedirUsuario(); throw new Error('Hace falta el token de acceso'); }
+  if (!res.ok) throw new Error(datos.error || `Error ${res.status}`);
+  return datos;
+}
+
+// ---------- secciones ----------
+const SECCIONES = [
+  ['feed', 'Feed'], ['alertas', 'Plazos'], ['duplicados', 'Duplicados'], ['competencia', 'Competencia'],
+  ['palabras', 'Palabras clave'], ['busquedas', 'Búsquedas'], ['alta', 'Alta manual'], ['salud', 'Fuentes'],
+];
+const VISTAS = [
+  ['relevantes', 'Relevantes'], ['dudosas', 'Dudosas'], ['sin_triar', 'Sin triar'],
+  ['descartadas_ia', 'Descartadas por la IA'], ['todas', 'Todo el feed'], ['seguimiento', 'En seguimiento'], ['archivo', 'Archivo'],
+];
+
+function pintarSecciones() {
+  $('#secciones').innerHTML = SECCIONES.map(([k, n]) =>
+    `<button data-seccion="${k}" class="${estado.seccion === k ? 'activa' : ''}">${n}</button>`).join('');
+}
+$('#secciones').addEventListener('click', (e) => {
+  const b = e.target.closest('button[data-seccion]');
+  if (!b) return;
+  estado.seccion = b.dataset.seccion;
+  pintarSecciones();
+  cargarSeccion();
+});
+
+async function cargarSeccion() {
+  const c = $('#contenido');
+  c.innerHTML = '<div class="vacio">Cargando…</div>';
+  try {
+    await ({ feed: verFeed, alertas: verAlertas, duplicados: verDuplicados, competencia: verCompetencia,
+      palabras: verPalabras, busquedas: verBusquedas, alta: verAlta, salud: verSalud })[estado.seccion](c);
+  } catch (e) {
+    c.innerHTML = `<div class="vacio">${esc(e.message)}</div>`;
+  }
+}
+
+// ---------- feed ----------
+async function verFeed(c) {
+  const contadores = await api('/api/contadores').catch(() => ({}));
+  c.innerHTML = `
+    <div class="pestanas">${VISTAS.map(([k, n]) => `<button data-vista="${k}" class="${estado.vista === k ? 'activa' : ''}">${n}${contadores[k] !== undefined ? `<span class="cuenta">${contadores[k]}</span>` : ''}</button>`).join('')}</div>
+    <div class="filtros">
+      <input type="search" name="q" placeholder="Buscar en título u organismo" value="${esc(estado.filtros.q || '')}">
+      <select name="tipo"><option value="">Subvenciones y licitaciones</option><option value="subvencion">Subvenciones</option><option value="licitacion">Licitaciones</option></select>
+      <select name="ambito"><option value="">Todos los ámbitos</option><option value="nacional">Nacional</option><option value="extranjero">Extranjero</option></select>
+      <select name="relevancia"><option value="">Toda relevancia</option><option value="alta">Alta</option><option value="media">Media</option><option value="baja">Baja</option></select>
+      <select name="fuente"><option value="">Todas las fuentes</option>${(estado.config.fuentes_con_lector || []).concat('MANUAL').map((f) => `<option>${esc(f)}</option>`).join('')}</select>
+    </div>
+    <div class="lista" id="lista"></div>`;
+  for (const [k, v] of Object.entries(estado.filtros)) { const el = c.querySelector(`[name="${k}"]`); if (el) el.value = v; }
+  c.querySelector('.pestanas').addEventListener('click', (e) => {
+    const b = e.target.closest('button[data-vista]');
+    if (!b) return;
+    estado.vista = b.dataset.vista; guardarLocal('vista', estado.vista); verFeed(c);
+  });
+  c.querySelector('.filtros').addEventListener('input', (e) => {
+    estado.filtros[e.target.name] = e.target.value;
+    clearTimeout(verFeed.t); verFeed.t = setTimeout(cargarLista, 250);
+  });
+  await cargarLista();
+}
+
+async function cargarLista() {
+  const p = new URLSearchParams({ vista: estado.vista, limite: '200' });
+  for (const [k, v] of Object.entries(estado.filtros)) if (v) p.set(k, v);
+  const filas = await api(`/api/feed?${p}`);
+  const lista = $('#lista');
+  if (!lista) return;
+  if (!filas.length) { lista.innerHTML = '<div class="vacio">Nada por aquí.</div>'; return; }
+  lista.innerHTML = filas.map(tarjeta).join('');
+}
+
+function tarjeta(c) {
+  const imp = importe(c.presupuesto_sin_impuestos ?? c.importe_max_ayuda ?? c.valor_estimado, c.moneda);
+  return `<article class="tarjeta" data-id="${c.id}">
+    <div>
+      <h3 data-abrir="${c.id}">${esc(c.titulo)}</h3>
+      <div class="meta">
+        <span>${esc(c.organismo || c.organismo_texto || 'Organismo sin identificar')}${c.es_objetivo ? ' ★' : ''}</span>
+        <span>${c.tipo === 'licitacion' ? 'Licitación' : 'Subvención'}${c.subtipo && c.subtipo !== 'convocatoria' ? ` · ${esc(c.subtipo.replace('_', ' '))}` : ''}</span>
+        <span>${esc(c.fuente)}${c.pais && c.pais !== 'ES' ? ` · ${esc(c.pais)}` : ''}</span>
+        ${plazo(c)}
+        ${imp ? `<span>${esc(imp)}</span>` : ''}
+      </div>
+      ${c.triage_motivo ? `<div class="motivo"><span class="etiqueta ${esc(c.triage_clasificacion)}">IA: ${esc(c.triage_clasificacion)} · ${c.triage_encaje ?? '?'}/100</span> ${esc(c.triage_motivo)}</div>` : ''}
+      ${c.keywords_coincidentes?.length ? `<div class="meta">Coincide: ${esc(c.keywords_coincidentes.slice(0, 6).join(', '))}</div>` : ''}
+    </div>
+    <div class="acciones">
+      <span class="etiqueta ${esc(c.relevancia)}" title="Relevancia por palabras clave · puntuación">${esc(c.relevancia)} · ${c.score}</span>
+      ${c.estado !== 'en_seguimiento' ? `<button data-accion="seguir" data-id="${c.id}">Seguir</button>` : ''}
+      <button data-accion="descartar" data-id="${c.id}" class="peligro">Descartar</button>
+      ${c.url_original ? `<a class="etiqueta" href="${esc(urlSegura(c.url_original) || '#')}" target="_blank" rel="noopener noreferrer">Ver anuncio</a>` : ''}
+    </div>
+  </article>`;
+}
+
+document.addEventListener('click', async (e) => {
+  const abrir = e.target.closest('[data-abrir]');
+  if (abrir) return abrirFicha(Number(abrir.dataset.abrir));
+  const b = e.target.closest('button[data-accion]');
+  if (!b) return;
+  const id = Number(b.dataset.id);
+  try {
+    if (b.dataset.accion === 'seguir') await revisar(id, { estado: 'en_seguimiento' }, 'En seguimiento');
+    else if (b.dataset.accion === 'descartar') await descartar(id);
+    else if (b.dataset.accion === 'archivar') await revisar(id, { estado: 'archivada' }, 'Archivada');
+    else if (b.dataset.accion === 'reabrir') await revisar(id, { estado: 'nueva' }, 'Vuelve al feed');
+    else if (b.dataset.accion === 'convertir') await convertir(id);
+    else if (b.dataset.accion === 'triar') { b.disabled = true; await api(`/api/convocatorias/${id}/triaje`, { method: 'POST' }); avisar('Triaje actualizado'); abrirFicha(id); }
+    else if (b.dataset.accion === 'analizar') { b.disabled = true; b.textContent = 'Analizando… (puede tardar)'; await api(`/api/convocatorias/${id}/analisis`, { method: 'POST' }); abrirFicha(id); }
+    else if (b.dataset.accion === 'cerrar') cerrarFicha();
+    else if (b.dataset.accion === 'no-duplicado') { await api(`/api/convocatorias/${id}/duplicado`, { method: 'POST', body: { original_id: null } }); abrirFicha(id); }
+    else if (b.dataset.accion === 'marcar-duplicado') {
+      const o = Number(prompt('Id de la convocatoria original'));
+      if (o) { await api(`/api/convocatorias/${id}/duplicado`, { method: 'POST', body: { original_id: o } }); abrirFicha(id); }
+    }
+  } catch (err) { avisar(err.message); b.disabled = false; }
+});
+
+async function revisar(id, cuerpo, msg) {
+  await api(`/api/convocatorias/${id}/revision`, { method: 'POST', body: cuerpo });
+  avisar(msg);
+  if ($('#ficha').classList.contains('abierta')) abrirFicha(id);
+  if (estado.seccion === 'feed') verFeed($('#contenido'));
+}
+
+function dialogo(id) {
+  const d = $(id);
+  d.querySelector('form').reset();
+  d.showModal();
+  return new Promise((ok) => d.addEventListener('close', () => ok(d.returnValue === 'ok' ? new FormData(d.querySelector('form')) : null), { once: true }));
+}
+
+async function descartar(id) {
+  const sel = $('#dlg-descartar select');
+  sel.innerHTML = estado.motivos.map((m) => `<option value="${esc(m.codigo)}">${esc(m.nombre)}</option>`).join('');
+  const f = await dialogo('#dlg-descartar');
+  if (f) await revisar(id, { estado: 'descartada', motivo_descarte: f.get('motivo'), detalle: f.get('detalle') || null }, 'Descartada');
+}
+
+async function convertir(id) {
+  const f = await dialogo('#dlg-convertir');
+  if (f) await revisar(id, { estado: 'convertida', expediente_ref: f.get('ref') }, 'Pasada a expediente');
+}
+
+// ---------- ficha ----------
+const CAMPOS_EDITABLES = [
+  ['titulo', 'Título'], ['organismo_texto', 'Organismo'], ['numero_expediente_organo', 'Nº expediente'],
+  ['fecha_limite', 'Fecha límite (ISO)'], ['presupuesto_sin_impuestos', 'Presupuesto sin impuestos'],
+  ['presupuesto_con_impuestos', 'Presupuesto con impuestos'], ['valor_estimado', 'Valor estimado'],
+  ['importe_max_ayuda', 'Importe ayuda'], ['relevancia', 'Relevancia (alta/media/baja)'],
+];
+
+async function abrirFicha(id) {
+  const f = $('#ficha');
+  f.classList.add('abierta');
+  f.innerHTML = '<p>Cargando…</p>';
+  try {
+    const c = await api(`/api/convocatorias/${id}`);
+    const a = c.analisis;
+    f.innerHTML = `
+      <div class="fila" style="justify-content:space-between"><span class="meta">#${c.id} · ${esc(c.fuente)} ${esc(c.external_id)} · ${esc(c.estado)}${c.corregido_manualmente ? ' · corregida a mano' : ''}</span><button data-accion="cerrar">Cerrar</button></div>
+      <h2>${esc(c.titulo)}</h2>
+      ${c.titulo_original && c.titulo_original !== c.titulo ? `<p class="meta">Original (${esc(c.idioma_original || '?')}): ${esc(c.titulo_original)}</p>` : ''}
+      ${c.duplicado_de_id ? `<p class="etiqueta dudosa">Duplicado de #${c.duplicado_de_id}: ${esc(c.duplicado_de_titulo)}</p> <button data-accion="no-duplicado" data-id="${c.id}">No es duplicado</button>` : ''}
+      <div class="acciones" style="justify-content:start;margin:10px 0">
+        <button data-accion="seguir" data-id="${c.id}">Seguir</button>
+        <button data-accion="convertir" data-id="${c.id}">Pasar a expediente</button>
+        <button data-accion="archivar" data-id="${c.id}">Archivar</button>
+        <button data-accion="descartar" data-id="${c.id}" class="peligro">Descartar</button>
+        ${c.estado !== 'nueva' ? `<button data-accion="reabrir" data-id="${c.id}">Devolver al feed</button>` : ''}
+        ${estado.config.triaje ? `<button data-accion="triar" data-id="${c.id}">Repetir triaje IA</button><button data-accion="analizar" data-id="${c.id}" class="primario">Análisis en profundidad</button>` : ''}
+        ${!c.duplicado_de_id ? `<button data-accion="marcar-duplicado" data-id="${c.id}">Marcar duplicado</button>` : ''}
+      </div>
+      <dl class="datos">${datosFicha(c)}</dl>
+      ${c.triage_fecha ? `<div class="bloque"><h4>Triaje IA</h4>
+        <p><span class="etiqueta ${esc(c.triage_clasificacion)}">${esc(c.triage_clasificacion)} · ${c.triage_encaje}/100</span> ${esc(c.triage_motivo)}</p>
+        <p class="meta">${esc([c.triage_convocante, c.triage_importe, c.triage_modelo, fecha(c.triage_fecha)].filter(Boolean).join(' · '))}</p></div>` : ''}
+      ${a ? `<div class="bloque"><h4>Análisis en profundidad · ${esc(fecha(c.analisis_fecha))}</h4>
+        <p><strong>${esc(String(a.veredicto || '').replace('_', ' '))}</strong> · ${a.puntuacion}/100</p>
+        ${(a.desglose || []).length ? `<table><tr><th>Criterio</th><th>Valoración</th><th>Comentario</th></tr>${a.desglose.map((d) => `<tr><td>${esc(d.criterio)}</td><td>${esc(d.valoracion)}</td><td>${esc(d.comentario)}</td></tr>`).join('')}</table>` : ''}
+        ${[['Requisitos', a.requisitos], ['Riesgos', a.riesgos], ['Plazos', a.plazos], ['Importes', a.importes]].filter(([, l]) => l?.length).map(([n, l]) => `<p><strong>${n}</strong></p><ul>${l.map((x) => `<li>${esc(x)}</li>`).join('')}</ul>`).join('')}
+        ${(a.fuentes_leidas || []).length ? `<p class="meta">Leído: ${a.fuentes_leidas.map((u) => enlace(u)).join(' · ')}</p>` : ''}
+      </div>` : ''}
+      ${c.resumen_cliente_md ? `<div class="bloque"><h4>Nota para clientes (Markdown)</h4><pre class="resumen">${esc(c.resumen_cliente_md)}</pre>
+        <button id="copiar-nota">Copiar</button></div>` : ''}
+      ${c.resumen ? `<div class="bloque"><h4>Resumen de la fuente</h4><pre class="resumen">${esc(c.resumen)}</pre></div>` : ''}
+      ${c.lotes.length ? `<div class="bloque"><h4>Lotes</h4><table><tr><th>Lote</th><th>Descripción</th><th>Presupuesto</th></tr>${c.lotes.map((l) => `<tr><td>${esc(l.numero)}</td><td>${esc(l.descripcion)}</td><td class="num">${esc(importe(l.presupuesto_sin_impuestos, c.moneda))}</td></tr>`).join('')}</table></div>` : ''}
+      ${c.duplicados.length ? `<div class="bloque"><h4>También publicada en</h4><ul>${c.duplicados.map((d) => `<li>${esc(d.fuente)} · ${enlace(d.url_original, d.titulo)} <span class="meta">#${d.id}</span></li>`).join('')}</ul></div>` : ''}
+      ${c.competencia.length ? `<div class="bloque"><h4>Quién gana en este organismo</h4><table><tr><th>Adjudicatario</th><th>Contratos</th><th>Importe</th><th>Licitadores medios</th><th>Ratio baja</th></tr>${c.competencia.map((x) => `<tr><td>${esc(x.adjudicatario_nombre)}</td><td class="num">${x.adjudicaciones}</td><td class="num">${esc(importe(x.importe_total))}</td><td class="num">${esc(x.licitadores_medios ?? '')}</td><td class="num">${esc(x.ratio_baja_medio ?? '')}</td></tr>`).join('')}</table></div>` : ''}
+      <div class="bloque"><h4>Corregir datos</h4>
+        <p class="meta">Al corregir, el vigilante deja de actualizar esta convocatoria con lo que traiga la fuente.</p>
+        <form id="form-corregir" class="formulario">
+          ${CAMPOS_EDITABLES.map(([k, n]) => `<label>${n}<input name="${k}" value="${esc(c[k] ?? '')}"></label>`).join('')}
+          <div class="ancho"><button class="primario">Guardar correcciones</button></div>
+        </form></div>
+      ${c.cambios.length ? `<div class="bloque"><h4>Historial de cambios</h4><table><tr><th>Fecha</th><th>Campo</th><th>Antes</th><th>Después</th><th>Origen</th></tr>${c.cambios.map((x) => `<tr><td>${esc(fecha(x.created_at))}</td><td>${esc(x.campo)}</td><td>${esc(x.valor_anterior)}</td><td>${esc(x.valor_nuevo)}</td><td>${esc(x.origen)}</td></tr>`).join('')}</table></div>` : ''}`;
+    $('#copiar-nota')?.addEventListener('click', () => navigator.clipboard.writeText(c.resumen_cliente_md).then(() => avisar('Copiada')));
+    $('#form-corregir').addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const datos = {};
+      for (const [k] of CAMPOS_EDITABLES) {
+        const v = e.target.elements[k].value.trim();
+        if (v !== String(c[k] ?? '')) datos[k] = v === '' ? null : v;
+      }
+      if (!Object.keys(datos).length) return avisar('No hay cambios');
+      try { await api(`/api/convocatorias/${id}`, { method: 'PATCH', body: datos }); avisar('Guardado'); abrirFicha(id); }
+      catch (err) { avisar(err.message); }
+    });
+  } catch (e) {
+    f.innerHTML = `<p>${esc(e.message)}</p><button data-accion="cerrar">Cerrar</button>`;
+  }
+}
+function datosFicha(c) {
+  const filas = [
+    ['Organismo', esc(c.organismo || c.organismo_texto || '') + (c.es_objetivo ? ' ★ objetivo' : '')],
+    ['Tipo', `${esc(c.tipo)} · ${esc(c.subtipo)}`],
+    ['Plazo', plazo(c)],
+    ['Publicación', esc(fecha(c.fecha_publicacion))],
+    ['Presupuesto sin impuestos', esc(importe(c.presupuesto_sin_impuestos, c.moneda))],
+    ['Presupuesto con impuestos', esc(importe(c.presupuesto_con_impuestos, c.moneda))],
+    ['Valor estimado', esc(importe(c.valor_estimado, c.moneda))],
+    ['Importe de la ayuda', esc(importe(c.importe_max_ayuda, c.moneda))],
+    ['Nº expediente', esc(c.numero_expediente_organo || '')],
+    ['CPV', esc((c.cpv || []).join(', '))],
+    ['País / ámbito', esc([c.pais, c.ambito].filter(Boolean).join(' · '))],
+    ['Relevancia', `<span class="etiqueta ${esc(c.relevancia)}">${esc(c.relevancia)}</span> · puntuación ${c.score}`],
+    ['Palabras clave', esc((c.keywords_coincidentes || []).join(', '))],
+    ['Enlaces', [['Anuncio', c.url_original], ['PCAP', c.url_pliego_administrativo], ['PPT', c.url_pliego_tecnico], ['Bases', c.url_bases]]
+      .filter(([, u]) => u).map(([n, u]) => enlace(u, n)).join(' · ')],
+    ['Expediente', esc(c.expediente_ref || '')],
+    ['Revisada', c.revisada_por ? `${esc(c.revisada_por)} · ${esc(fecha(c.revisada_at))}` : ''],
+  ];
+  return filas.filter(([, v]) => v).map(([n, v]) => `<dt>${n}</dt><dd>${v}</dd>`).join('');
+}
+function cerrarFicha() { $('#ficha').classList.remove('abierta'); }
+document.addEventListener('keydown', (e) => { if (e.key === 'Escape') cerrarFicha(); });
+
+// ---------- otras secciones ----------
+function tabla(filas, columnas, vacio = 'Nada por aquí.') {
+  if (!filas.length) return `<div class="vacio">${vacio}</div>`;
+  return `<div class="tabla-scroll"><table><tr>${columnas.map(([, n]) => `<th>${n}</th>`).join('')}</tr>${filas.map((f) =>
+    `<tr>${columnas.map(([k, , fmt]) => `<td${fmt === importe ? ' class="num"' : ''}>${fmt ? fmt(f[k], f) : esc(f[k])}</td>`).join('')}</tr>`).join('')}</table></div>`;
+}
+const tituloAbrible = (v, f) => `<a href="#" data-abrir="${f.id}">${esc(v)}</a>`;
+
+async function verAlertas(c) {
+  const filas = await api('/api/alertas');
+  c.innerHTML = '<h2>Plazos que cierran en 7 días (en seguimiento o en expediente)</h2>' + tabla(filas, [
+    ['titulo', 'Convocatoria', tituloAbrible], ['organismo_texto', 'Organismo'], ['fuente', 'Fuente'],
+    ['fecha_limite', 'Fecha límite', (v) => esc(fecha(v))], ['expediente_ref', 'Expediente']]);
+}
+
+async function verDuplicados(c) {
+  const filas = await api('/api/duplicados');
+  c.innerHTML = '<h2>Posibles duplicados sin marcar</h2><p class="meta">Mismo organismo (o sin identificar), título parecido y plazo cercano.</p>' + tabla(filas.map((f) => ({ ...f, id: f.id_posible_duplicado })), [
+    ['titulo_a', 'Original', (v, f) => `<a href="#" data-abrir="${f.id_original}">${esc(v)}</a> <span class="meta">${esc(f.fuente_a)}</span>`],
+    ['titulo_b', 'Posible duplicado', (v, f) => `<a href="#" data-abrir="${f.id_posible_duplicado}">${esc(v)}</a> <span class="meta">${esc(f.fuente_b)}</span>`],
+    ['similitud', 'Similitud', (v) => esc(Number(v).toFixed(2))],
+    ['id_original', '', (v, f) => `<button data-marcar="${f.id_posible_duplicado}" data-original="${v}">Marcar duplicado</button>`]]);
+  c.querySelectorAll('[data-marcar]').forEach((b) => b.addEventListener('click', async () => {
+    await api(`/api/convocatorias/${b.dataset.marcar}/duplicado`, { method: 'POST', body: { original_id: Number(b.dataset.original) } });
+    avisar('Marcado'); verDuplicados(c);
+  }));
+}
+
+async function verCompetencia(c) {
+  c.innerHTML = `<h2>Competencia: quién gana y cuántos licitadores hay</h2>
+    <div class="filtros"><input type="search" id="q-comp" placeholder="Organismo o empresa"></div><div id="tabla-comp"></div>`;
+  const cargar = async () => {
+    const q = $('#q-comp').value.trim();
+    const filas = await api(`/api/competencia${q ? `?q=${encodeURIComponent(q)}` : ''}`);
+    $('#tabla-comp').innerHTML = tabla(filas, [['organismo', 'Organismo'], ['adjudicatario_nombre', 'Adjudicatario'],
+      ['adjudicaciones', 'Contratos'], ['importe_total', 'Importe', importe], ['licitadores_medios', 'Licitadores medios'],
+      ['ratio_baja_medio', 'Adjudicado / presupuesto']], 'Aún no hay adjudicaciones registradas.');
+  };
+  $('#q-comp').addEventListener('input', () => { clearTimeout(cargar.t); cargar.t = setTimeout(cargar, 250); });
+  await cargar();
+}
+
+const CATEGORIAS = ['programas-financiacion', 'subvenciones', 'licitaciones', 'maritimo-portuario', 'tecnologia-digital'];
+async function verPalabras(c) {
+  const filas = await api('/api/palabras');
+  c.innerHTML = `<h2>Palabras clave</h2>
+    <p class="meta">Las palabras <strong>ancla</strong> (programas propios) bastan por sí solas para relevancia alta. Un término marítimo genérico solo da relevancia baja.</p>
+    <form id="form-palabra" class="formulario">
+      <label>Palabra o frase<input name="keyword" required></label>
+      <label>Categoría<select name="categoria">${CATEGORIAS.map((k) => `<option>${k}</option>`).join('')}</select></label>
+      <label>Ancla<select name="es_ancla"><option value="">No</option><option value="1">Sí</option></select></label>
+      <div class="ancho"><button class="primario">Añadir</button></div>
+    </form>` + tabla(filas, [['keyword', 'Palabra'], ['categoria', 'Categoría'],
+    ['es_ancla', 'Ancla', (v, f) => `<input type="checkbox" data-ancla="${f.id}" ${v ? 'checked' : ''}>`],
+    ['activa', 'Activa', (v, f) => `<input type="checkbox" data-activa="${f.id}" ${v ? 'checked' : ''}>`],
+    ['id', '', (v) => `<button class="peligro" data-borrar-palabra="${v}">Borrar</button>`]]);
+  $('#form-palabra').addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const f = new FormData(e.target);
+    try { await api('/api/palabras', { method: 'POST', body: { keyword: f.get('keyword'), categoria: f.get('categoria'), es_ancla: Boolean(f.get('es_ancla')) } }); verPalabras(c); }
+    catch (err) { avisar(err.message.includes('duplicate') ? 'Esa palabra ya existe' : err.message); }
+  });
+  c.onchange = async (e) => {
+    const t = e.target;
+    if (t.dataset.ancla) await api(`/api/palabras/${t.dataset.ancla}`, { method: 'PATCH', body: { es_ancla: t.checked } });
+    if (t.dataset.activa) await api(`/api/palabras/${t.dataset.activa}`, { method: 'PATCH', body: { activa: t.checked } });
+  };
+  c.querySelectorAll('[data-borrar-palabra]').forEach((b) => b.addEventListener('click', async () => {
+    if (confirm('¿Borrar esta palabra clave?')) { await api(`/api/palabras/${b.dataset.borrarPalabra}`, { method: 'DELETE' }); verPalabras(c); }
+  }));
+}
+
+async function verBusquedas(c) {
+  const filas = await api('/api/busquedas');
+  c.innerHTML = `<h2>Búsquedas guardadas</h2>
+    <p class="meta">Avisan por email de cada convocatoria nueva que cumpla los filtros${estado.config.email ? '' : ' (el servidor aún no tiene SMTP configurado: los avisos quedan pendientes)'}.</p>
+    <form id="form-busqueda" class="formulario">
+      <label>Nombre<input name="nombre" required></label>
+      <label>Email<input name="usuario_email" type="email" required></label>
+      <label>Texto<input name="q" placeholder="título, organismo o resumen"></label>
+      <label>Tipo<select name="tipo"><option value="">Ambos</option><option value="subvencion">Subvención</option><option value="licitacion">Licitación</option></select></label>
+      <label>Fuentes (coma)<input name="fuentes" placeholder="PLACE, TED"></label>
+      <label>Países ISO-2 (coma)<input name="paises" placeholder="ES, PT"></label>
+      <label>Importe mínimo<input name="importe_min" type="number" min="0"></label>
+      <label>Importe máximo<input name="importe_max" type="number" min="0"></label>
+      <label>Encaje IA mínimo (0-100)<input name="encaje_min" type="number" min="0" max="100"></label>
+      <label>Prefijos CPV (coma)<input name="cpv_prefijos" placeholder="72, 48"></label>
+      <div class="ancho"><button class="primario">Guardar búsqueda</button></div>
+    </form>` + tabla(filas, [['nombre', 'Nombre'], ['usuario_email', 'Email'], ['q', 'Texto'], ['tipo', 'Tipo'],
+    ['encaje_min', 'Encaje mín.'], ['avisadas', 'Avisadas'], ['last_checked_at', 'Última revisión', (v) => esc(fecha(v))],
+    ['id', '', (v) => `<button class="peligro" data-borrar-busqueda="${v}">Borrar</button>`]]);
+  $('#form-busqueda').addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const f = Object.fromEntries(new FormData(e.target));
+    for (const k of ['importe_min', 'importe_max', 'encaje_min']) f[k] = f[k] === '' ? null : Number(f[k]);
+    try { await api('/api/busquedas', { method: 'POST', body: f }); avisar('Búsqueda guardada'); verBusquedas(c); }
+    catch (err) { avisar(err.message); }
+  });
+  c.querySelectorAll('[data-borrar-busqueda]').forEach((b) => b.addEventListener('click', async () => {
+    if (confirm('¿Borrar esta búsqueda?')) { await api(`/api/busquedas/${b.dataset.borrarBusqueda}`, { method: 'DELETE' }); verBusquedas(c); }
+  }));
+}
+
+function verAlta(c) {
+  c.innerHTML = `<h2>Alta manual de una convocatoria</h2>
+    <form id="form-alta" class="formulario">
+      <label class="ancho">Título<input name="titulo" required></label>
+      <label>Tipo<select name="tipo"><option value="subvencion">Subvención</option><option value="licitacion">Licitación</option></select></label>
+      <label>Organismo<input name="organismo_texto"></label>
+      <label>Fecha límite<input name="fecha_limite" type="datetime-local"></label>
+      <label>Ventanilla permanente<select name="ventanilla_permanente"><option value="">No</option><option value="1">Sí</option></select></label>
+      <label>Presupuesto sin impuestos<input name="presupuesto_sin_impuestos" type="number" step="0.01"></label>
+      <label>Importe de la ayuda<input name="importe_max_ayuda" type="number" step="0.01"></label>
+      <label>País ISO-2<input name="pais" value="ES" maxlength="2"></label>
+      <label>Relevancia<select name="relevancia"><option>media</option><option>alta</option><option>baja</option></select></label>
+      <label class="ancho">Enlace<input name="url_original" type="url"></label>
+      <label class="ancho">Resumen<textarea name="resumen" rows="3"></textarea></label>
+      <div class="ancho"><button class="primario">Dar de alta</button></div>
+    </form>`;
+  $('#form-alta').addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const f = Object.fromEntries(new FormData(e.target));
+    f.ventanilla_permanente = Boolean(f.ventanilla_permanente);
+    f.fecha_limite = f.fecha_limite ? new Date(f.fecha_limite).toISOString() : null;
+    for (const k of Object.keys(f)) if (f[k] === '') f[k] = null;
+    try { const r = await api('/api/convocatorias', { method: 'POST', body: f }); avisar('Dada de alta'); abrirFicha(r.id); e.target.reset(); }
+    catch (err) { avisar(err.message); }
+  });
+}
+
+async function verSalud(c) {
+  const [filas, ejec, acierto] = await Promise.all([api('/api/salud'), api('/api/ejecucion'), api('/api/acierto')]);
+  const conLector = filas.filter((f) => f.tiene_lector);
+  const sinLector = filas.filter((f) => !f.tiene_lector);
+  c.innerHTML = `<h2>Fuentes con lector</h2>` + tabla(conLector, [['codigo', 'Fuente'], ['nombre', 'Nombre'], ['cron', 'Cron'],
+    ['activa', 'Activa', (v) => (v ? 'sí' : 'no')], ['ultimo_ok', 'Último OK', (v) => esc(fecha(v))],
+    ['ultimo_error', 'Último error', (v, f) => (v ? `${esc(fecha(v))}<br><span class="meta">${esc(f.ultimo_mensaje_error)}</span>` : '')],
+    ['nuevas_30_dias', 'Nuevas 30 días'], ['estancada', 'Estado', (v) => (v ? '<span class="etiqueta descartada">estancada</span>' : '<span class="etiqueta relevante">bien</span>')]]) +
+    `<h2>Acierto del triaje IA</h2>` + tabla(acierto, [['triage_clasificacion', 'IA dijo'], ['total', 'Total'], ['seguidas', 'Seguidas por el equipo'], ['descartadas_a_mano', 'Descartadas a mano']]) +
+    `<h2>Registro de la última ejecución manual</h2><div class="registro">${esc((ejec.registro || []).join('\n') || 'Sin ejecuciones desde que arrancó el servidor.')}</div>` +
+    `<h2>Fuentes sin lector todavía (${sinLector.length})</h2><p class="meta">Están en el catálogo pero el vigilante aún no sabe leerlas: ${esc(sinLector.map((f) => f.codigo).join(', '))}.</p>`;
+}
+
+// ---------- ejecución manual ----------
+$('#btn-vigilar').addEventListener('click', async () => {
+  try {
+    await api('/api/ejecucion', { method: 'POST', body: {} });
+    avisar('Vigilancia lanzada');
+    vigilarEjecucion();
+  } catch (e) { avisar(e.message); }
+});
+async function vigilarEjecucion() {
+  const e = await api('/api/ejecucion').catch(() => null);
+  $('#estado-ejecucion').textContent = e?.enMarcha ? 'Vigilando…' : '';
+  $('#btn-vigilar').disabled = Boolean(e?.enMarcha);
+  if (e?.enMarcha) setTimeout(vigilarEjecucion, 4000);
+  else if (e?.ultimo && estado.seccion === 'feed') verFeed($('#contenido'));
+}
+
+// ---------- usuario ----------
+function pintarUsuario() { $('#btn-usuario').textContent = estado.usuario || 'Identificarse'; }
+async function pedirUsuario() {
+  const d = $('#dlg-usuario');
+  if (d.open) return;
+  d.querySelector('[name=usuario]').value = estado.usuario;
+  d.querySelector('[name=token]').value = estado.token;
+  d.showModal();
+  d.addEventListener('close', () => {
+    estado.usuario = d.querySelector('[name=usuario]').value.trim();
+    estado.token = d.querySelector('[name=token]').value.trim();
+    guardarLocal('usuario', estado.usuario); guardarLocal('token', estado.token);
+    pintarUsuario(); iniciar();
+  }, { once: true });
+}
+$('#btn-usuario').addEventListener('click', pedirUsuario);
+
+async function iniciar() {
+  try {
+    [estado.config, estado.motivos] = await Promise.all([api('/api/config'), api('/api/motivos')]);
+  } catch (e) { avisar(e.message); }
+  pintarSecciones();
+  cargarSeccion();
+  vigilarEjecucion();
+}
+pintarUsuario();
+iniciar();
+</script>
+</body>
+</html>

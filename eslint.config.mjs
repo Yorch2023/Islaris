@@ -173,9 +173,38 @@ export default [
         },
     },
     {
+        // Vigilante de convocatorias: Node.js CommonJS (código, CLI y pruebas)
+        files: ['vigilante/**/*.js'],
+        ignores: ['vigilante/public/**'],
+        languageOptions: {
+            ecmaVersion: 2022,
+            sourceType: 'commonjs',
+            globals: {
+                require: 'readonly', module: 'writable', exports: 'writable', process: 'readonly',
+                __dirname: 'readonly', __filename: 'readonly', Buffer: 'readonly', console: 'readonly',
+                setTimeout: 'readonly', clearTimeout: 'readonly', setInterval: 'readonly',
+                clearInterval: 'readonly', setImmediate: 'readonly', fetch: 'readonly',
+                AbortSignal: 'readonly', URL: 'readonly', URLSearchParams: 'readonly', Intl: 'readonly',
+            },
+        },
+        rules: {
+            'no-unused-vars': ['error', {
+                argsIgnorePattern:       '^_',
+                varsIgnorePattern:       '^_',
+                caughtErrorsIgnorePattern: '^_',
+            }],
+            'no-undef':    'error',
+            'no-var':      'error',
+            'prefer-const': 'error',
+            eqeqeq:        ['error', 'always'],
+            'no-eval':     'error',
+        },
+    },
+    {
         // Exclude build artifacts and node_modules globally
         ignores: [
             'node_modules/**',
+            'vigilante/node_modules/**',
             'moodle-plugins/**/amd/build/**',
             'coverage/**',
         ],

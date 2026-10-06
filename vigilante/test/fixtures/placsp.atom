@@ -1,0 +1,125 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<feed xmlns="http://www.w3.org/2005/Atom" xmlns:cbc-place-ext="urn:dgpe:names:draft:codice-place-ext:schema:xsd:CommonBasicComponents-2" xmlns:cac-place-ext="urn:dgpe:names:draft:codice-place-ext:schema:xsd:CommonAggregateComponents-2" xmlns:cbc="urn:dgpe:names:draft:codice:schema:xsd:CommonBasicComponents-2" xmlns:cac="urn:dgpe:names:draft:codice:schema:xsd:CommonAggregateComponents-2" xmlns:at="http://purl.org/atompub/tombstones/1.0">
+  <title>Perfiles Contratantes</title>
+  <link href="https://contrataciondelestado.es/sindicacion/sindicacion_643/licitacionesPerfilesContratanteCompleto3_20261005_120000.atom" rel="next"/>
+  <link href="https://contrataciondelestado.es/sindicacion/sindicacion_643/licitacionesPerfilesContratanteCompleto3.atom" rel="self"/>
+  <updated>2026-10-05T12:00:00.000+02:00</updated>
+  <at:deleted-entry ref="https://contrataciondelestado.es/sindicacion/licitacionesPerfilContratante/1000" when="2026-10-05T10:00:00.000+02:00"/>
+  <entry>
+    <id>https://contrataciondelestado.es/sindicacion/licitacionesPerfilContratante/15550001</id>
+    <link href="https://contrataciondelestado.es/wps/poc?uri=deeplink:detalle_licitacion&amp;idEvl=abc123"/>
+    <summary type="text">Id licitación: SCT-2026/045; Órgano de Contratación: Presidencia de la Autoridad Portuaria de Santa Cruz de Tenerife; Importe: 450000.00 EUR; Estado: PUB</summary>
+    <title>Servicio de mantenimiento evolutivo del sistema de gestión portuaria y del sistema VTS</title>
+    <updated>2026-10-05T11:30:00.000+02:00</updated>
+    <cac-place-ext:ContractFolderStatus>
+      <cbc:ContractFolderID>SCT-2026/045</cbc:ContractFolderID>
+      <cbc-place-ext:ContractFolderStatusCode listURI="https://contrataciondelestado.es/codice/cl/2.04/SyndicationContractFolderStatusCode-2.04.gc">PUB</cbc-place-ext:ContractFolderStatusCode>
+      <cac-place-ext:LocatedContractingParty>
+        <cbc:ContractingPartyTypeCode>5</cbc:ContractingPartyTypeCode>
+        <cac:Party>
+          <cac:PartyIdentification><cbc:ID schemeName="DIR3">EA0004530</cbc:ID></cac:PartyIdentification>
+          <cac:PartyIdentification><cbc:ID schemeName="NIF">Q3867003F</cbc:ID></cac:PartyIdentification>
+          <cac:PartyName><cbc:Name>Presidencia de la Autoridad Portuaria de Santa Cruz de Tenerife</cbc:Name></cac:PartyName>
+        </cac:Party>
+      </cac-place-ext:LocatedContractingParty>
+      <cac:ProcurementProject>
+        <cbc:Name>Servicio de mantenimiento evolutivo del sistema de gestión portuaria y del sistema VTS</cbc:Name>
+        <cbc:TypeCode>2</cbc:TypeCode>
+        <cac:BudgetAmount>
+          <cbc:EstimatedOverallContractAmount currencyID="EUR">900000</cbc:EstimatedOverallContractAmount>
+          <cbc:TotalAmount currencyID="EUR">481500</cbc:TotalAmount>
+          <cbc:TaxExclusiveAmount currencyID="EUR">450000</cbc:TaxExclusiveAmount>
+        </cac:BudgetAmount>
+        <cac:RequiredCommodityClassification><cbc:ItemClassificationCode listURI="x">72267000</cbc:ItemClassificationCode></cac:RequiredCommodityClassification>
+        <cac:RequiredCommodityClassification><cbc:ItemClassificationCode listURI="x">09310000</cbc:ItemClassificationCode></cac:RequiredCommodityClassification>
+      </cac:ProcurementProject>
+      <cac:ProcurementProjectLot>
+        <cbc:ID schemeName="ID_LOTE">1</cbc:ID>
+        <cac:ProcurementProject>
+          <cbc:Name>Sistema de gestión portuaria</cbc:Name>
+          <cac:BudgetAmount><cbc:TaxExclusiveAmount currencyID="EUR">300000</cbc:TaxExclusiveAmount></cac:BudgetAmount>
+          <cac:RequiredCommodityClassification><cbc:ItemClassificationCode>72267000</cbc:ItemClassificationCode></cac:RequiredCommodityClassification>
+        </cac:ProcurementProject>
+      </cac:ProcurementProjectLot>
+      <cac:ProcurementProjectLot>
+        <cbc:ID schemeName="ID_LOTE">2</cbc:ID>
+        <cac:ProcurementProject>
+          <cbc:Name>Sistema VTS</cbc:Name>
+          <cac:BudgetAmount><cbc:TaxExclusiveAmount currencyID="EUR">150000</cbc:TaxExclusiveAmount></cac:BudgetAmount>
+        </cac:ProcurementProject>
+      </cac:ProcurementProjectLot>
+      <cac:TenderingProcess>
+        <cbc:ProcedureCode listURI="x">1</cbc:ProcedureCode>
+        <cac:TenderSubmissionDeadlinePeriod>
+          <cbc:EndDate>2026-11-03</cbc:EndDate>
+          <cbc:EndTime>14:00:00</cbc:EndTime>
+        </cac:TenderSubmissionDeadlinePeriod>
+      </cac:TenderingProcess>
+      <cac:LegalDocumentReference>
+        <cbc:ID>PCAP.pdf</cbc:ID>
+        <cac:Attachment><cac:ExternalReference><cbc:URI>https://contrataciondelestado.es/doc/pcap-sct-2026-045.pdf</cbc:URI></cac:ExternalReference></cac:Attachment>
+      </cac:LegalDocumentReference>
+      <cac:TechnicalDocumentReference>
+        <cbc:ID>PPT.pdf</cbc:ID>
+        <cac:Attachment><cac:ExternalReference><cbc:URI>https://contrataciondelestado.es/doc/ppt-sct-2026-045.pdf</cbc:URI></cac:ExternalReference></cac:Attachment>
+      </cac:TechnicalDocumentReference>
+    </cac-place-ext:ContractFolderStatus>
+  </entry>
+  <entry>
+    <id>https://contrataciondelestado.es/sindicacion/licitacionesPerfilContratante/15550002</id>
+    <link href="https://contrataciondelestado.es/wps/poc?uri=deeplink:detalle_licitacion&amp;idEvl=def456"/>
+    <summary type="text">Id licitación: APLP-2026-12; Estado: RES</summary>
+    <title>Suministro e instalación de sistema de control de tráfico portuario y AIS</title>
+    <updated>2026-10-05T10:00:00.000+02:00</updated>
+    <cac-place-ext:ContractFolderStatus>
+      <cbc:ContractFolderID>APLP-2026-12</cbc:ContractFolderID>
+      <cbc-place-ext:ContractFolderStatusCode>RES</cbc-place-ext:ContractFolderStatusCode>
+      <cac-place-ext:LocatedContractingParty>
+        <cac:Party>
+          <cac:PartyIdentification><cbc:ID schemeName="DIR3">EA0004520</cbc:ID></cac:PartyIdentification>
+          <cac:PartyName><cbc:Name>Autoridad Portuaria de Las Palmas</cbc:Name></cac:PartyName>
+        </cac:Party>
+      </cac-place-ext:LocatedContractingParty>
+      <cac:ProcurementProject>
+        <cbc:Name>Suministro e instalación de sistema de control de tráfico portuario y AIS</cbc:Name>
+        <cac:BudgetAmount><cbc:TaxExclusiveAmount currencyID="EUR">200000</cbc:TaxExclusiveAmount></cac:BudgetAmount>
+      </cac:ProcurementProject>
+      <cac:TenderResult>
+        <cbc:ResultCode>8</cbc:ResultCode>
+        <cbc:AwardDate>2026-09-30</cbc:AwardDate>
+        <cbc:ReceivedTenderQuantity>4</cbc:ReceivedTenderQuantity>
+        <cac:WinningParty>
+          <cac:PartyIdentification><cbc:ID schemeName="NIF">B12345678</cbc:ID></cac:PartyIdentification>
+          <cac:PartyName><cbc:Name>COMPETIDOR MARITIMO SL</cbc:Name></cac:PartyName>
+        </cac:WinningParty>
+        <cac:AwardedTenderedProject>
+          <cac:LegalMonetaryTotal><cbc:TaxExclusiveAmount currencyID="EUR">168000</cbc:TaxExclusiveAmount></cac:LegalMonetaryTotal>
+        </cac:AwardedTenderedProject>
+      </cac:TenderResult>
+    </cac-place-ext:ContractFolderStatus>
+  </entry>
+  <entry>
+    <id>https://contrataciondelestado.es/sindicacion/licitacionesPerfilContratante/15550003</id>
+    <link href="https://contrataciondelestado.es/wps/poc?uri=deeplink:detalle_licitacion&amp;idEvl=ghi789"/>
+    <title>Obras de reparación de aceras en el casco urbano</title>
+    <updated>2026-10-05T09:00:00.000+02:00</updated>
+    <cac-place-ext:ContractFolderStatus>
+      <cbc:ContractFolderID>OB-77</cbc:ContractFolderID>
+      <cbc-place-ext:ContractFolderStatusCode>PUB</cbc-place-ext:ContractFolderStatusCode>
+      <cac-place-ext:LocatedContractingParty><cac:Party><cac:PartyName><cbc:Name>Ayuntamiento de X</cbc:Name></cac:PartyName></cac:Party></cac-place-ext:LocatedContractingParty>
+      <cac:ProcurementProject><cbc:Name>Obras de reparación de aceras en el casco urbano</cbc:Name></cac:ProcurementProject>
+    </cac-place-ext:ContractFolderStatus>
+  </entry>
+  <entry>
+    <id>https://contrataciondelestado.es/sindicacion/licitacionesPerfilContratante/15550004</id>
+    <link href="https://contrataciondelestado.es/wps/poc?uri=deeplink:detalle_licitacion&amp;idEvl=jkl000"/>
+    <title>Consulta preliminar al mercado para un gemelo digital del puerto</title>
+    <updated>2026-10-04T09:00:00.000+02:00</updated>
+    <cac-place-ext:ContractFolderStatus>
+      <cbc:ContractFolderID>CPM-01</cbc:ContractFolderID>
+      <cbc-place-ext:ContractFolderStatusCode>PRE</cbc-place-ext:ContractFolderStatusCode>
+      <cac-place-ext:LocatedContractingParty><cac:Party><cac:PartyName><cbc:Name>Autoridad Portuaria de Valencia</cbc:Name></cac:PartyName></cac:Party></cac-place-ext:LocatedContractingParty>
+      <cac:ProcurementProject><cbc:Name>Consulta preliminar al mercado para un gemelo digital del puerto</cbc:Name></cac:ProcurementProject>
+    </cac-place-ext:ContractFolderStatus>
+  </entry>
+</feed>

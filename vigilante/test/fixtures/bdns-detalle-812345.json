@@ -1,0 +1,11 @@
+{
+  "id": 1, "codigoBDNS": "812345", "organo": { "nivel1": "CANARIAS", "nivel2": "CONSEJERÍA DE ECONOMÍA", "nivel3": "PROEXCA" },
+  "sedeElectronica": "https://sede.gobiernodecanarias.org/proexca", "fechaRecepcion": "2026-10-05",
+  "instrumentos": [{ "descripcion": "SUBVENCIÓN Y ENTREGA DINERARIA SIN CONTRAPRESTACIÓN" }],
+  "tipoConvocatoria": "Concurrencia competitiva - canónica", "presupuestoTotal": 1500000,
+  "descripcion": "Subvenciones Canarias Aporta 2026 para proyectos de internacionalización",
+  "tiposBeneficiarios": [{ "descripcion": "PYME Y PERSONAS FÍSICAS QUE DESARROLLAN ACTIVIDAD ECONÓMICA" }],
+  "descripcionFinalidad": "Comercio, Turismo y Pymes", "urlBasesReguladoras": "https://www.gobiernodecanarias.org/boc/2026/100/001.html",
+  "abierto": true, "fechaInicioSolicitud": "2026-10-06", "fechaFinSolicitud": "2026-11-06",
+  "textInicio": null, "textFin": null, "reglamento": { "descripcion": "Reglamento (UE) 2023/2831 de minimis" }
+}

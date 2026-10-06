@@ -1,0 +1,25 @@
+{
+  "notices": [
+    {
+      "publication-number": "612345-2026",
+      "notice-title": { "eng": "Netherlands – Port management system – Vessel traffic service upgrade", "nld": "Haven beheer" },
+      "buyer-name": { "eng": ["Port of Rotterdam Authority"] },
+      "buyer-country": ["NLD"],
+      "publication-date": ["2026-10-05+02:00"],
+      "deadline-receipt-tender-date-lot": ["2026-11-20+01:00"],
+      "classification-cpv": ["72000000", "48000000"],
+      "links": { "html": { "ENG": "https://ted.europa.eu/en/notice/-/detail/612345-2026" } }
+    },
+    {
+      "publication-number": "612399-2026",
+      "notice-title": { "spa": "España – Servicios de software – Mantenimiento evolutivo del sistema de gestión portuaria y del sistema VTS", "eng": "Spain – Software services" },
+      "buyer-name": { "spa": ["Autoridad Portuaria de Santa Cruz de Tenerife"] },
+      "buyer-country": ["ESP"],
+      "publication-date": ["2026-10-05+02:00"],
+      "deadline-receipt-tender-date-lot": ["2026-11-03+01:00"],
+      "classification-cpv": ["72267000"],
+      "links": { "html": { "SPA": "https://ted.europa.eu/es/notice/-/detail/612399-2026" } }
+    }
+  ],
+  "totalNoticeCount": 2
+}

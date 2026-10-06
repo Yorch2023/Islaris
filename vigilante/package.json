@@ -1,0 +1,27 @@
+{
+  "name": "vigilante-subvenciones-licitaciones",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Vigilante de subvenciones y licitaciones sobre el esquema ERP (PostgreSQL)",
+  "main": "src/vigilante.js",
+  "bin": {
+    "vigilante": "bin/vigilante.js"
+  },
+  "scripts": {
+    "migrar": "node bin/vigilante.js migrar",
+    "vigilar": "node bin/vigilante.js vigilar",
+    "triaje": "node bin/vigilante.js triaje",
+    "servidor": "node bin/vigilante.js servidor",
+    "test": "node --test test/*.test.js"
+  },
+  "dependencies": {
+    "@anthropic-ai/sdk": "^0.131.0",
+    "fast-xml-parser": "^5.11.2",
+    "nodemailer": "^10.0.15",
+    "pg": "^8.23.1"
+  },
+  "engines": {
+    "node": ">=20.0.0"
+  },
+  "license": "UNLICENSED"
+}

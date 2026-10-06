@@ -1,0 +1,47 @@
+{
+  "status": { "code": "200", "text": "ok" },
+  "data": {
+    "sumario": {
+      "metadatos": { "publicacion": "BOE", "fecha_publicacion": "20261005" },
+      "diario": [{
+        "numero": "240",
+        "seccion": [
+          {
+            "codigo": "1", "nombre": "I. Disposiciones generales",
+            "departamento": { "codigo": "1", "nombre": "MINISTERIO X", "item": { "identificador": "BOE-A-2026-1", "titulo": "Real Decreto sobre puertos del Estado y su régimen", "url_html": "https://www.boe.es/diario_boe/txt.php?id=BOE-A-2026-1" } }
+          },
+          {
+            "codigo": "3", "nombre": "III. Otras disposiciones",
+            "departamento": [{
+              "codigo": "7723", "nombre": "MINISTERIO DE CIENCIA, INNOVACIÓN Y UNIVERSIDADES",
+              "epigrafe": [{
+                "nombre": "Ayudas",
+                "item": [
+                  { "identificador": "BOE-A-2026-20001", "titulo": "Resolución de 1 de octubre de 2026, del Centro para el Desarrollo Tecnológico y la Innovación, por la que se aprueba la convocatoria del programa Neotec 2026.", "url_pdf": { "szBytes": "1000", "texto": "https://www.boe.es/boe/dias/2026/10/05/pdfs/BOE-A-2026-20001.pdf" }, "url_html": "https://www.boe.es/diario_boe/txt.php?id=BOE-A-2026-20001" },
+                  { "identificador": "BOE-A-2026-20002", "titulo": "Resolución de 28 de septiembre de 2026, por la que se conceden las ayudas de innovación portuaria del programa Ports 4.0.", "url_html": "https://www.boe.es/diario_boe/txt.php?id=BOE-A-2026-20002" }
+                ]
+              }]
+            }]
+          },
+          {
+            "codigo": "5A", "nombre": "A. Contratación del Sector Público",
+            "departamento": [{
+              "codigo": "9999", "nombre": "MINISTERIO DE TRANSPORTES Y MOVILIDAD SOSTENIBLE",
+              "epigrafe": {
+                "nombre": "Licitaciones",
+                "item": { "identificador": "BOE-B-2026-30001", "titulo": "Anuncio de licitación de: Presidencia de la Autoridad Portuaria de Santa Cruz de Tenerife. Objeto: Servicio de mantenimiento evolutivo del sistema de gestión portuaria y del sistema VTS. Expediente: SCT-2026/045.", "url_html": "https://www.boe.es/diario_boe/txt.php?id=BOE-B-2026-30001" }
+              }
+            }]
+          },
+          {
+            "codigo": "5B", "nombre": "B. Otros anuncios oficiales",
+            "departamento": {
+              "codigo": "5555", "nombre": "COMUNIDAD AUTÓNOMA DE CANARIAS",
+              "item": { "identificador": "BOE-B-2026-30002", "titulo": "Extracto de la Orden de 30 de septiembre de 2026 por la que se convocan las subvenciones Canarias Aporta para 2026. BDNS (Identif.): 812345.", "url_html": "https://www.boe.es/diario_boe/txt.php?id=BOE-B-2026-30002" }
+            }
+          }
+        ]
+      }]
+    }
+  }
+}
