@@ -804,8 +804,8 @@ async function verCliente(c, id) {
       <button id="btn-volver">← Clientes</button>
       <div class="fila">
         <button id="btn-editar">Editar ficha</button>
-        <button id="btn-rastrear" title="Vuelve a leer las fuentes de los últimos ${estado.config.dias_rastreo || 90} días buscando para este cliente">Buscar en las fuentes (${estado.config.dias_rastreo || 90} días)</button>
-        ${estado.config.triaje ? '<button id="btn-evaluar">Evaluar encaje</button>' : ''}
+        <button id="btn-evaluar" title="Cruza la ficha con las convocatorias que el Radar ya tiene guardadas y evalúa lo pendiente. No vuelve a leer las fuentes.">Cruzar con lo ya guardado (rápido)</button>
+        <button id="btn-rastrear" title="Vuelve a leer las fuentes que tocan según lo que busca el cliente: BDNS de los últimos ${estado.config.dias_rastreo_bdns || 365} días; BOE, PLACSP y TED de ${estado.config.dias_rastreo || 90} días">Buscar en las fuentes (completo)</button>
         <button class="primario" id="btn-islaris">Pasar a Claude (skill Islaris)</button>
       </div>
     </div>
@@ -836,7 +836,7 @@ async function verCliente(c, id) {
         <td>${esc(o.motivo || `Coincide por ${o.origen === 'territorio' ? 'territorio' : 'palabras clave'}: ${(o.coincidencias || []).join(', ')}`)}
           ${o.requisito_critico ? `<div class="meta">Verificar: ${esc(o.requisito_critico)}</div>` : ''}</td>
         <td><select data-op="${o.convocatoria_id}">${ESTADOS_OP.map(([v, n]) => `<option value="${v}" ${o.estado === v ? 'selected' : ''}>${n}</option>`).join('')}</select></td>
-      </tr>`).join('')}</table></div>` : `<div class="vacio">Nada por aquí todavía. Si acabas de crear el cliente, pulsa «Buscar en las fuentes» para revisar los últimos ${estado.config.dias_rastreo || 90} días.</div>`}
+      </tr>`).join('')}</table></div>` : `<div class="vacio">Nada por aquí todavía. Si acabas de crear el cliente, pulsa «Buscar en las fuentes (completo)»: revisa la BDNS de los últimos ${estado.config.dias_rastreo_bdns || 365} días y el resto de fuentes de ${estado.config.dias_rastreo || 90}.</div>`}
     <dialog id="dlg-islaris"><form method="dialog">
       <strong>Pasar a Claude con la skill islaris-subvenciones</strong>
       <p class="meta">Copia este texto y pégalo en una conversación nueva de Claude. Lleva la ficha (paso 1) y las convocatorias abiertas verdes, amarillas y sin evaluar como punto de partida del informe del paso 2.</p>
@@ -864,7 +864,7 @@ async function verCliente(c, id) {
     catch (err) { avisar(err.message); }
   };
   $('#btn-rastrear').addEventListener('click', () => lanzar(`/api/clientes/${id}/rastrear`, 'Buscando en las fuentes: sigue el avance en la barra de arriba'));
-  $('#btn-evaluar')?.addEventListener('click', () => lanzar(`/api/clientes/${id}/evaluar`, 'Evaluando el encaje con Claude…'));
+  $('#btn-evaluar')?.addEventListener('click', () => lanzar(`/api/clientes/${id}/evaluar`, 'Cruzando con lo ya guardado: sigue el avance en la barra de arriba'));
   $('#btn-islaris').addEventListener('click', async () => {
     const { markdown } = await api(`/api/clientes/${id}/islaris`);
     const d = $('#dlg-islaris');

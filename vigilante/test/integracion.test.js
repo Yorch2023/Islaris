@@ -415,3 +415,13 @@ test('progreso: vigilar informa por fuente y el porcentaje avanza', opciones, as
     assert.equal(pcts[0], 0);
     assert.equal(pcts.at(-1), 100);
 });
+
+test('rastreo de un cliente: solo las fuentes que le sirven', opciones, async () => {
+    const { rastrearCliente } = require('../src/tareas');
+    const k = (await db.query(`INSERT INTO cliente (razon_social, intereses, palabras_clave) VALUES ('Solo Subvenciones SL', '{subvencion}', '{comercio}') RETURNING id`)).rows[0];
+    const r = await rastrearCliente(db, { ...CONFIG, anthropicApiKey: null, emailAvisos: null, diasRastreo: 0, diasRastreoBdns: 0, rastreoMaxPaginas: 1 },
+        k.id, { log: silencio, pedirFn: pedirFalso });
+    assert.deepEqual(Object.keys(r.vigilancia).sort(), ['BDNS', 'BOE']);
+    assert.ok('BDNS' in r.cruces_por_fuente);
+    await db.query('DELETE FROM cliente WHERE id = $1', [k.id]);
+});

@@ -176,15 +176,16 @@ function crearServidorMcp({ fetchFn = fetch } = {}) {
 
     servidor.registerTool('buscar_convocatorias_cliente', {
         title: 'Buscar convocatorias para un cliente',
-        description: 'Relee las fuentes (BDNS, BOE, Plataforma de Contratación y TED) de los últimos 90 días buscando para '
-            + 'este cliente y evalúa el encaje con semáforo. Tarda varios minutos y corre en segundo plano: después llama a '
+        description: 'Relee las fuentes que tocan según lo que busca el cliente (BDNS de los últimos 12 meses y BOE para '
+            + 'subvenciones; Plataforma de Contratación y TED de 90 días para licitaciones) y evalúa el encaje con semáforo. Tarda varios minutos y corre en segundo plano: después llama a '
             + 'estado_vigilante cada poco para informar del avance y, al terminar, a ver_cliente.',
         inputSchema: { cliente_id: z.number().int() },
     }, envolver(({ cliente_id: id }) => llamar(`/api/clientes/${id}/rastrear`, { metodo: 'POST' })));
 
     servidor.registerTool('evaluar_encaje_cliente', {
         title: 'Evaluar el encaje pendiente',
-        description: 'Pone semáforo a las oportunidades del cliente que aún no lo tienen, sin releer las fuentes. Corre en segundo plano.',
+        description: 'Cruza al cliente con las convocatorias que el Radar ya tiene guardadas y pone semáforo a lo pendiente, '
+            + 'sin releer las fuentes (rápido). Úsala tras cambiar la ficha o las palabras clave. Corre en segundo plano.',
         inputSchema: { cliente_id: z.number().int() },
     }, envolver(({ cliente_id: id }) => llamar(`/api/clientes/${id}/evaluar`, { metodo: 'POST' })));
 

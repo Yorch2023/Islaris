@@ -64,7 +64,9 @@ guardan hasta pulsar «Guardar».
   fuera del feed del grupo) y lo cruza con cada ficha: por palabra clave o, en subvenciones,
   porque la convoca un organismo de su territorio (Canarias, su isla, su municipio). La BDNS
   recoge todas las subvenciones públicas españolas, incluidas las de cabildos y ayuntamientos.
-- **Buscar en las fuentes** relee los últimos 90 días para un cliente nuevo, porque lo que
+- **Buscar en las fuentes (completo)** relee solo las fuentes que sirven al cliente (BDNS de los
+  últimos 12 meses y BOE si busca subvenciones; PLACSP y TED de 90 días si busca licitaciones),
+  porque lo que
   antes no coincidía con nada no estaba guardado.
 - Claude pone a cada cruce un **semáforo** (verde, amarillo o rojo) con el motivo, el
   requisito crítico a verificar y el importe orientativo, con los mismos criterios que la

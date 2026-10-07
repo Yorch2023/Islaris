@@ -380,7 +380,7 @@ function crearServidor(db, config, { log = console.log, planificador = null } = 
         ['POST', /^\/api\/clientes\/(\d+)\/evaluar$/, (req, q, m) =>
             enSegundoPlano('Evaluar el encaje del cliente', (progreso) => trabajarClientes(db, config, { clienteId: Number(m[1]), log: anotar, progreso }), { cliente_id: Number(m[1]) })],
         ['POST', /^\/api\/clientes\/(\d+)\/rastrear$/, (req, q, m) =>
-            enSegundoPlano(`Buscar ${config.diasRastreo} días de convocatorias para el cliente`, (progreso) => rastrearCliente(db, config, Number(m[1]), { log: anotar, progreso }), { cliente_id: Number(m[1]) })],
+            enSegundoPlano('Buscar convocatorias para el cliente', (progreso) => rastrearCliente(db, config, Number(m[1]), { log: anotar, progreso }), { cliente_id: Number(m[1]) })],
         ['PATCH', /^\/api\/clientes\/(\d+)\/oportunidades\/(\d+)$/, async (req, q, m) => {
             const { estado } = await leerCuerpo(req);
             if (!['sugerida', 'en_estudio', 'propuesta', 'descartada'].includes(estado)) throw new ErrorPeticion(400, 'Estado no válido');
@@ -473,7 +473,7 @@ function crearServidor(db, config, { log = console.log, planificador = null } = 
         }],
         ['GET', /^\/api\/config$/, () => ({
             triaje: Boolean(config.anthropicApiKey), modelo: config.modeloTriaje, email: Boolean(config.smtp?.host),
-            email_avisos: config.emailAvisos || null, dias_rastreo: config.diasRastreo,
+            email_avisos: config.emailAvisos || null, dias_rastreo: config.diasRastreo, dias_rastreo_bdns: config.diasRastreoBdns ?? 365,
             fuentes_con_lector: Object.keys(lectores), token: Boolean(config.token),
         })],
     ];

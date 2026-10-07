@@ -59,7 +59,9 @@ function leerConfig() {
         // y a dónde se mandan los avisos de oportunidades
         encajeLote: entero('VIGILANTE_ENCAJE_LOTE', 60),
         diasRastreo: entero('VIGILANTE_DIAS_RASTREO', 90),
-        rastreoMaxPaginas: entero('VIGILANTE_RASTREO_MAX_PAGINAS', 1000),
+        // La BDNS se mira más atrás: hay convocatorias publicadas hace meses que siguen abiertas
+        diasRastreoBdns: entero('VIGILANTE_DIAS_RASTREO_BDNS', 365),
+        rastreoMaxPaginas: entero('VIGILANTE_RASTREO_MAX_PAGINAS', 3000),
         emailAvisos: process.env.VIGILANTE_EMAIL_AVISOS || process.env.SMTP_USER || null,
         // Email de las búsquedas guardadas (opcional)
         smtp: {

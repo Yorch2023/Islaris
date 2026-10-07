@@ -77,16 +77,20 @@ function aConvocatoria(item, detalle, zona) {
 
 async function* leer(ctx) {
     const { desde, hasta, pedir, config, interesa, log, progreso = () => {} } = ctx;
-    for (let pagina = 0; pagina < config.bdnsMaxPaginas; pagina++) {
-        const datos = await pedir(urlListado(desde, hasta, pagina), {
-            como: 'json', cabeceras: { Accept: 'application/json' }, userAgent: config.userAgent,
-        });
+    const opciones = { como: 'json', cabeceras: { Accept: 'application/json' }, userAgent: config.userAgent };
+    const listado = (pagina) => pedir(urlListado(desde, hasta, pagina), opciones);
+
+    // La primera página dice cuántas hay; el resto se pide de 4 en 4
+    const primera = await listado(0);
+    const totalPaginas = Number(primera?.totalPages ?? 0);
+    const tope = Math.max(1, Math.min(totalPaginas || config.bdnsMaxPaginas, config.bdnsMaxPaginas));
+    let hechas = 0;
+
+    async function* procesar(datos) {
         const items = arr(datos?.content);
         const interesantes = items.filter((item) => interesa(aConvocatoria(item, null, config.zonaHoraria)));
         // Las fichas de detalle se descargan 5 a la vez
-        const detalles = await enParalelo(interesantes, 5, (item) => pedir(urlDetalle(String(item.numeroConvocatoria ?? item.id)), {
-            como: 'json', cabeceras: { Accept: 'application/json' }, userAgent: config.userAgent,
-        }));
+        const detalles = await enParalelo(interesantes, 5, (item) => pedir(urlDetalle(String(item.numeroConvocatoria ?? item.id)), opciones));
         for (const [i, item] of interesantes.entries()) {
             let detalle = detalles[i];
             if (detalle?.error) {
@@ -95,10 +99,28 @@ async function* leer(ctx) {
             }
             yield aConvocatoria(item, detalle, config.zonaHoraria);
         }
-        const total = Number(datos?.totalPages ?? 0);
-        const tope = Math.min(total || config.bdnsMaxPaginas, config.bdnsMaxPaginas);
-        progreso((pagina + 1) / tope, `página ${pagina + 1} de ${tope}`);
-        if (items.length < TAM_PAGINA || (total && pagina + 1 >= total)) break;
+        hechas++;
+        progreso(hechas / tope, `página ${hechas} de ${tope}`);
+    }
+
+    yield* procesar(primera);
+    if (arr(primera?.content).length < TAM_PAGINA) return;
+    if (!totalPaginas) {
+        // Sin total conocido: página a página hasta que se acaben
+        for (let pagina = 1; pagina < config.bdnsMaxPaginas; pagina++) {
+            const datos = await listado(pagina);
+            yield* procesar(datos);
+            if (arr(datos?.content).length < TAM_PAGINA) return;
+        }
+        return;
+    }
+    for (let desdePag = 1; desdePag < tope; desdePag += 4) {
+        const paginas = Array.from({ length: Math.min(4, tope - desdePag) }, (_, i) => desdePag + i);
+        const lote = await enParalelo(paginas, 4, (pg) => listado(pg));
+        for (const datos of lote) {
+            if (datos?.error) throw datos.error;
+            yield* procesar(datos);
+        }
     }
 }
 

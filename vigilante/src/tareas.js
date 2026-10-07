@@ -85,21 +85,27 @@ async function trabajarClientes(db, config, { clienteId = null, avisos = true, l
  * Para un cliente recién dado de alta: vuelve a leer las fuentes más días hacia atrás
  * (lo que antes no coincidía con nada no estaba guardado) y lo cruza con él.
  */
-async function rastrearCliente(db, config, clienteId, { log = console.log, progreso = () => {} } = {}) {
+async function rastrearCliente(db, config, clienteId, { log = console.log, progreso = () => {}, pedirFn } = {}) {
     const cfg = {
         ...config,
         bdnsMaxPaginas: Math.max(config.bdnsMaxPaginas, config.rastreoMaxPaginas),
         placspMaxPaginas: Math.max(config.placspMaxPaginas, 60),
     };
+    // Solo las fuentes que sirven a lo que busca el cliente: BDNS para subvenciones,
+    // PLACSP y TED para licitaciones, BOE para ambas
+    const cliente = (await db.query('SELECT intereses FROM cliente WHERE id = $1', [clienteId])).rows[0];
+    const intereses = new Set(cliente?.intereses?.length ? cliente.intereses : ['subvencion']);
+    const FUENTE_TIPO = { BDNS: ['subvencion'], PLACE: ['licitacion'], TED: ['licitacion'], BOE: ['subvencion', 'licitacion'] };
+    const fuentes = config.fuentes.filter((f) => (FUENTE_TIPO[f] || ['subvencion', 'licitacion']).some((t) => intereses.has(t)));
     // Fuente a fuente: al terminar cada una se cruza con el cliente, para que las
     // oportunidades vayan apareciendo sin esperar a leerlo todo
-    const fuentes = config.fuentes;
     const avance = progresoVigilancia(tramo(progreso, 0, 70));
     const vigilancia = {};
     const cruces = {};
     for (const [k, fuente] of fuentes.entries()) {
         Object.assign(vigilancia, await vigilar(db, cfg, {
-            fuentes: [fuente], dias: config.diasRastreo, log,
+            fuentes: [fuente], dias: fuente === 'BDNS' ? (config.diasRastreoBdns ?? 365) : config.diasRastreo, log,
+            ...(pedirFn ? { pedirFn } : {}),
             progreso: (p) => avance(p.leidas !== undefined ? p : { ...p, indice: k, total: fuentes.length }),
         }));
         const c = await cruzarClientes(db, { clienteId, log });

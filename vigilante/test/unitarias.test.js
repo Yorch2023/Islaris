@@ -283,3 +283,25 @@ test('clientes: fuera las ayudas que no son para empresas', () => {
     // Sin dato de beneficiarios (BOE) se mantiene
     assert.equal(clientes.coincideCliente(k, { ...base, titulo: 'Convocatoria de eficiencia energética' }).origen, 'palabra_clave');
 });
+
+test('BDNS: lee todas las páginas (en paralelo) y en orden', async () => {
+    const bdnsL = require('../src/fuentes/bdns');
+    const pedidas = [];
+    const pedir = async (url) => {
+        const pagina = Number(new URL(url).searchParams.get('page'));
+        if (url.includes('/busqueda?')) {
+            pedidas.push(pagina);
+            const n = pagina < 2 ? 50 : 10;
+            return { totalPages: 3, content: Array.from({ length: n }, (_, i) => ({ numeroConvocatoria: String(pagina * 100 + i), descripcion: `Ayuda ${pagina}-${i}` })) };
+        }
+        return { fechaFinSolicitud: '2099-01-01' };
+    };
+    const vistos = [];
+    const avances = [];
+    const ctx = { desde: '2026-01-01', hasta: '2026-10-07', pedir, log: () => {}, progreso: (f) => avances.push(f),
+        config: { bdnsMaxPaginas: 100, zonaHoraria: 'Europe/Madrid' }, interesa: (c) => c.titulo.endsWith('-0') };
+    for await (const c of bdnsL.leer(ctx)) vistos.push(c.external_id);
+    assert.deepEqual(pedidas.sort(), [0, 1, 2]);
+    assert.deepEqual(vistos, ['0', '100', '200']);
+    assert.equal(avances.at(-1), 1);
+});
