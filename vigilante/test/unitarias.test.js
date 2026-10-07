@@ -267,3 +267,19 @@ test('en paralelo: respeta el límite, mantiene el orden y recoge errores', asyn
     assert.deepEqual(r.filter((x) => typeof x === 'number'), [60, 20, 40, 10]);
     assert.equal(r[3].error.message, 'falla');
 });
+
+test('clientes: fuera las ayudas que no son para empresas', () => {
+    const k = clientes.compilarClienteBusqueda({ id: 1, intereses: ['subvencion'], palabras_clave: ['eficiencia energética'],
+        isla: 'Tenerife', incluir_territorio: true, territorios: [] });
+    const base = { tipo: 'subvencion', organismo_texto: 'CABILDO INSULAR DE TENERIFE' };
+    const hogar = { ...base, titulo: 'Ayudas a la eficiencia energética en viviendas',
+        resumen: 'Beneficiarios: PERSONAS FÍSICAS QUE NO DESARROLLAN ACTIVIDAD ECONÓMICA' };
+    assert.equal(clientes.soloParaNoEmpresas(hogar), true);
+    assert.equal(clientes.coincideCliente(k, hogar), null);
+    const pymes = { ...base, titulo: 'Ayudas a la eficiencia energética',
+        resumen: 'Beneficiarios: PYME Y PERSONAS FÍSICAS QUE DESARROLLAN ACTIVIDAD ECONÓMICA, PERSONAS FÍSICAS QUE NO DESARROLLAN ACTIVIDAD ECONÓMICA' };
+    assert.equal(clientes.coincideCliente(k, pymes).origen, 'palabra_clave');
+    assert.equal(clientes.coincideCliente(k, { ...base, titulo: 'Becas', resumen: 'Beneficiarios: GRAN EMPRESA' }).origen, 'territorio');
+    // Sin dato de beneficiarios (BOE) se mantiene
+    assert.equal(clientes.coincideCliente(k, { ...base, titulo: 'Convocatoria de eficiencia energética' }).origen, 'palabra_clave');
+});

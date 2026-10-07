@@ -39,8 +39,22 @@ function compilarClienteBusqueda(cliente) {
  * si es una subvención, porque la convoca un organismo de su territorio.
  * Devuelve { origen, coincidencias } o null.
  */
+/**
+ * ¿La convocatoria es solo para quien no es empresa? La BDNS publica el tipo de
+ * beneficiario («Personas físicas que no desarrollan actividad económica», «PYME y
+ * personas físicas que desarrollan actividad económica», «Gran empresa»…). Sin ese dato
+ * (BOE, licitaciones) se da por posible.
+ */
+function soloParaNoEmpresas(c) {
+    const linea = String(c.resumen || '').split('\n').find((l) => /^Beneficiarios:/i.test(l));
+    if (!linea) return false;
+    const t = normalizar(linea);
+    return !(/\bpyme\b|gran empresa|(?<!no )desarrollan actividad economica|sin informacion/.test(t));
+}
+
 function coincideCliente(k, c) {
     if (!k.intereses.has(c.tipo)) return null;
+    if (c.tipo === 'subvencion' && soloParaNoEmpresas(c)) return null;
     const texto = { crudo: `${c.titulo || ''}\n${c.resumen || ''}`, norm: normalizar(`${c.titulo || ''}\n${c.resumen || ''}`) };
     const coincidencias = k.palabras
         .filter((p) => p.regex.test(p.sigla ? texto.crudo : texto.norm))
@@ -80,6 +94,17 @@ async function cruzarClientes(db, { clienteId = null, log = console.log } = {}) 
     const resumen = {};
     for (const cliente of clientes) {
         const k = compilarClienteBusqueda(cliente);
+        // Cruces aún sin evaluar ni tocar que ya no cumplen los criterios: fuera
+        const viejos = (await db.query(`
+            SELECT cc.convocatoria_id, c.tipo, c.titulo, c.resumen, c.organismo_texto
+              FROM cliente_convocatoria cc JOIN convocatoria c ON c.id = cc.convocatoria_id
+             WHERE cc.cliente_id = $1 AND cc.evaluado_at IS NULL AND cc.estado = 'sugerida'`, [cliente.id])).rows;
+        const sobran = viejos.filter((c) => !coincideCliente(k, c)).map((c) => c.convocatoria_id);
+        if (sobran.length) {
+            await db.query('DELETE FROM cliente_convocatoria WHERE cliente_id = $1 AND convocatoria_id = ANY ($2::bigint[])',
+                [cliente.id, sobran]);
+            log(`Cliente "${cliente.razon_social}": ${sobran.length} cruces retirados (no son para empresas o ya no coinciden)`);
+        }
         const { rows } = await db.query(`
             SELECT c.id, c.tipo, c.titulo, c.resumen, c.organismo_texto
               FROM convocatoria c
@@ -429,7 +454,7 @@ async function avisarClientes(db, config, { log = console.log, transporte } = {}
 }
 
 module.exports = {
-    territoriosDe, compilarClienteBusqueda, pendientesDeEvaluar, coincideCliente, clientesActivos, cruzarClientes,
+    territoriosDe, compilarClienteBusqueda, pendientesDeEvaluar, soloParaNoEmpresas, coincideCliente, clientesActivos, cruzarClientes,
     evaluarEncajes, sugerirPalabras, fichaCliente, oportunidades, componerPaqueteIslaris, paqueteIslaris,
     avisarClientes, ESQUEMA_ENCAJE,
 };
