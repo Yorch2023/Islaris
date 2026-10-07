@@ -616,7 +616,8 @@ function formCliente(c, k) {
     <form id="form-cliente" class="formulario">
       <h4 class="ancho">La empresa</h4>
       <label>Razón social *<input name="razon_social" required value="${v(k?.razon_social)}"></label>
-      <label>CIF<input name="cif" value="${v(k?.cif)}"></label>
+      <label>CIF / NIF<input name="cif" value="${v(k?.cif)}">
+        <span class="fila" style="justify-content:start;align-items:center"><button type="button" id="btn-buscar-nif">Buscar datos por NIF</button><span id="nif-estado" class="meta"></span></span></label>
       <label>Forma jurídica<input name="forma_juridica" placeholder="SL, autónomo, cooperativa…" value="${v(k?.forma_juridica)}"></label>
       <label>Isla<select name="isla">${['', 'Tenerife', 'Gran Canaria', 'Lanzarote', 'Fuerteventura', 'La Palma', 'La Gomera', 'El Hierro'].map((i) => `<option ${k?.isla === i ? 'selected' : ''}>${i}</option>`).join('')}</select></label>
       <label>Municipio<input name="municipio" value="${v(k?.municipio)}"></label>
@@ -625,6 +626,7 @@ function formCliente(c, k) {
       <label>Empleados<input name="empleados" type="number" min="0" value="${v(k?.empleados)}"></label>
       <label>Facturación último año (€)<input name="facturacion" type="number" step="0.01" value="${v(k?.facturacion)}"></label>
       <label>Fecha de constitución<input name="fecha_constitucion" type="date" value="${k?.fecha_constitucion ? new Date(k.fecha_constitucion).toISOString().slice(0, 10) : ''}"></label>
+      <div id="datos-encontrados" class="ancho"></div>
       <h4 class="ancho">Qué quiere financiar</h4>
       <label class="ancho">Proyecto o inversión<textarea name="proyecto" rows="3">${v(k?.proyecto)}</textarea></label>
       <label>Importe aproximado (€)<input name="proyecto_importe" type="number" step="0.01" value="${v(k?.proyecto_importe)}"></label>
@@ -651,6 +653,52 @@ function formCliente(c, k) {
       </div>
     </form>`;
   const form = $('#form-cliente');
+  // NIF: validación al salir del campo y búsqueda de datos en internet
+  const validarCampoNif = async () => {
+    const nif = form.elements.cif.value.trim();
+    if (!nif) { $('#nif-estado').textContent = ''; return; }
+    const r = await api(`/api/empresa/validar?nif=${encodeURIComponent(nif)}`).catch(() => null);
+    if (!r) return;
+    $('#nif-estado').textContent = r.valido ? `✓ válido · ${r.forma_juridica}` : '✗ el dígito de control no cuadra';
+    if (r.valido && !form.elements.forma_juridica.value) form.elements.forma_juridica.value = r.forma_juridica || '';
+  };
+  form.elements.cif.addEventListener('change', validarCampoNif);
+  validarCampoNif();
+  $('#btn-buscar-nif').addEventListener('click', async (e) => {
+    const cif = form.elements.cif.value.trim();
+    const razon = form.elements.razon_social.value.trim();
+    if (!cif && !razon) return avisar('Escribe el NIF (o la razón social) primero');
+    e.target.disabled = true; e.target.textContent = 'Buscando en internet…';
+    try {
+      const d = await api('/api/empresa/buscar', { method: 'POST', body: { cif, razon_social: razon } });
+      const poner = (campo, valor, siempre = false) => {
+        const el = form.elements[campo];
+        if (el && valor !== null && valor !== undefined && valor !== '' && (siempre || !el.value.trim())) el.value = valor;
+      };
+      poner('cif', d.cif, true);
+      poner('razon_social', d.razon_social);
+      poner('forma_juridica', d.forma_juridica);
+      poner('cnae', (d.cnae || []).map((x) => x.codigo).join(', '));
+      poner('actividad', d.actividad);
+      poner('municipio', d.municipio);
+      if (d.isla && [...form.elements.isla.options].some((o) => o.value === d.isla)) poner('isla', d.isla);
+      poner('fecha_constitucion', d.fecha_constitucion);
+      poner('empleados', d.empleados);
+      poner('facturacion', d.facturacion);
+      $('#datos-encontrados').innerHTML = d.sin_ia
+        ? '<p class="meta">Sin clave de Claude solo se comprueba el NIF y se deduce la forma jurídica. El resto, a mano.</p>'
+        : `<div class="bloque"><h4>${d.encontrada ? 'Datos encontrados (revísalos antes de guardar)' : 'No se ha podido identificar la empresa con seguridad'}</h4>
+          ${(d.cnae || []).length ? `<p>CNAE: ${d.cnae.map((x) => `<strong>${esc(x.codigo)}</strong> ${esc(x.descripcion)}`).join(' · ')}</p>` : ''}
+          ${d.domicilio ? `<p class="meta">Domicilio: ${esc(d.domicilio)}</p>` : ''}
+          ${d.anio_datos ? `<p class="meta">Plantilla y ventas del ejercicio ${esc(d.anio_datos)}</p>` : ''}
+          ${(d.avisos || []).map((a) => `<p class="etiqueta dudosa">${esc(a)}</p>`).join(' ')}
+          ${(d.fuentes || []).length ? `<p class="meta">Fuentes: ${d.fuentes.map((u) => enlace(u)).join(' · ')}</p>` : ''}</div>`;
+      validarCampoNif();
+      avisar(d.sin_ia ? 'NIF comprobado. Para buscar el resto en internet hace falta la clave de Claude'
+        : d.encontrada ? 'Datos cargados: revísalos y pulsa Guardar' : 'No se encontraron datos fiables');
+    } catch (err) { avisar(err.message); }
+    e.target.disabled = false; e.target.textContent = 'Buscar datos por NIF';
+  });
   $('#btn-cancelar-cliente').addEventListener('click', () => verClientes(c));
   $('#btn-borrar-cliente')?.addEventListener('click', async () => {
     if (!confirm('¿Borrar este cliente y sus oportunidades?')) return;

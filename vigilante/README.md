@@ -51,6 +51,11 @@ un expediente es la referencia de texto `expediente_ref`.
 En la pestaña **Clientes** se da de alta la ficha de una empresa (actividad, isla, tamaño,
 proyecto que quiere financiar, minimis recibido, si busca subvenciones o licitaciones…) y
 las palabras clave que la describen (el botón «Sugerir con IA» las propone a partir de la ficha).
+Al escribir el NIF se comprueba el dígito de control y se deduce la forma jurídica; el botón
+«Buscar datos por NIF» busca en internet (con Claude) la razón social, el CNAE, la actividad,
+el domicilio, la fecha de constitución, la plantilla y las ventas, con las fuentes consultadas
+y los avisos si las fuentes no coinciden. Los datos se proponen en el formulario y no se
+guardan hasta pulsar «Guardar».
 
 - El vigilante guarda también lo que solo interesa a los clientes (marcado `solo_clientes`,
   fuera del feed del grupo) y lo cruza con cada ficha: por palabra clave o, en subvenciones,

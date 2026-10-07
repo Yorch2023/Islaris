@@ -9,6 +9,7 @@ const crypto = require('crypto');
 const lectores = require('./fuentes');
 const { iniciarPlanificador, ciclo, trabajarClientes, rastrearCliente } = require('./tareas');
 const clientesMod = require('./clientes');
+const { validarNif, buscarDatosEmpresa } = require('./empresa');
 const { analizar } = require('./analisis');
 const { triarUna, guardarTriaje, crearCliente } = require('./triaje');
 const { detectarSubtipo } = require('./subtipo');
@@ -286,6 +287,12 @@ function crearServidor(db, config, { log = console.log, planificador = null } = 
     }
 
     const rutas = [
+        ['GET', /^\/api\/empresa\/validar$/, (req, q) => validarNif(q.get('nif'))],
+        ['POST', /^\/api\/empresa\/buscar$/, async (req) => {
+            const b = await leerCuerpo(req);
+            if (!b.cif && !b.razon_social) throw new ErrorPeticion(400, 'Indica el NIF o la razón social');
+            return buscarDatosEmpresa(config, { cif: b.cif, razon_social: b.razon_social });
+        }],
         ['GET', /^\/api\/clientes$/, () => listarClientes(db)],
         ['POST', /^\/api\/clientes$/, async (req) => {
             const k = await guardarFichaCliente(db, null, await leerCuerpo(req));

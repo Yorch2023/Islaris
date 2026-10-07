@@ -180,3 +180,41 @@ test('paquete para Islaris: ficha, convocatorias y lo que no cubre', () => {
     assert.match(md, /🟡 Amarillo \(60\/100\)/);
     assert.match(md, /REF/);
 });
+
+test('NIF: dígito de control y forma jurídica', () => {
+    const { validarNif } = require('../src/empresa');
+    assert.deepEqual(validarNif('b-38517827'), { nif: 'B38517827', valido: true, tipo: 'cif', forma_juridica: 'Sociedad limitada' });
+    assert.equal(validarNif('B38517828').valido, false);
+    assert.equal(validarNif('A85908036').forma_juridica, 'Sociedad anónima');
+    assert.equal(validarNif('12345678Z').tipo, 'dni');
+    assert.equal(validarNif('12345678A').valido, false);
+    assert.equal(validarNif('X1234567L').valido, true);
+    assert.equal(validarNif('hola').valido, false);
+});
+
+test('datos de empresa por NIF: reanuda la búsqueda web y limpia la respuesta', async () => {
+    const { buscarDatosEmpresa } = require('../src/empresa');
+    const llamadas = [];
+    const ia = { beta: { messages: { create: async (p) => {
+        llamadas.push(p);
+        if (llamadas.length === 1) return { stop_reason: 'pause_turn', model: 'm', content: [{ type: 'server_tool_use', id: 'x' }] };
+        return { stop_reason: 'end_turn', model: 'm', content: [{ type: 'text', text: JSON.stringify({
+            encontrada: true, razon_social: 'CONGELADOS PEYMAR SL', cif: 'B38517827', forma_juridica: null,
+            cnae: [{ codigo: '4632', descripcion: 'Comercio al por mayor de carne' }, { codigo: 'n/d', descripcion: 'x' }],
+            actividad: 'Mayorista de congelados', domicilio: 'Ctra. Boca Tauce, Chío', municipio: 'Guía de Isora',
+            isla: 'Tenerife', fecha_constitucion: '28/10/1998', empleados: 54, facturacion: 30000000, anio_datos: 2024,
+            fuentes: ['https://ejemplo.es'], avisos: [] }) }] };
+    } } } };
+    const d = await buscarDatosEmpresa({ modeloTriaje: 'm', anthropicApiKey: 'x' }, { cif: 'B38517827' }, { cliente: ia });
+    assert.equal(llamadas.length, 2);
+    assert.equal(llamadas[1].messages.at(-1).role, 'assistant');
+    assert.ok(llamadas[0].tools.some((t) => t.type === 'web_search_20260209'));
+    assert.deepEqual(d.cnae, [{ codigo: '4632', descripcion: 'Comercio al por mayor de carne' }]);
+    assert.equal(d.forma_juridica, 'Sociedad limitada');
+    assert.equal(d.fecha_constitucion, null); // formato no ISO: se descarta
+    assert.equal(d.nif_valido, true);
+    // Sin clave: solo lo que se deduce del NIF
+    const sin = await buscarDatosEmpresa({ anthropicApiKey: null }, { cif: 'B38517827' });
+    assert.equal(sin.sin_ia, true);
+    assert.equal(sin.forma_juridica, 'Sociedad limitada');
+});
