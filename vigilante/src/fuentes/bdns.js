@@ -75,7 +75,7 @@ function aConvocatoria(item, detalle, zona) {
 }
 
 async function* leer(ctx) {
-    const { desde, hasta, pedir, config, interesa, log } = ctx;
+    const { desde, hasta, pedir, config, interesa, log, progreso = () => {} } = ctx;
     for (let pagina = 0; pagina < config.bdnsMaxPaginas; pagina++) {
         const datos = await pedir(urlListado(desde, hasta, pagina), {
             como: 'json', cabeceras: { Accept: 'application/json' }, userAgent: config.userAgent,
@@ -95,6 +95,8 @@ async function* leer(ctx) {
             yield aConvocatoria(item, detalle, config.zonaHoraria);
         }
         const total = Number(datos?.totalPages ?? 0);
+        const tope = Math.min(total || config.bdnsMaxPaginas, config.bdnsMaxPaginas);
+        progreso((pagina + 1) / tope, `página ${pagina + 1} de ${tope}`);
         if (items.length < TAM_PAGINA || (total && pagina + 1 >= total)) break;
     }
 }

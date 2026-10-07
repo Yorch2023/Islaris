@@ -76,6 +76,23 @@ guardan hasta pulsar «Guardar».
   bloque listo para pegar en Claude. Se configura con `SMTP_*` y `VIGILANTE_EMAIL_AVISOS` en
   el `.env` (con Gmail hace falta una contraseña de aplicación).
 
+## Conexión con Claude (skill islaris-subvenciones)
+
+`mcp/servidor-mcp.js` es un conector MCP que da a la app de escritorio de Claude herramientas para
+usar el vigilante: `estado_vigilante`, `buscar_empresa` (NIF → CNAE, tamaño, ayudas y minimis en la
+BDNS), `listar_clientes`, `ver_cliente`, `guardar_cliente`, `sugerir_palabras_clave`,
+`buscar_convocatorias_cliente`, `evaluar_encaje_cliente`, `consultar_ayudas_cliente`,
+`paquete_islaris`, `ver_convocatoria` y `marcar_oportunidad`. Habla con la API web del vigilante,
+que tiene que estar en marcha.
+
+En un Mac, `bash scripts/instalar-mac.sh` deja todo funcionando solo: instala dependencias, aplica
+las migraciones, programa el arranque del vigilante al iniciar sesión (LaunchAgent, registro en
+`~/Library/Logs/vigilante.log`) y añade el conector a la configuración de la app de Claude.
+`bash scripts/instalar-mac.sh --quitar` lo deshace.
+
+Las búsquedas largas muestran una barra de progreso en la web (fase, fuente, página y porcentaje),
+y `estado_vigilante` devuelve el mismo avance a Claude.
+
 ## Puesta en marcha
 
 Requisitos: Node.js 20 o superior y PostgreSQL 15 o superior (con las extensiones `pg_trgm`

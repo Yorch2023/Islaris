@@ -7,6 +7,7 @@ const { compilarPalabras } = require('./palabras');
 const { normalizar } = require('./texto');
 const { crearCliente, fichaConvocatoria } = require('./triaje');
 const { crearTransporte, escapar, fmtFecha, fmtImporte } = require('./busquedas');
+const { tamanoEmpresa, antiguedadAnios } = require('./empresa');
 
 // ---------------------------------------------------------------------------
 // Coincidencia cliente ↔ convocatoria
@@ -60,6 +61,17 @@ async function clientesActivos(db) {
  * Cruza cada cliente activo (o uno) con las convocatorias abiertas que aún no tenía
  * vistas. Devuelve { [clienteId]: nuevas }.
  */
+async function pendientesDeEvaluar(db, clienteId = null) {
+    const { rows } = await db.query(`
+        SELECT count(*)::int AS n FROM cliente_convocatoria cc
+          JOIN cliente k ON k.id = cc.cliente_id AND k.activo
+          JOIN convocatoria c ON c.id = cc.convocatoria_id
+         WHERE cc.evaluado_at IS NULL AND cc.estado <> 'descartada'
+           AND ($1::bigint IS NULL OR cc.cliente_id = $1)
+           AND (c.fecha_limite IS NULL OR c.fecha_limite > now())`, [clienteId]);
+    return rows[0].n;
+}
+
 async function cruzarClientes(db, { clienteId = null, log = console.log } = {}) {
     const clientes = clienteId
         ? (await db.query('SELECT * FROM cliente WHERE id = $1', [clienteId])).rows
@@ -137,7 +149,13 @@ function fichaCliente(c) {
         c.proyecto_importe && `Importe del proyecto: ${fmtImporte(c.proyecto_importe)}`,
         c.proyecto_plazo && `Plazo del proyecto: ${c.proyecto_plazo}`,
         c.intereses?.length && `Le interesa: ${c.intereses.join(', ')}`,
-        c.minimis_3_anios !== null && c.minimis_3_anios !== undefined && `Ayudas de minimis en los últimos 3 años: ${fmtImporte(c.minimis_3_anios)}`,
+        tamanoEmpresa(c) && `Tamaño orientativo: ${tamanoEmpresa(c)} (por plantilla y facturación; revisar empresas asociadas o vinculadas)`,
+        c.fecha_constitucion && `Antigüedad: ${antiguedadAnios(c.fecha_constitucion)} años`,
+        c.minimis_3_anios !== null && c.minimis_3_anios !== undefined && `Ayudas de minimis en los últimos 3 años: ${fmtImporte(c.minimis_3_anios)}`
+            + (c.ayudas_recibidas?.resumen_minimis ? ` según la BDNS (margen hasta el tope general de 300.000 €: ${fmtImporte(c.ayudas_recibidas.resumen_minimis.margen)})` : ''),
+        c.ayudas_recibidas?.concesiones?.length && `Ayudas concedidas antes según la BDNS: ${c.ayudas_recibidas.concesiones.slice(0, 6)
+            .map((a) => `${a.convocatoria || 'convocatoria sin nombre'} (${a.organo || 'organismo n/d'}, ${a.fecha || 's/f'}, ${fmtImporte(a.importe)})`).join('; ')}`
+            + (c.ayudas_recibidas.concesiones.length > 6 ? ` y ${c.ayudas_recibidas.concesiones.length - 6} más` : ''),
         c.al_corriente !== null && c.al_corriente !== undefined && `Al corriente con AEAT, Seguridad Social y ATC: ${c.al_corriente ? 'sí' : 'no'}`,
         c.servicios_licitacion && `Servicios que vende a la Administración: ${c.servicios_licitacion}`,
         c.certificaciones && `Certificaciones y solvencia: ${c.certificaciones}`,
@@ -172,7 +190,7 @@ async function evaluarUna(cli, config, cliente, conv) {
 
 /** Evalúa con Claude los cruces pendientes. Sin ANTHROPIC_API_KEY no hace nada. */
 async function evaluarEncajes(db, config, { clienteId = null, limite = config.encajeLote ?? 60,
-    log = console.log, cliente: cli } = {}) {
+    log = console.log, cliente: cli, alAvanzar = () => {} } = {}) {
     if (!config.anthropicApiKey && !cli) return { evaluadas: 0, errores: 0, omitido: true };
     const anthropic = cli || crearCliente(config);
     const { rows } = await db.query(`
@@ -188,7 +206,8 @@ async function evaluarEncajes(db, config, { clienteId = null, limite = config.en
     const fichas = new Map();
     let evaluadas = 0;
     let errores = 0;
-    for (const fila of rows) {
+    for (const [i, fila] of rows.entries()) {
+        alAvanzar(i, rows.length);
         try {
             if (!fichas.has(fila.cliente_id)) {
                 fichas.set(fila.cliente_id, (await db.query('SELECT * FROM cliente WHERE id = $1', [fila.cliente_id])).rows[0]);
@@ -406,7 +425,7 @@ async function avisarClientes(db, config, { log = console.log, transporte } = {}
 }
 
 module.exports = {
-    territoriosDe, compilarClienteBusqueda, coincideCliente, clientesActivos, cruzarClientes,
+    territoriosDe, compilarClienteBusqueda, pendientesDeEvaluar, coincideCliente, clientesActivos, cruzarClientes,
     evaluarEncajes, sugerirPalabras, fichaCliente, oportunidades, componerPaqueteIslaris, paqueteIslaris,
     avisarClientes, ESQUEMA_ENCAJE,
 };

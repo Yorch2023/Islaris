@@ -88,9 +88,11 @@ function aConvocatoria(n, zona) {
 }
 
 async function* leer(ctx) {
-    const { desde, hasta, pedir, config, palabras } = ctx;
+    const { desde, hasta, pedir, config, palabras, progreso = () => {} } = ctx;
     const vistos = new Set();
-    for (const query of construirConsultas(palabras, desde, hasta)) {
+    const consultas = construirConsultas(palabras, desde, hasta);
+    for (const [q, query] of consultas.entries()) {
+        progreso(q / consultas.length, `búsqueda ${q + 1} de ${consultas.length}`);
         for (let page = 1; page <= config.tedMaxPaginas; page++) {
             const datos = await pedir(URL_BUSQUEDA, {
                 metodo: 'POST',

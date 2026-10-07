@@ -145,12 +145,19 @@ function parsearPagina(xml, zona) {
 }
 
 async function* leer(ctx) {
-    const { desde, pedir, config, log } = ctx;
-    for (const feedUrl of config.placspFeeds) {
+    const { desde, hasta, pedir, config, log, progreso = () => {} } = ctx;
+    const feeds = config.placspFeeds;
+    const span = Math.max(1, Date.parse(hasta) - Date.parse(desde) + 86400000);
+    for (const [f, feedUrl] of feeds.entries()) {
         let url = feedUrl;
         for (let pagina = 0; url && pagina < config.placspMaxPaginas; pagina++) {
             const xml = await pedir(url, { tiempo: 90000, userAgent: config.userAgent });
             const { elementos, siguiente, masAntigua } = parsearPagina(xml, config.zonaHoraria);
+            // Avance: cuánto del periodo pedido se ha cubierto ya en este feed
+            const cubierto = masAntigua ? (Date.parse(hasta) + 86400000 - Date.parse(masAntigua)) / span : 0;
+            const enFeed = Math.max(cubierto, (pagina + 1) / config.placspMaxPaginas);
+            progreso((f + Math.min(1, enFeed)) / feeds.length,
+                `feed ${f + 1} de ${feeds.length}, página ${pagina + 1}${masAntigua ? `, anuncios del ${masAntigua.slice(0, 10).split('-').reverse().join('/')}` : ''}`);
             yield* elementos;
             // El feed va de más reciente a más antiguo: paramos al pasar de la fecha de corte
             if (masAntigua && masAntigua.slice(0, 10) < desde) break;

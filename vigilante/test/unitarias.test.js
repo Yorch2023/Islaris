@@ -218,3 +218,36 @@ test('datos de empresa por NIF: reanuda la búsqueda web y limpia la respuesta',
     assert.equal(sin.sin_ia, true);
     assert.equal(sin.forma_juridica, 'Sociedad limitada');
 });
+
+test('BDNS por NIF: concesiones, minimis de 3 años y filtro por beneficiario', async () => {
+    const { ayudasRecibidas } = require('../src/fuentes/bdns-beneficiario');
+    const pedidas = [];
+    const pedir = async (url) => {
+        pedidas.push(url);
+        if (url.includes('/minimis/')) {
+            return { content: [
+                { codigoConcesion: 'M1', fechaConcesion: '2025-03-01', beneficiario: 'B38517827 CONGELADOS PEYMAR SL', ayudaEquivalente: 12000, convocante: 'CABILDO DE TENERIFE' },
+                { codigoConcesion: 'M2', fechaConcesion: '2021-01-01', beneficiario: 'B38517827 CONGELADOS PEYMAR SL', ayudaEquivalente: 50000 },
+                { codigoConcesion: 'M3', fechaConcesion: '2025-05-01', beneficiario: 'B00000000 OTRA SL', ayudaEquivalente: 99999 },
+            ], totalPages: 1 };
+        }
+        return { content: [{ codConcesion: 'C1', fechaConcesion: '2025-03-01', beneficiario: 'B38517827 CONGELADOS PEYMAR SL', importe: 12000, convocatoria: 'Ayudas al comercio', nivel1: 'CANARIAS' }], totalPages: 1 };
+    };
+    const r = await ayudasRecibidas('b-38517827', { pedir, hoy: new Date('2026-10-07T12:00:00Z') });
+    assert.ok(pedidas.every((u) => u.includes('nifCif=B38517827')));
+    assert.equal(r.concesiones.length, 1);
+    assert.equal(r.concesiones[0].organo, 'CANARIAS');
+    assert.equal(r.minimis.length, 2); // la de otro NIF se descarta
+    assert.equal(r.resumen_minimis.consumido_3_anios, 12000); // la de 2021 queda fuera de la ventana
+    assert.equal(r.resumen_minimis.margen, 288000);
+});
+
+test('tamaño de empresa y antigüedad', () => {
+    const { tamanoEmpresa, antiguedadAnios } = require('../src/empresa');
+    assert.equal(tamanoEmpresa({ empleados: 5, facturacion: 300000 }), 'microempresa');
+    assert.equal(tamanoEmpresa({ empleados: 30, facturacion: 3e6 }), 'pequeña empresa');
+    assert.equal(tamanoEmpresa({ empleados: 70, facturacion: 33e6 }), 'mediana empresa');
+    assert.equal(tamanoEmpresa({ empleados: 300 }), 'gran empresa');
+    assert.equal(tamanoEmpresa({}), null);
+    assert.equal(antiguedadAnios('1998-10-28', new Date('2026-10-07')), 27);
+});

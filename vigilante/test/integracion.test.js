@@ -401,3 +401,17 @@ test('API de clientes: alta, cruce inmediato, cambio de estado y paquete', opcio
         servidor.close();
     }
 });
+
+test('progreso: vigilar informa por fuente y el porcentaje avanza', opciones, async () => {
+    const eventos = [];
+    await vigilar(db, { ...CONFIG, fuentes: ['BDNS', 'BOE'] }, { log: silencio, pedirFn: pedirFalso, progreso: (p) => eventos.push(p) });
+    assert.ok(eventos.some((e) => e.fuente === 'BDNS' && /página 1 de 1/.test(e.detalle || '')));
+    assert.ok(eventos.some((e) => e.fuente === 'BOE' && /sumario del/.test(e.detalle || '')));
+    assert.ok(eventos.every((e) => e.total === 2));
+
+    const { trabajarClientes } = require('../src/tareas');
+    const pcts = [];
+    await trabajarClientes(db, { ...CONFIG, anthropicApiKey: null, emailAvisos: null }, { log: silencio, progreso: (p) => pcts.push(p.porcentaje) });
+    assert.equal(pcts[0], 0);
+    assert.equal(pcts.at(-1), 100);
+});

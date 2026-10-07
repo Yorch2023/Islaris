@@ -5,6 +5,29 @@
 
 const { crearCliente } = require('./triaje');
 
+/**
+ * Tamaño según la Recomendación 2003/361/CE con plantilla y volumen de negocio (sin
+ * balance ni empresas asociadas o vinculadas: es orientativo).
+ */
+function tamanoEmpresa({ empleados, facturacion }) {
+    const e = empleados === null || empleados === undefined || empleados === '' ? null : Number(empleados);
+    const f = facturacion === null || facturacion === undefined || facturacion === '' ? null : Number(facturacion);
+    if (e === null && f === null) return null;
+    const cumple = (maxE, maxF) => (e === null || e < maxE) && (f === null || f <= maxF);
+    if (cumple(10, 2e6)) return 'microempresa';
+    if (cumple(50, 10e6)) return 'pequeña empresa';
+    if (cumple(250, 50e6)) return 'mediana empresa';
+    return 'gran empresa';
+}
+
+/** Años desde la constitución (para líneas de startups y empresas jóvenes). */
+function antiguedadAnios(fecha, hoy = new Date()) {
+    if (!fecha) return null;
+    const d = new Date(fecha);
+    if (Number.isNaN(d.getTime())) return null;
+    return Math.floor((hoy - d) / (365.25 * 86400000));
+}
+
 // Primera letra del CIF → forma jurídica (Orden EHA/451/2008)
 const FORMA_POR_LETRA = {
     A: 'Sociedad anónima', B: 'Sociedad limitada', C: 'Sociedad colectiva', D: 'Sociedad comanditaria',
@@ -164,4 +187,4 @@ async function buscarDatosEmpresa(config, { cif, razon_social: razonSocial } = {
     };
 }
 
-module.exports = { validarNif, buscarDatosEmpresa, ESQUEMA_EMPRESA, FORMA_POR_LETRA };
+module.exports = { validarNif, buscarDatosEmpresa, tamanoEmpresa, antiguedadAnios, ESQUEMA_EMPRESA, FORMA_POR_LETRA };

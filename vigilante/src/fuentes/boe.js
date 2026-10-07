@@ -68,8 +68,11 @@ function aConvocatoria({ seccion, dep, epi, item }, ymd, zona) {
 }
 
 async function* leer(ctx) {
-    const { desde, hasta, pedir, config } = ctx;
+    const { desde, hasta, pedir, config, progreso = () => {} } = ctx;
+    const totalDias = Math.round((Date.parse(hasta) - Date.parse(desde)) / 86400000) + 1;
+    let n = 0;
     for (let dia = desde; dia <= hasta; dia = sumarDias(dia, 1)) {
+        progreso(n++ / totalDias, `sumario del ${dia.split('-').reverse().join('/')} (${n} de ${totalDias})`);
         // 404 = ese día no hay BOE (domingos)
         const json = await pedir(urlSumario(dia), {
             como: 'json', aceptar404: true, cabeceras: { Accept: 'application/json' }, userAgent: config.userAgent,

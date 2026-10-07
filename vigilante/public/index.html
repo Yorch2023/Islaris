@@ -85,6 +85,11 @@ dialog form { display: flex; flex-direction: column; gap: 10px; }
 .semaforo.verde { background: #2e9d5b; } .semaforo.amarillo { background: #e0a400; } .semaforo.rojo { background: #d0453b; }
 .formulario h4 { margin: 8px 0 0; font-size: 13px; color: var(--suave); text-transform: uppercase; letter-spacing: .04em; }
 #dlg-islaris { width: min(760px, 94%); } #dlg-islaris textarea { width: 100%; font-family: ui-monospace, monospace; font-size: 12px; }
+#barra-progreso { position: sticky; top: 53px; z-index: 4; background: var(--panel); border-bottom: 1px solid var(--borde); padding: 8px 20px 10px; }
+.barra-texto { display: flex; gap: 8px; align-items: baseline; flex-wrap: wrap; font-size: 13px; margin-bottom: 6px; }
+#barra-pct { margin-left: auto; font-variant-numeric: tabular-nums; font-weight: 600; }
+.barra-fondo { height: 8px; background: var(--acento-suave); border-radius: 999px; overflow: hidden; }
+.barra-relleno { height: 100%; width: 0; background: var(--acento); border-radius: 999px; transition: width .6s ease; }
 .registro { font-family: ui-monospace, monospace; font-size: 12px; white-space: pre-wrap; background: var(--panel); border: 1px solid var(--borde); border-radius: 8px; padding: 10px; max-height: 260px; overflow: auto; }
 @media (max-width: 720px) {
   .tarjeta { grid-template-columns: 1fr; }
@@ -103,6 +108,10 @@ dialog form { display: flex; flex-direction: column; gap: 10px; }
     <button id="btn-usuario" title="Usuario y token"></button>
   </div>
 </header>
+<div id="barra-progreso" hidden>
+  <div class="barra-texto"><strong id="barra-trabajo"></strong> <span id="barra-fase"></span> <span id="barra-detalle" class="meta"></span><span id="barra-pct"></span></div>
+  <div class="barra-fondo"><div class="barra-relleno" id="barra-relleno"></div></div>
+</div>
 <main id="contenido"></main>
 <aside id="ficha" aria-label="Ficha de la convocatoria"></aside>
 <div id="aviso" role="status"></div>
@@ -574,6 +583,23 @@ async function verSalud(c) {
 const SEMAFORO_TXT = { verde: 'Verde', amarillo: 'Amarillo', rojo: 'Rojo' };
 const ESTADOS_OP = [['sugerida', 'Sugerida'], ['en_estudio', 'En estudio'], ['propuesta', 'Propuesta enviada'], ['descartada', 'Descartada']];
 
+function htmlAyudas(a) {
+  if (!a) return '';
+  if (a.error) return `<p class="etiqueta dudosa">No se pudo consultar la BDNS: ${esc(a.error)}</p>`;
+  const r = a.resumen_minimis || {};
+  const filas = [...(a.minimis || []).map((x) => ({ ...x, esMinimis: true })), ...(a.concesiones || [])]
+    .filter((x, i, l) => !x.codigo || l.findIndex((y) => y.codigo === x.codigo) === i)
+    .sort((x, y) => String(y.fecha).localeCompare(String(x.fecha)));
+  return `<div class="bloque"><h4>Ayudas recibidas según la BDNS</h4>
+    <p><strong>Minimis últimos 3 años:</strong> ${esc(importe(r.consumido_3_anios || 0))} de ${esc(importe(r.tope_general || 300000))}
+      · <strong>margen ${esc(importe(r.margen ?? 300000))}</strong> <span class="meta">(desde ${esc(r.desde || '')}; tope general, hay topes sectoriales menores)</span></p>
+    ${filas.length ? `<div class="tabla-scroll"><table><tr><th>Fecha</th><th>Convocatoria</th><th>Órgano</th><th>Importe</th><th></th></tr>
+      ${filas.slice(0, 30).map((x) => `<tr><td>${esc(x.fecha || '')}</td><td>${esc(x.convocatoria || '')}</td><td>${esc(x.organo || '')}</td>
+        <td class="num">${esc(importe(x.importe))}</td><td>${x.esMinimis ? '<span class="etiqueta dudosa">minimis</span>' : ''}</td></tr>`).join('')}</table></div>`
+      : '<p class="meta">No consta ninguna ayuda publicada con este NIF.</p>'}
+    <p class="meta">Consultado ${esc(fecha(a.consultado_at))}. La BDNS no recoge todo (por ejemplo, algunas ayudas a productos como la REA): pregunta siempre al cliente.</p></div>`;
+}
+
 function punto(s) {
   return `<span class="semaforo ${esc(s || 'gris')}" title="${esc(SEMAFORO_TXT[s] || 'Sin evaluar')}"></span>`;
 }
@@ -653,6 +679,7 @@ function formCliente(c, k) {
       </div>
     </form>`;
   const form = $('#form-cliente');
+  let extra = {}; // datos_registro y ayudas_recibidas del autocompletado, se guardan con la ficha
   // NIF: validación al salir del campo y búsqueda de datos en internet
   const validarCampoNif = async () => {
     const nif = form.elements.cif.value.trim();
@@ -685,6 +712,14 @@ function formCliente(c, k) {
       poner('fecha_constitucion', d.fecha_constitucion);
       poner('empleados', d.empleados);
       poner('facturacion', d.facturacion);
+      if (d.ayudas && !d.ayudas.error) {
+        poner('minimis_3_anios', d.ayudas.resumen_minimis?.consumido_3_anios, true);
+        extra.ayudas_recibidas = d.ayudas;
+      }
+      if (!d.sin_ia) {
+        extra.datos_registro = { domicilio: d.domicilio, cnae: d.cnae, anio_datos: d.anio_datos, fuentes: d.fuentes,
+          avisos: d.avisos, consultado_at: new Date().toISOString() };
+      }
       $('#datos-encontrados').innerHTML = d.sin_ia
         ? '<p class="meta">Sin clave de Claude solo se comprueba el NIF y se deduce la forma jurídica. El resto, a mano.</p>'
         : `<div class="bloque"><h4>${d.encontrada ? 'Datos encontrados (revísalos antes de guardar)' : 'No se ha podido identificar la empresa con seguridad'}</h4>
@@ -692,7 +727,9 @@ function formCliente(c, k) {
           ${d.domicilio ? `<p class="meta">Domicilio: ${esc(d.domicilio)}</p>` : ''}
           ${d.anio_datos ? `<p class="meta">Plantilla y ventas del ejercicio ${esc(d.anio_datos)}</p>` : ''}
           ${(d.avisos || []).map((a) => `<p class="etiqueta dudosa">${esc(a)}</p>`).join(' ')}
+          ${d.tamano ? `<p>Tamaño orientativo: <strong>${esc(d.tamano)}</strong> <span class="meta">(por plantilla y facturación; revisar empresas vinculadas)</span></p>` : ''}
           ${(d.fuentes || []).length ? `<p class="meta">Fuentes: ${d.fuentes.map((u) => enlace(u)).join(' · ')}</p>` : ''}</div>`;
+      $('#datos-encontrados').insertAdjacentHTML('beforeend', htmlAyudas(d.ayudas));
       validarCampoNif();
       avisar(d.sin_ia ? 'NIF comprobado. Para buscar el resto en internet hace falta la clave de Claude'
         : d.encontrada ? 'Datos cargados: revísalos y pulsa Guardar' : 'No se encontraron datos fiables');
@@ -725,6 +762,7 @@ function formCliente(c, k) {
     if (!datos.intereses.length) return avisar('Marca al menos subvenciones o licitaciones');
     datos.al_corriente = f.al_corriente === '' ? null : f.al_corriente === 'true';
     datos.incluir_territorio = f.incluir_territorio === 'true';
+    Object.assign(datos, extra);
     try {
       const r = await api(k ? `/api/clientes/${k.id}` : '/api/clientes', { method: k ? 'PATCH' : 'POST', body: datos });
       estado.clienteAbierto = r.id;
@@ -753,7 +791,12 @@ async function verCliente(c, id) {
     </div>
     <h2>${esc(k.razon_social)}</h2>
     <p class="meta">${esc([k.cif, k.forma_juridica, [k.municipio, k.isla].filter(Boolean).join(', '), k.empleados != null ? `${k.empleados} empleados` : null].filter(Boolean).join(' · '))}</p>
+    ${k.tamano ? `<p class="meta">Tamaño orientativo: ${esc(k.tamano)}${k.cnae?.length ? ` · CNAE ${esc(k.cnae.join(', '))}` : ''}</p>` : ''}
     ${k.proyecto ? `<p><strong>Proyecto:</strong> ${esc(k.proyecto)}${k.proyecto_importe ? ` (${esc(importe(k.proyecto_importe))})` : ''}</p>` : ''}
+    <details ${k.ayudas_recibidas ? '' : 'open'}><summary>Ayudas recibidas y minimis ${k.minimis_3_anios != null ? `· ${esc(importe(k.minimis_3_anios))} en 3 años` : ''}</summary>
+      ${htmlAyudas(k.ayudas_recibidas)}
+      ${k.cif ? '<button id="btn-ayudas">Consultar ayudas recibidas en la BDNS</button>' : '<p class="meta">Añade el NIF para consultarlas.</p>'}
+    </details>
     <p class="meta">Busca: ${esc((k.palabras_clave || []).join(', ') || 'sin palabras clave')}${k.incluir_territorio ? ` · territorio: ${esc(k.territorios_efectivos.join(', ') || 'no indicado')}` : ''}</p>
     ${!k.palabras_clave?.length ? '<p class="etiqueta dudosa">Añade palabras clave en «Editar ficha» (o pulsa «Sugerir con IA») para que el vigilante encuentre más.</p>' : ''}
     <div class="pestanas" style="margin-top:12px">
@@ -781,6 +824,11 @@ async function verCliente(c, id) {
     </form></dialog>`;
   $('#btn-volver').addEventListener('click', () => { estado.clienteAbierto = null; history.replaceState(null, '', '#'); verClientes(c); });
   $('#btn-editar').addEventListener('click', () => formCliente(c, k));
+  $('#btn-ayudas')?.addEventListener('click', async (e) => {
+    e.target.disabled = true; e.target.textContent = 'Consultando la BDNS…';
+    try { await api(`/api/clientes/${id}/ayudas`, { method: 'POST' }); avisar('Ayudas actualizadas'); verCliente(c, id); }
+    catch (err) { avisar(err.message); e.target.disabled = false; e.target.textContent = 'Consultar ayudas recibidas en la BDNS'; }
+  });
   c.querySelector('.pestanas').addEventListener('click', (e) => {
     const b = e.target.closest('[data-filtro]');
     if (b) { estado.filtroSemaforo = b.dataset.filtro; verCliente(c, id); }
@@ -793,7 +841,7 @@ async function verCliente(c, id) {
     try { await api(ruta, { method: 'POST' }); avisar(msg); vigilarEjecucion(); }
     catch (err) { avisar(err.message); }
   };
-  $('#btn-rastrear').addEventListener('click', () => lanzar(`/api/clientes/${id}/rastrear`, 'Buscando en las fuentes: puede tardar varios minutos. Vuelve a abrir el cliente al terminar.'));
+  $('#btn-rastrear').addEventListener('click', () => lanzar(`/api/clientes/${id}/rastrear`, 'Buscando en las fuentes: sigue el avance en la barra de arriba'));
   $('#btn-evaluar')?.addEventListener('click', () => lanzar(`/api/clientes/${id}/evaluar`, 'Evaluando el encaje con Claude…'));
   $('#btn-islaris').addEventListener('click', async () => {
     const { markdown } = await api(`/api/clientes/${id}/islaris`);
@@ -820,14 +868,34 @@ $('#btn-vigilar').addEventListener('click', async () => {
 });
 async function vigilarEjecucion() {
   const e = await api('/api/ejecucion').catch(() => null);
-  $('#estado-ejecucion').textContent = e?.enMarcha ? 'Vigilando…' : '';
-  $('#btn-vigilar').disabled = Boolean(e?.enMarcha);
-  if (e?.enMarcha) setTimeout(vigilarEjecucion, 4000);
+  const ocupado = Boolean(e?.enMarcha || e?.planificador_ocupado);
+  $('#estado-ejecucion').textContent = '';
+  $('#btn-vigilar').disabled = ocupado;
+  const barra = $('#barra-progreso');
+  if (e?.enMarcha && e.progreso) {
+    const p = e.progreso;
+    const minutos = Math.round((Date.now() - new Date(p.inicio)) / 60000);
+    barra.hidden = false;
+    $('#barra-trabajo').textContent = e.trabajo || 'Trabajando';
+    $('#barra-fase').textContent = `· ${p.fase || ''}`;
+    $('#barra-detalle').textContent = `${p.detalle || ''}${minutos ? ` · ${minutos} min` : ''}`;
+    $('#barra-pct').textContent = `${p.porcentaje || 0} %`;
+    $('#barra-relleno').style.width = `${p.porcentaje || 0}%`;
+  } else if (e?.planificador_ocupado) {
+    barra.hidden = false;
+    $('#barra-trabajo').textContent = 'Vigilancia programada en marcha';
+    $('#barra-fase').textContent = ''; $('#barra-detalle').textContent = ''; $('#barra-pct').textContent = '';
+    $('#barra-relleno').style.width = '100%';
+  } else {
+    barra.hidden = true;
+  }
+  if (!e?.enMarcha && e?.ultimo?.error && vigilarEjecucion.enMarcha) avisar(`Error: ${e.ultimo.error}`);
+  if (ocupado) setTimeout(vigilarEjecucion, 2000);
   else if (e?.ultimo && vigilarEjecucion.enMarcha) {
     if (estado.seccion === 'feed') verFeed($('#contenido'));
     if (estado.seccion === 'clientes') verClientes($('#contenido'));
   }
-  vigilarEjecucion.enMarcha = Boolean(e?.enMarcha);
+  vigilarEjecucion.enMarcha = ocupado;
 }
 
 // ---------- usuario ----------

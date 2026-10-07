@@ -46,7 +46,7 @@ function estadoInicial(c, ahora = new Date()) {
  * @returns resumen por fuente { leidas, nuevas, actualizadas, error? }
  */
 async function vigilar(db, config, { fuentes = config.fuentes, dias = config.diasAtras, log = console.log,
-    lectoresInyectados = lectores, pedirFn = pedir } = {}) {
+    lectoresInyectados = lectores, pedirFn = pedir, progreso = () => {} } = {}) {
     const palabras = compilarPalabras(await repo.cargarPalabras(db));
     const vetados = await repo.organismosVetados(db);
     const activas = new Set((await db.query('SELECT codigo FROM fuente WHERE activa')).rows.map((f) => f.codigo));
@@ -83,8 +83,14 @@ async function vigilar(db, config, { fuentes = config.fuentes, dias = config.dia
         return true;
     };
 
-    for (const codigo of fuentes) {
+    for (const [indice, codigo] of fuentes.entries()) {
         const lector = lectoresInyectados[codigo];
+        // fraccion: avance dentro de esta fuente (0-1); detalle: texto para la barra
+        const avisarProgreso = (fraccion, detalle) => progreso({
+            fuente: codigo, indice, total: fuentes.length,
+            fraccion: Math.max(0, Math.min(1, fraccion || 0)), detalle,
+        });
+        avisarProgreso(0, 'empezando');
         if (!lector) {
             log(`${codigo}: no hay lector implementado para esta fuente, se omite`);
             continue;
@@ -100,11 +106,13 @@ async function vigilar(db, config, { fuentes = config.fuentes, dias = config.dia
             desde, hasta, config, palabras: palabrasTed, log,
             interesa: (c) => interesa({ ...c }),
             pedir: (url, op) => pedirFn(url, { userAgent: config.userAgent, ...op }),
+            progreso: avisarProgreso,
         };
         let mensaje = null;
         try {
             for await (const item of lector.leer(ctx)) {
                 r.leidas++;
+                if (r.leidas % 200 === 0) progreso({ fuente: codigo, indice, total: fuentes.length, leidas: r.leidas });
                 if (!interesa(item)) continue;
                 try {
                     if (item.clase === 'adjudicacion') {

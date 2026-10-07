@@ -9,7 +9,9 @@ const crypto = require('crypto');
 const lectores = require('./fuentes');
 const { iniciarPlanificador, ciclo, trabajarClientes, rastrearCliente } = require('./tareas');
 const clientesMod = require('./clientes');
-const { validarNif, buscarDatosEmpresa } = require('./empresa');
+const { validarNif, buscarDatosEmpresa, tamanoEmpresa } = require('./empresa');
+const { ayudasRecibidas } = require('./fuentes/bdns-beneficiario');
+const { pedir } = require('./http');
 const { analizar } = require('./analisis');
 const { triarUna, guardarTriaje, crearCliente } = require('./triaje');
 const { detectarSubtipo } = require('./subtipo');
@@ -31,7 +33,8 @@ const ESTADOS_REVISION = new Set(['nueva', 'en_seguimiento', 'descartada', 'arch
 const CAMPOS_CLIENTE = ['razon_social', 'cif', 'forma_juridica', 'isla', 'municipio', 'actividad', 'cnae',
     'empleados', 'facturacion', 'fecha_constitucion', 'proyecto', 'proyecto_importe', 'proyecto_plazo',
     'intereses', 'minimis_3_anios', 'al_corriente', 'servicios_licitacion', 'certificaciones',
-    'palabras_clave', 'territorios', 'incluir_territorio', 'umbral_aviso', 'email_contacto', 'notas', 'activo'];
+    'palabras_clave', 'territorios', 'incluir_territorio', 'umbral_aviso', 'email_contacto', 'notas', 'activo',
+    'datos_registro', 'ayudas_recibidas', 'ayudas_consultadas_at'];
 const LISTAS_CLIENTE = new Set(['cnae', 'intereses', 'palabras_clave', 'territorios']);
 
 function valorCliente(k, v) {
@@ -45,6 +48,22 @@ function valorCliente(k, v) {
 }
 
 async function guardarFichaCliente(db, id, cuerpo) {
+    try {
+        return await escribirFichaCliente(db, id, cuerpo);
+    } catch (e) {
+        if (e.code === '23505' && /cif/.test(e.constraint || '')) throw new ErrorPeticion(409, 'Ya existe un cliente con ese NIF');
+        throw e;
+    }
+}
+
+async function escribirFichaCliente(db, id, cuerpoOriginal) {
+    const cuerpo = { ...cuerpoOriginal };
+    // Si llegan las ayudas de la BDNS, el minimis de 3 años sale de ellas (salvo que se indique a mano)
+    const resumen = cuerpo.ayudas_recibidas?.resumen_minimis;
+    if (resumen && !('minimis_3_anios' in cuerpo)) cuerpo.minimis_3_anios = resumen.consumido_3_anios;
+    if (cuerpo.ayudas_recibidas?.consultado_at && !cuerpo.ayudas_consultadas_at) {
+        cuerpo.ayudas_consultadas_at = cuerpo.ayudas_recibidas.consultado_at;
+    }
     const campos = CAMPOS_CLIENTE.filter((k) => k in cuerpo);
     if (!id && !cuerpo.razon_social) throw new ErrorPeticion(400, 'Falta la razón social');
     if (!campos.length) throw new ErrorPeticion(400, 'No hay datos que guardar');
@@ -80,7 +99,9 @@ async function fichaClienteCompleta(db, id) {
     const cliente = (await db.query('SELECT * FROM cliente WHERE id = $1', [id])).rows[0];
     if (!cliente) throw new ErrorPeticion(404, 'No existe ese cliente');
     const ops = await clientesMod.oportunidades(db, id, { incluirRojas: true, incluirDescartadas: true });
-    return { ...cliente, territorios_efectivos: clientesMod.territoriosDe(cliente), oportunidades: ops };
+    return {
+        ...cliente, territorios_efectivos: clientesMod.territoriosDe(cliente), tamano: tamanoEmpresa(cliente), oportunidades: ops,
+    };
 }
 
 class ErrorPeticion extends Error {
@@ -267,23 +288,33 @@ async function salud(db) {
 }
 
 function crearServidor(db, config, { log = console.log, planificador = null } = {}) {
-    const ejecuciones = { enMarcha: false, ultimo: null, registro: [] };
+    const ejecuciones = { enMarcha: false, trabajo: null, progreso: null, ultimo: null, registro: [] };
     const anotar = (m) => {
         log(m);
         ejecuciones.registro.push(`${new Date().toISOString()} ${m}`);
         if (ejecuciones.registro.length > 200) ejecuciones.registro.shift();
     };
 
+    const consultarAyudas = (nif) => ayudasRecibidas(nif, {
+        pedir: (url, op) => pedir(url, { userAgent: config.userAgent, ...op }),
+    });
+
     /** Lanza un trabajo largo sin bloquear la respuesta (uno cada vez). */
     function enSegundoPlano(nombre, fn) {
         if (ejecuciones.enMarcha || planificador?.ocupado) throw new ErrorPeticion(409, 'Ya hay una vigilancia en marcha');
         ejecuciones.enMarcha = true;
+        ejecuciones.trabajo = nombre;
+        ejecuciones.progreso = { porcentaje: 0, fase: 'Empezando', detalle: '', inicio: new Date() };
+        const progreso = (p) => { ejecuciones.progreso = { ...ejecuciones.progreso, ...p }; };
         anotar(`Inicio: ${nombre}`);
-        fn()
-            .then((r) => { ejecuciones.ultimo = { fin: new Date(), resumen: r }; anotar(`Fin: ${nombre}`); })
-            .catch((e) => anotar(`Error en ${nombre}: ${e.message}`))
-            .finally(() => { ejecuciones.enMarcha = false; });
-        return { iniciada: true };
+        fn(progreso)
+            .then((r) => { ejecuciones.ultimo = { fin: new Date(), trabajo: nombre, resumen: r }; anotar(`Fin: ${nombre}`); })
+            .catch((e) => {
+                ejecuciones.ultimo = { fin: new Date(), trabajo: nombre, error: e.message };
+                anotar(`Error en ${nombre}: ${e.message}`);
+            })
+            .finally(() => { ejecuciones.enMarcha = false; ejecuciones.progreso = null; });
+        return { iniciada: true, trabajo: nombre };
     }
 
     const rutas = [
@@ -291,7 +322,28 @@ function crearServidor(db, config, { log = console.log, planificador = null } = 
         ['POST', /^\/api\/empresa\/buscar$/, async (req) => {
             const b = await leerCuerpo(req);
             if (!b.cif && !b.razon_social) throw new ErrorPeticion(400, 'Indica el NIF o la razón social');
-            return buscarDatosEmpresa(config, { cif: b.cif, razon_social: b.razon_social });
+            const nif = b.cif ? validarNif(b.cif) : null;
+            // Datos registrales (web) y ayudas recibidas (BDNS) a la vez
+            const [datos, ayudas] = await Promise.all([
+                buscarDatosEmpresa(config, { cif: b.cif, razon_social: b.razon_social }),
+                nif?.valido ? consultarAyudas(nif.nif).catch((e) => ({ error: e.message })) : null,
+            ]);
+            return { ...datos, tamano: tamanoEmpresa(datos), ayudas };
+        }],
+        ['GET', /^\/api\/empresa\/ayudas$/, async (req, q) => {
+            const nif = validarNif(q.get('nif'));
+            if (!nif.valido) throw new ErrorPeticion(400, 'NIF no válido');
+            return consultarAyudas(nif.nif);
+        }],
+        ['POST', /^\/api\/clientes\/(\d+)\/ayudas$/, async (req, q, m) => {
+            const id = Number(m[1]);
+            const k = (await db.query('SELECT cif FROM cliente WHERE id = $1', [id])).rows[0];
+            if (!k) throw new ErrorPeticion(404, 'No existe ese cliente');
+            if (!k.cif) throw new ErrorPeticion(400, 'El cliente no tiene NIF');
+            const a = await consultarAyudas(k.cif);
+            await db.query(`UPDATE cliente SET ayudas_recibidas = $2, ayudas_consultadas_at = now(),
+                                   minimis_3_anios = $3 WHERE id = $1`, [id, a, a.resumen_minimis.consumido_3_anios]);
+            return fichaClienteCompleta(db, id);
         }],
         ['GET', /^\/api\/clientes$/, () => listarClientes(db)],
         ['POST', /^\/api\/clientes$/, async (req) => {
@@ -323,9 +375,9 @@ function crearServidor(db, config, { log = console.log, planificador = null } = 
             return clientesMod.sugerirPalabras(config, k);
         }],
         ['POST', /^\/api\/clientes\/(\d+)\/evaluar$/, (req, q, m) =>
-            enSegundoPlano('evaluar encaje del cliente', () => trabajarClientes(db, config, { clienteId: Number(m[1]), log: anotar }))],
+            enSegundoPlano('Evaluar el encaje del cliente', (progreso) => trabajarClientes(db, config, { clienteId: Number(m[1]), log: anotar, progreso }))],
         ['POST', /^\/api\/clientes\/(\d+)\/rastrear$/, (req, q, m) =>
-            enSegundoPlano(`rastreo de ${config.diasRastreo} días para el cliente`, () => rastrearCliente(db, config, Number(m[1]), { log: anotar }))],
+            enSegundoPlano(`Buscar ${config.diasRastreo} días de convocatorias para el cliente`, (progreso) => rastrearCliente(db, config, Number(m[1]), { log: anotar, progreso }))],
         ['PATCH', /^\/api\/clientes\/(\d+)\/oportunidades\/(\d+)$/, async (req, q, m) => {
             const { estado } = await leerCuerpo(req);
             if (!['sugerida', 'en_estudio', 'propuesta', 'descartada'].includes(estado)) throw new ErrorPeticion(400, 'Estado no válido');
@@ -407,11 +459,13 @@ function crearServidor(db, config, { log = console.log, planificador = null } = 
             await db.query('DELETE FROM busqueda_guardada WHERE id = $1', [Number(m[1])]);
             return { ok: true };
         }],
-        ['GET', /^\/api\/ejecucion$/, () => ({ ...ejecuciones, registro: ejecuciones.registro.slice(-50) })],
+        ['GET', /^\/api\/ejecucion$/, () => ({
+            ...ejecuciones, planificador_ocupado: Boolean(planificador?.ocupado), registro: ejecuciones.registro.slice(-50),
+        })],
         ['POST', /^\/api\/ejecucion$/, async (req) => {
             const b = await leerCuerpo(req);
             const fuentes = Array.isArray(b.fuentes) && b.fuentes.length ? b.fuentes : config.fuentes;
-            enSegundoPlano('vigilancia', () => ciclo(db, config, { fuentes, dias: b.dias ?? config.diasAtras, log: anotar }));
+            enSegundoPlano('Vigilancia de las fuentes', (progreso) => ciclo(db, config, { fuentes, dias: b.dias ?? config.diasAtras, log: anotar, progreso }));
             return { iniciada: true, fuentes };
         }],
         ['GET', /^\/api\/config$/, () => ({
