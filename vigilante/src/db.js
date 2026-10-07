@@ -1,5 +1,6 @@
 'use strict';
 
+const os = require('os');
 const { Pool, types } = require('pg');
 
 // NUMERIC como string (no perder céntimos) y bigint como número (ids)
@@ -7,10 +8,24 @@ types.setTypeParser(20, (v) => parseInt(v, 10));
 
 let pool = null;
 
+/**
+ * Si la URL no lleva usuario, se usa el del sistema. Arrancado como servicio (launchd)
+ * puede no existir la variable USER, y entonces PostgreSQL rechaza la conexión.
+ */
+function conUsuario(databaseUrl) {
+    try {
+        const u = new URL(databaseUrl);
+        if (!u.username) u.username = encodeURIComponent(os.userInfo().username);
+        return u.toString();
+    } catch (_e) {
+        return databaseUrl;
+    }
+}
+
 function obtenerPool(databaseUrl) {
     if (!pool) {
         pool = new Pool({
-            connectionString: databaseUrl,
+            connectionString: conUsuario(databaseUrl),
             max: 5,
             options: '-c search_path=vigilante,public -c TimeZone=UTC',
         });
@@ -41,4 +56,4 @@ async function enTransaccion(p, fn) {
     }
 }
 
-module.exports = { obtenerPool, cerrarPool, enTransaccion };
+module.exports = { obtenerPool, cerrarPool, enTransaccion, conUsuario };

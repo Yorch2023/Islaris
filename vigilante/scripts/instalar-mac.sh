@@ -52,7 +52,12 @@ cat > "$PLIST" <<PLIST
   <key>KeepAlive</key><true/>
   <key>ThrottleInterval</key><integer>30</integer>
   <key>EnvironmentVariables</key>
-  <dict><key>PATH</key><string>$(dirname "$NODE"):/usr/bin:/bin:/usr/sbin:/sbin</string></dict>
+  <dict>
+    <key>PATH</key><string>$(dirname "$NODE"):/usr/bin:/bin:/usr/sbin:/sbin</string>
+    <key>USER</key><string>$(id -un)</string>
+    <key>HOME</key><string>$HOME</string>
+    <key>LANG</key><string>es_ES.UTF-8</string>
+  </dict>
   <key>StandardOutPath</key><string>$LOG</string>
   <key>StandardErrorPath</key><string>$LOG</string>
 </dict>
