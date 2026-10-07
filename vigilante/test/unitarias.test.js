@@ -251,3 +251,19 @@ test('tamaño de empresa y antigüedad', () => {
     assert.equal(tamanoEmpresa({}), null);
     assert.equal(antiguedadAnios('1998-10-28', new Date('2026-10-07')), 27);
 });
+
+test('en paralelo: respeta el límite, mantiene el orden y recoge errores', async () => {
+    const { enParalelo } = require('../src/concurrencia');
+    let activos = 0;
+    let maximo = 0;
+    const r = await enParalelo([30, 10, 20, 0, 5], 2, async (ms, i) => {
+        activos++; maximo = Math.max(maximo, activos);
+        await new Promise((ok) => setTimeout(ok, ms));
+        activos--;
+        if (i === 3) throw new Error('falla');
+        return ms * 2;
+    });
+    assert.equal(maximo, 2);
+    assert.deepEqual(r.filter((x) => typeof x === 'number'), [60, 20, 40, 10]);
+    assert.equal(r[3].error.message, 'falla');
+});

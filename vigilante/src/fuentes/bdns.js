@@ -5,6 +5,7 @@
 // 2) Para las que encajan por palabras clave, ficha de detalle (plazos, presupuesto, bases).
 
 const { fechaIso, fechaHora, aImporte, limpiarHtml, recortar, arr } = require('../texto');
+const { enParalelo } = require('../concurrencia');
 
 const BASE = 'https://www.infosubvenciones.es/bdnstrans/api';
 const TAM_PAGINA = 50;
@@ -81,16 +82,16 @@ async function* leer(ctx) {
             como: 'json', cabeceras: { Accept: 'application/json' }, userAgent: config.userAgent,
         });
         const items = arr(datos?.content);
-        for (const item of items) {
-            const previa = aConvocatoria(item, null, config.zonaHoraria);
-            if (!interesa(previa)) continue;
-            let detalle = null;
-            try {
-                detalle = await pedir(urlDetalle(previa.external_id), {
-                    como: 'json', cabeceras: { Accept: 'application/json' }, userAgent: config.userAgent,
-                });
-            } catch (e) {
-                log(`BDNS: sin detalle de ${previa.external_id}: ${e.message}`);
+        const interesantes = items.filter((item) => interesa(aConvocatoria(item, null, config.zonaHoraria)));
+        // Las fichas de detalle se descargan 5 a la vez
+        const detalles = await enParalelo(interesantes, 5, (item) => pedir(urlDetalle(String(item.numeroConvocatoria ?? item.id)), {
+            como: 'json', cabeceras: { Accept: 'application/json' }, userAgent: config.userAgent,
+        }));
+        for (const [i, item] of interesantes.entries()) {
+            let detalle = detalles[i];
+            if (detalle?.error) {
+                log(`BDNS: sin detalle de ${item.numeroConvocatoria}: ${detalle.error.message}`);
+                detalle = null;
             }
             yield aConvocatoria(item, detalle, config.zonaHoraria);
         }

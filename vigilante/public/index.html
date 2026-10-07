@@ -600,6 +600,26 @@ function htmlAyudas(a) {
     <p class="meta">Consultado ${esc(fecha(a.consultado_at))}. La BDNS no recoge todo (por ejemplo, algunas ayudas a productos como la REA): pregunta siempre al cliente.</p></div>`;
 }
 
+async function pintarUltimaBusqueda(id) {
+  const e = await api('/api/ejecucion').catch(() => null);
+  const caja = $('#ultima-busqueda');
+  if (!caja || !e) return;
+  const botones = ['#btn-rastrear', '#btn-evaluar'].map((s) => $(s)).filter(Boolean);
+  botones.forEach((b) => { b.disabled = Boolean(e.enMarcha || e.planificador_ocupado); });
+  if (e.enMarcha && e.cliente_id === id) {
+    caja.innerHTML = '<p class="etiqueta">Búsqueda en marcha para este cliente: las oportunidades aparecen al terminar cada fuente.</p>';
+    return;
+  }
+  const u = e.ultimo;
+  if (!u || u.cliente_id !== id) { caja.innerHTML = ''; return; }
+  if (u.error) { caja.innerHTML = `<p class="etiqueta descartada">La última búsqueda falló: ${esc(u.error)}</p>`; return; }
+  const r = u.resumen || {};
+  const fuentes = Object.entries(r.vigilancia || {}).map(([f, v]) => `${f}: ${v.error ? `error (${v.error})` : `${v.leidas} revisadas`}`);
+  const nuevas = Object.values(r.cruces_por_fuente || {}).reduce((s, n) => s + n, 0) + Object.values(r.cruces || {}).reduce((s, n) => s + n, 0);
+  caja.innerHTML = `<div class="bloque"><p class="meta">Última búsqueda, terminada ${esc(fecha(u.fin))}: ${esc(fuentes.join(' · ') || 'sin fuentes')}.
+    <strong>${nuevas}</strong> oportunidades nuevas para este cliente${r.encaje ? `, ${r.encaje.evaluadas} evaluadas con Claude${r.encaje.errores ? ` (${r.encaje.errores} con error)` : ''}` : ''}${estado.config.triaje ? '' : '. Sin clave de Claude no se evalúa el encaje'}.</p></div>`;
+}
+
 function punto(s) {
   return `<span class="semaforo ${esc(s || 'gris')}" title="${esc(SEMAFORO_TXT[s] || 'Sin evaluar')}"></span>`;
 }
@@ -799,9 +819,10 @@ async function verCliente(c, id) {
     </details>
     <p class="meta">Busca: ${esc((k.palabras_clave || []).join(', ') || 'sin palabras clave')}${k.incluir_territorio ? ` · territorio: ${esc(k.territorios_efectivos.join(', ') || 'no indicado')}` : ''}</p>
     ${!k.palabras_clave?.length ? '<p class="etiqueta dudosa">Añade palabras clave en «Editar ficha» (o pulsa «Sugerir con IA») para que el Radar encuentre más.</p>' : ''}
+    <div id="ultima-busqueda"></div>
     <div class="pestanas" style="margin-top:12px">
       <button data-filtro="utiles" class="${filtro === 'utiles' ? 'activa' : ''}">${punto('verde')} ${cuenta('verde')} · ${punto('amarillo')} ${cuenta('amarillo')} · sin evaluar ${cuenta(null)}</button>
-      <button data-filtro="todas" class="${filtro === 'todas' ? 'activa' : ''}">Todas (incluye rojas)</button>
+      <button data-filtro="todas" class="${filtro === 'todas' ? 'activa' : ''}">Todas (${k.oportunidades.length}, de ellas ${punto('rojo')} ${cuenta('rojo')})</button>
       <button data-filtro="descartadas" class="${filtro === 'descartadas' ? 'activa' : ''}">Descartadas</button>
     </div>
     ${ops.length ? `<div class="tabla-scroll"><table>
@@ -822,6 +843,7 @@ async function verCliente(c, id) {
       <textarea id="txt-islaris" rows="16" readonly></textarea>
       <div class="fila"><button value="cerrar">Cerrar</button><button type="button" id="btn-descargar">Descargar .md</button><button type="button" class="primario" id="btn-copiar">Copiar</button></div>
     </form></dialog>`;
+  pintarUltimaBusqueda(id);
   $('#btn-volver').addEventListener('click', () => { estado.clienteAbierto = null; history.replaceState(null, '', '#'); verClientes(c); });
   $('#btn-editar').addEventListener('click', () => formCliente(c, k));
   $('#btn-ayudas')?.addEventListener('click', async (e) => {

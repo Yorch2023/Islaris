@@ -300,17 +300,20 @@ function crearServidor(db, config, { log = console.log, planificador = null } = 
     });
 
     /** Lanza un trabajo largo sin bloquear la respuesta (uno cada vez). */
-    function enSegundoPlano(nombre, fn) {
-        if (ejecuciones.enMarcha || planificador?.ocupado) throw new ErrorPeticion(409, 'Ya hay una vigilancia en marcha');
+    function enSegundoPlano(nombre, fn, extra = {}) {
+        if (ejecuciones.enMarcha || planificador?.ocupado) {
+            throw new ErrorPeticion(409, `Ya hay una búsqueda en marcha (${ejecuciones.trabajo || 'vigilancia programada'}): sigue el avance en la barra de arriba`);
+        }
         ejecuciones.enMarcha = true;
         ejecuciones.trabajo = nombre;
+        ejecuciones.cliente_id = extra.cliente_id ?? null;
         ejecuciones.progreso = { porcentaje: 0, fase: 'Empezando', detalle: '', inicio: new Date() };
         const progreso = (p) => { ejecuciones.progreso = { ...ejecuciones.progreso, ...p }; };
         anotar(`Inicio: ${nombre}`);
         fn(progreso)
-            .then((r) => { ejecuciones.ultimo = { fin: new Date(), trabajo: nombre, resumen: r }; anotar(`Fin: ${nombre}`); })
+            .then((r) => { ejecuciones.ultimo = { fin: new Date(), trabajo: nombre, ...extra, resumen: r }; anotar(`Fin: ${nombre}`); })
             .catch((e) => {
-                ejecuciones.ultimo = { fin: new Date(), trabajo: nombre, error: e.message };
+                ejecuciones.ultimo = { fin: new Date(), trabajo: nombre, ...extra, error: e.message };
                 anotar(`Error en ${nombre}: ${e.message}`);
             })
             .finally(() => { ejecuciones.enMarcha = false; ejecuciones.progreso = null; });
@@ -375,9 +378,9 @@ function crearServidor(db, config, { log = console.log, planificador = null } = 
             return clientesMod.sugerirPalabras(config, k);
         }],
         ['POST', /^\/api\/clientes\/(\d+)\/evaluar$/, (req, q, m) =>
-            enSegundoPlano('Evaluar el encaje del cliente', (progreso) => trabajarClientes(db, config, { clienteId: Number(m[1]), log: anotar, progreso }))],
+            enSegundoPlano('Evaluar el encaje del cliente', (progreso) => trabajarClientes(db, config, { clienteId: Number(m[1]), log: anotar, progreso }), { cliente_id: Number(m[1]) })],
         ['POST', /^\/api\/clientes\/(\d+)\/rastrear$/, (req, q, m) =>
-            enSegundoPlano(`Buscar ${config.diasRastreo} días de convocatorias para el cliente`, (progreso) => rastrearCliente(db, config, Number(m[1]), { log: anotar, progreso }))],
+            enSegundoPlano(`Buscar ${config.diasRastreo} días de convocatorias para el cliente`, (progreso) => rastrearCliente(db, config, Number(m[1]), { log: anotar, progreso }), { cliente_id: Number(m[1]) })],
         ['PATCH', /^\/api\/clientes\/(\d+)\/oportunidades\/(\d+)$/, async (req, q, m) => {
             const { estado } = await leerCuerpo(req);
             if (!['sugerida', 'en_estudio', 'propuesta', 'descartada'].includes(estado)) throw new ErrorPeticion(400, 'Estado no válido');

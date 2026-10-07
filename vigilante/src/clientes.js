@@ -8,6 +8,7 @@ const { normalizar } = require('./texto');
 const { crearCliente, fichaConvocatoria } = require('./triaje');
 const { crearTransporte, escapar, fmtFecha, fmtImporte } = require('./busquedas');
 const { tamanoEmpresa, antiguedadAnios } = require('./empresa');
+const { enParalelo } = require('./concurrencia');
 
 // ---------------------------------------------------------------------------
 // Coincidencia cliente ↔ convocatoria
@@ -206,12 +207,14 @@ async function evaluarEncajes(db, config, { clienteId = null, limite = config.en
     const fichas = new Map();
     let evaluadas = 0;
     let errores = 0;
-    for (const [i, fila] of rows.entries()) {
-        alAvanzar(i, rows.length);
+    for (const id of new Set(rows.map((f) => f.cliente_id))) {
+        fichas.set(id, (await db.query('SELECT * FROM cliente WHERE id = $1', [id])).rows[0]);
+    }
+    let hechas = 0;
+    alAvanzar(0, rows.length);
+    // Se evalúan 4 a la vez
+    await enParalelo(rows, 4, async (fila) => {
         try {
-            if (!fichas.has(fila.cliente_id)) {
-                fichas.set(fila.cliente_id, (await db.query('SELECT * FROM cliente WHERE id = $1', [fila.cliente_id])).rows[0]);
-            }
             const conv = (await db.query('SELECT * FROM convocatoria WHERE id = $1', [fila.convocatoria_id])).rows[0];
             const e = await evaluarUna(anthropic, config, fichas.get(fila.cliente_id), conv);
             await db.query(`
@@ -226,7 +229,8 @@ async function evaluarEncajes(db, config, { clienteId = null, limite = config.en
             errores++;
             log(`Encaje: error en cliente ${fila.cliente_id} / convocatoria ${fila.convocatoria_id}: ${err.message}`);
         }
-    }
+        alAvanzar(++hechas, rows.length);
+    });
     if (rows.length) log(`Encaje: ${evaluadas} evaluadas, ${errores} con error`);
     return { evaluadas, errores };
 }

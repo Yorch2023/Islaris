@@ -91,13 +91,24 @@ async function rastrearCliente(db, config, clienteId, { log = console.log, progr
         bdnsMaxPaginas: Math.max(config.bdnsMaxPaginas, config.rastreoMaxPaginas),
         placspMaxPaginas: Math.max(config.placspMaxPaginas, 60),
     };
-    const vigilancia = await vigilar(db, cfg, {
-        dias: config.diasRastreo, log, progreso: progresoVigilancia(tramo(progreso, 0, 70)),
-    });
+    // Fuente a fuente: al terminar cada una se cruza con el cliente, para que las
+    // oportunidades vayan apareciendo sin esperar a leerlo todo
+    const fuentes = config.fuentes;
+    const avance = progresoVigilancia(tramo(progreso, 0, 70));
+    const vigilancia = {};
+    const cruces = {};
+    for (const [k, fuente] of fuentes.entries()) {
+        Object.assign(vigilancia, await vigilar(db, cfg, {
+            fuentes: [fuente], dias: config.diasRastreo, log,
+            progreso: (p) => avance(p.leidas !== undefined ? p : { ...p, indice: k, total: fuentes.length }),
+        }));
+        const c = await cruzarClientes(db, { clienteId, log });
+        cruces[fuente] = c[clienteId] || 0;
+    }
     const resto = await trabajarClientes(db, config, {
         clienteId, log, progreso: (p) => tramo(progreso, 70, 100)(p.porcentaje, p.fase, p.detalle),
     });
-    return { vigilancia, ...resto };
+    return { vigilancia, cruces_por_fuente: cruces, ...resto };
 }
 
 async function mantenimiento(db, { log = console.log } = {}) {
