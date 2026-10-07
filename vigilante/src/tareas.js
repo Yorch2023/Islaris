@@ -6,17 +6,51 @@
 const { vigilar } = require('./vigilante');
 const { triarPendientes } = require('./triaje');
 const { procesarBusquedas } = require('./busquedas');
+const { cruzarClientes, evaluarEncajes, avisarClientes } = require('./clientes');
 const { compilarCron, coincide } = require('./cron');
 const lectores = require('./fuentes');
 
 const CRON_MANTENIMIENTO = '15 7 * * *';
 
-/** Vigila las fuentes indicadas y, a continuación, tría lo nuevo y envía avisos. */
+/**
+ * Vigila las fuentes indicadas y, a continuación, tría lo nuevo, lo cruza con los
+ * clientes y envía los avisos.
+ */
 async function ciclo(db, config, { fuentes, dias, triaje = true, avisos = true, log = console.log } = {}) {
     const resumen = { vigilancia: await vigilar(db, config, { fuentes, dias, log }) };
     if (triaje) resumen.triaje = await triarPendientes(db, config, { log });
+    resumen.clientes = await trabajarClientes(db, config, { avisos, log });
     if (avisos) resumen.avisos = await procesarBusquedas(db, config, { log });
     return resumen;
+}
+
+/** Cruza los clientes con lo abierto, evalúa el encaje y avisa por correo. */
+async function trabajarClientes(db, config, { clienteId = null, avisos = true, log = console.log } = {}) {
+    const r = { cruces: await cruzarClientes(db, { clienteId, log }) };
+    // Se evalúa por tandas hasta agotar lo pendiente (cada tanda limita el gasto de una pasada)
+    r.encaje = { evaluadas: 0, errores: 0 };
+    for (let i = 0; i < 20; i++) {
+        const e = await evaluarEncajes(db, config, { clienteId, log });
+        r.encaje.evaluadas += e.evaluadas;
+        r.encaje.errores += e.errores;
+        if (e.omitido || e.evaluadas === 0 || e.evaluadas + e.errores < (config.encajeLote ?? 60)) break;
+    }
+    if (avisos) r.avisos = await avisarClientes(db, config, { log });
+    return r;
+}
+
+/**
+ * Para un cliente recién dado de alta: vuelve a leer las fuentes más días hacia atrás
+ * (lo que antes no coincidía con nada no estaba guardado) y lo cruza con él.
+ */
+async function rastrearCliente(db, config, clienteId, { log = console.log } = {}) {
+    const cfg = {
+        ...config,
+        bdnsMaxPaginas: Math.max(config.bdnsMaxPaginas, config.rastreoMaxPaginas),
+        placspMaxPaginas: Math.max(config.placspMaxPaginas, 60),
+    };
+    const vigilancia = await vigilar(db, cfg, { dias: config.diasRastreo, log });
+    return { vigilancia, ...(await trabajarClientes(db, config, { clienteId, log })) };
 }
 
 async function mantenimiento(db, { log = console.log } = {}) {
@@ -96,4 +130,4 @@ function iniciarPlanificador(db, config, { log = console.log } = {}) {
     };
 }
 
-module.exports = { ciclo, mantenimiento, iniciarPlanificador, CRON_MANTENIMIENTO };
+module.exports = { ciclo, trabajarClientes, rastrearCliente, mantenimiento, iniciarPlanificador, CRON_MANTENIMIENTO };

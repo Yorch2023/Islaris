@@ -11,7 +11,8 @@ const CAMPOS = [
     'deadline-receipt-tender-date-lot', 'classification-cpv', 'links',
 ];
 // Categorías de palabra_clave que tiene sentido buscar en licitaciones
-const CATEGORIAS_TED = new Set(['licitaciones', 'maritimo-portuario', 'tecnologia-digital']);
+// ("cliente": palabras clave de los clientes que buscan licitaciones)
+const CATEGORIAS_TED = new Set(['licitaciones', 'maritimo-portuario', 'tecnologia-digital', 'cliente']);
 const POR_CONSULTA = 15;
 
 const IDIOMAS = ['spa', 'eng', 'fra', 'por'];

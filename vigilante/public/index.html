@@ -81,6 +81,10 @@ dialog { border: 1px solid var(--borde); border-radius: 10px; background: var(--
 dialog::backdrop { background: rgba(0,0,0,.35); }
 dialog form { display: flex; flex-direction: column; gap: 10px; }
 .fila { display: flex; gap: 8px; justify-content: end; }
+.semaforo { display: inline-block; width: 12px; height: 12px; border-radius: 50%; background: var(--borde); vertical-align: middle; }
+.semaforo.verde { background: #2e9d5b; } .semaforo.amarillo { background: #e0a400; } .semaforo.rojo { background: #d0453b; }
+.formulario h4 { margin: 8px 0 0; font-size: 13px; color: var(--suave); text-transform: uppercase; letter-spacing: .04em; }
+#dlg-islaris { width: min(760px, 94%); } #dlg-islaris textarea { width: 100%; font-family: ui-monospace, monospace; font-size: 12px; }
 .registro { font-family: ui-monospace, monospace; font-size: 12px; white-space: pre-wrap; background: var(--panel); border: 1px solid var(--borde); border-radius: 8px; padding: 10px; max-height: 260px; overflow: auto; }
 @media (max-width: 720px) {
   .tarjeta { grid-template-columns: 1fr; }
@@ -189,7 +193,7 @@ async function api(ruta, op = {}) {
 
 // ---------- secciones ----------
 const SECCIONES = [
-  ['feed', 'Feed'], ['alertas', 'Plazos'], ['duplicados', 'Duplicados'], ['competencia', 'Competencia'],
+  ['feed', 'Feed'], ['clientes', 'Clientes'], ['alertas', 'Plazos'], ['duplicados', 'Duplicados'], ['competencia', 'Competencia'],
   ['palabras', 'Palabras clave'], ['busquedas', 'Búsquedas'], ['alta', 'Alta manual'], ['salud', 'Fuentes'],
 ];
 const VISTAS = [
@@ -205,6 +209,7 @@ $('#secciones').addEventListener('click', (e) => {
   const b = e.target.closest('button[data-seccion]');
   if (!b) return;
   estado.seccion = b.dataset.seccion;
+  estado.clienteAbierto = null;
   pintarSecciones();
   cargarSeccion();
 });
@@ -213,7 +218,7 @@ async function cargarSeccion() {
   const c = $('#contenido');
   c.innerHTML = '<div class="vacio">Cargando…</div>';
   try {
-    await ({ feed: verFeed, alertas: verAlertas, duplicados: verDuplicados, competencia: verCompetencia,
+    await ({ feed: verFeed, clientes: verClientes, alertas: verAlertas, duplicados: verDuplicados, competencia: verCompetencia,
       palabras: verPalabras, busquedas: verBusquedas, alta: verAlta, salud: verSalud })[estado.seccion](c);
   } catch (e) {
     c.innerHTML = `<div class="vacio">${esc(e.message)}</div>`;
@@ -565,6 +570,198 @@ async function verSalud(c) {
     `<h2>Fuentes sin lector todavía (${sinLector.length})</h2><p class="meta">Están en el catálogo pero el vigilante aún no sabe leerlas: ${esc(sinLector.map((f) => f.codigo).join(', '))}.</p>`;
 }
 
+// ---------- clientes ----------
+const SEMAFORO_TXT = { verde: 'Verde', amarillo: 'Amarillo', rojo: 'Rojo' };
+const ESTADOS_OP = [['sugerida', 'Sugerida'], ['en_estudio', 'En estudio'], ['propuesta', 'Propuesta enviada'], ['descartada', 'Descartada']];
+
+function punto(s) {
+  return `<span class="semaforo ${esc(s || 'gris')}" title="${esc(SEMAFORO_TXT[s] || 'Sin evaluar')}"></span>`;
+}
+
+async function verClientes(c) {
+  if (estado.clienteAbierto) return verCliente(c, estado.clienteAbierto);
+  const filas = await api('/api/clientes');
+  c.innerHTML = `
+    <div class="fila" style="justify-content:space-between;align-items:center;margin-bottom:12px">
+      <h2 style="margin:0">Clientes</h2>
+      <button class="primario" id="btn-nuevo-cliente">Nuevo cliente</button>
+    </div>
+    <p class="meta">Cada cliente se cruza con todas las convocatorias abiertas que el vigilante conoce. Con la clave de Claude, cada cruce recibe un semáforo de encaje y las verdes y amarillas te llegan por correo${estado.config.email_avisos ? ` a ${esc(estado.config.email_avisos)}` : ' (configura SMTP y VIGILANTE_EMAIL_AVISOS en el .env)'}.</p>
+    <div class="lista">${filas.length ? filas.map((k) => `
+      <article class="tarjeta">
+        <div>
+          <h3 data-cliente="${k.id}">${esc(k.razon_social)}${k.activo ? '' : ' <span class="etiqueta">inactivo</span>'}</h3>
+          <div class="meta"><span>${esc([k.actividad, [k.municipio, k.isla].filter(Boolean).join(', ')].filter(Boolean).join(' · '))}</span></div>
+          ${k.proyecto ? `<div class="motivo">${esc(k.proyecto)}</div>` : ''}
+        </div>
+        <div class="acciones">
+          <span class="etiqueta relevante">${punto('verde')} ${k.verdes}</span>
+          <span class="etiqueta dudosa">${punto('amarillo')} ${k.amarillas}</span>
+          ${k.sin_evaluar ? `<span class="etiqueta">${k.sin_evaluar} sin evaluar</span>` : ''}
+          ${k.proximo_plazo ? `<span class="meta">Próximo plazo: ${esc(fecha(k.proximo_plazo, false))}</span>` : ''}
+          <button data-cliente="${k.id}">Abrir</button>
+        </div>
+      </article>`).join('') : '<div class="vacio">Aún no hay clientes. Pulsa «Nuevo cliente».</div>'}</div>`;
+  $('#btn-nuevo-cliente').addEventListener('click', () => formCliente(c, null));
+  c.querySelectorAll('[data-cliente]').forEach((el) => el.addEventListener('click', () => {
+    estado.clienteAbierto = Number(el.dataset.cliente); verClientes(c);
+  }));
+}
+
+function formCliente(c, k) {
+  const v = (x) => esc(Array.isArray(x) ? x.join(', ') : (x ?? ''));
+  const intereses = k?.intereses || ['subvencion'];
+  c.innerHTML = `
+    <h2>${k ? `Editar ${esc(k.razon_social)}` : 'Nuevo cliente'}</h2>
+    <form id="form-cliente" class="formulario">
+      <h4 class="ancho">La empresa</h4>
+      <label>Razón social *<input name="razon_social" required value="${v(k?.razon_social)}"></label>
+      <label>CIF<input name="cif" value="${v(k?.cif)}"></label>
+      <label>Forma jurídica<input name="forma_juridica" placeholder="SL, autónomo, cooperativa…" value="${v(k?.forma_juridica)}"></label>
+      <label>Isla<select name="isla">${['', 'Tenerife', 'Gran Canaria', 'Lanzarote', 'Fuerteventura', 'La Palma', 'La Gomera', 'El Hierro'].map((i) => `<option ${k?.isla === i ? 'selected' : ''}>${i}</option>`).join('')}</select></label>
+      <label>Municipio<input name="municipio" value="${v(k?.municipio)}"></label>
+      <label>CNAE (separados por comas)<input name="cnae" value="${v(k?.cnae)}"></label>
+      <label class="ancho">A qué se dedica<textarea name="actividad" rows="2">${v(k?.actividad)}</textarea></label>
+      <label>Empleados<input name="empleados" type="number" min="0" value="${v(k?.empleados)}"></label>
+      <label>Facturación último año (€)<input name="facturacion" type="number" step="0.01" value="${v(k?.facturacion)}"></label>
+      <label>Fecha de constitución<input name="fecha_constitucion" type="date" value="${k?.fecha_constitucion ? new Date(k.fecha_constitucion).toISOString().slice(0, 10) : ''}"></label>
+      <h4 class="ancho">Qué quiere financiar</h4>
+      <label class="ancho">Proyecto o inversión<textarea name="proyecto" rows="3">${v(k?.proyecto)}</textarea></label>
+      <label>Importe aproximado (€)<input name="proyecto_importe" type="number" step="0.01" value="${v(k?.proyecto_importe)}"></label>
+      <label>Cuándo<input name="proyecto_plazo" placeholder="p. ej. primer semestre 2027" value="${v(k?.proyecto_plazo)}"></label>
+      <label>Le interesan<span><label style="flex-direction:row;gap:6px"><input type="checkbox" name="int_subvencion" ${intereses.includes('subvencion') ? 'checked' : ''}> Subvenciones y ayudas</label>
+        <label style="flex-direction:row;gap:6px"><input type="checkbox" name="int_licitacion" ${intereses.includes('licitacion') ? 'checked' : ''}> Licitaciones</label></span></label>
+      <h4 class="ancho">Para descartar lo que no puede pedir</h4>
+      <label>Minimis recibido en 3 años (€)<input name="minimis_3_anios" type="number" step="0.01" value="${v(k?.minimis_3_anios)}"></label>
+      <label>Al corriente AEAT / SS / ATC<select name="al_corriente"><option value="">No lo sé</option><option value="true" ${k?.al_corriente === true ? 'selected' : ''}>Sí</option><option value="false" ${k?.al_corriente === false ? 'selected' : ''}>No</option></select></label>
+      <label class="ancho">Servicios que vende a la Administración (si busca licitaciones)<textarea name="servicios_licitacion" rows="2">${v(k?.servicios_licitacion)}</textarea></label>
+      <label class="ancho">Certificaciones y contratos públicos anteriores<textarea name="certificaciones" rows="2">${v(k?.certificaciones)}</textarea></label>
+      <h4 class="ancho">Qué busca el vigilante para este cliente</h4>
+      <label class="ancho">Palabras clave (separadas por comas; aparecen en el título de las convocatorias)<textarea name="palabras_clave" rows="3">${v(k?.palabras_clave)}</textarea>
+        ${estado.config.triaje && k ? '<button type="button" id="btn-sugerir">Sugerir con IA</button>' : ''}</label>
+      <label>Territorios (comas; vacío = Canarias + isla + municipio)<input name="territorios" value="${v(k?.territorios)}"></label>
+      <label>Todas las ayudas de su territorio<select name="incluir_territorio"><option value="true">Sí, que la IA las filtre</option><option value="false" ${k?.incluir_territorio === false ? 'selected' : ''}>No, solo por palabras clave</option></select></label>
+      <label>Avisar a partir de encaje<input name="umbral_aviso" type="number" min="0" max="100" value="${v(k?.umbral_aviso ?? 60)}"></label>
+      <label>Email del cliente<input name="email_contacto" type="email" value="${v(k?.email_contacto)}"></label>
+      <label class="ancho">Notas<textarea name="notas" rows="2">${v(k?.notas)}</textarea></label>
+      <div class="ancho fila" style="justify-content:start">
+        <button class="primario">Guardar</button>
+        <button type="button" id="btn-cancelar-cliente">Cancelar</button>
+        ${k ? '<button type="button" class="peligro" id="btn-borrar-cliente">Borrar cliente</button>' : ''}
+      </div>
+    </form>`;
+  const form = $('#form-cliente');
+  $('#btn-cancelar-cliente').addEventListener('click', () => verClientes(c));
+  $('#btn-borrar-cliente')?.addEventListener('click', async () => {
+    if (!confirm('¿Borrar este cliente y sus oportunidades?')) return;
+    await api(`/api/clientes/${k.id}`, { method: 'DELETE' });
+    estado.clienteAbierto = null; verClientes(c);
+  });
+  $('#btn-sugerir')?.addEventListener('click', async (e) => {
+    e.target.disabled = true; e.target.textContent = 'Pensando…';
+    try {
+      const s = await api(`/api/clientes/${k.id}/sugerir-palabras`, { method: 'POST' });
+      const actuales = form.elements.palabras_clave.value.split(',').map((x) => x.trim()).filter(Boolean);
+      form.elements.palabras_clave.value = [...new Set([...actuales, ...s.palabras_clave])].join(', ');
+      if (!form.elements.territorios.value.trim()) form.elements.territorios.value = s.territorios.join(', ');
+      avisar('Revisa las sugerencias y pulsa Guardar');
+    } catch (err) { avisar(err.message); }
+    e.target.disabled = false; e.target.textContent = 'Sugerir con IA';
+  });
+  form.addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const f = Object.fromEntries(new FormData(form));
+    const datos = {};
+    for (const [n, val] of Object.entries(f)) if (!n.startsWith('int_')) datos[n] = val;
+    datos.intereses = [f.int_subvencion && 'subvencion', f.int_licitacion && 'licitacion'].filter(Boolean);
+    if (!datos.intereses.length) return avisar('Marca al menos subvenciones o licitaciones');
+    datos.al_corriente = f.al_corriente === '' ? null : f.al_corriente === 'true';
+    datos.incluir_territorio = f.incluir_territorio === 'true';
+    try {
+      const r = await api(k ? `/api/clientes/${k.id}` : '/api/clientes', { method: k ? 'PATCH' : 'POST', body: datos });
+      estado.clienteAbierto = r.id;
+      avisar('Cliente guardado');
+      verClientes(c);
+    } catch (err) { avisar(err.message); }
+  });
+}
+
+async function verCliente(c, id) {
+  const k = await api(`/api/clientes/${id}`);
+  const filtro = estado.filtroSemaforo || 'utiles';
+  const ops = k.oportunidades.filter((o) => (filtro === 'todas' ? true
+    : filtro === 'descartadas' ? o.estado === 'descartada'
+      : o.estado !== 'descartada' && o.semaforo !== 'rojo'));
+  const cuenta = (s) => k.oportunidades.filter((o) => o.estado !== 'descartada' && (s ? o.semaforo === s : !o.semaforo)).length;
+  c.innerHTML = `
+    <div class="fila" style="justify-content:space-between;align-items:center">
+      <button id="btn-volver">← Clientes</button>
+      <div class="fila">
+        <button id="btn-editar">Editar ficha</button>
+        <button id="btn-rastrear" title="Vuelve a leer las fuentes de los últimos ${estado.config.dias_rastreo || 90} días buscando para este cliente">Buscar en las fuentes (${estado.config.dias_rastreo || 90} días)</button>
+        ${estado.config.triaje ? '<button id="btn-evaluar">Evaluar encaje</button>' : ''}
+        <button class="primario" id="btn-islaris">Pasar a Claude (skill Islaris)</button>
+      </div>
+    </div>
+    <h2>${esc(k.razon_social)}</h2>
+    <p class="meta">${esc([k.cif, k.forma_juridica, [k.municipio, k.isla].filter(Boolean).join(', '), k.empleados != null ? `${k.empleados} empleados` : null].filter(Boolean).join(' · '))}</p>
+    ${k.proyecto ? `<p><strong>Proyecto:</strong> ${esc(k.proyecto)}${k.proyecto_importe ? ` (${esc(importe(k.proyecto_importe))})` : ''}</p>` : ''}
+    <p class="meta">Busca: ${esc((k.palabras_clave || []).join(', ') || 'sin palabras clave')}${k.incluir_territorio ? ` · territorio: ${esc(k.territorios_efectivos.join(', ') || 'no indicado')}` : ''}</p>
+    ${!k.palabras_clave?.length ? '<p class="etiqueta dudosa">Añade palabras clave en «Editar ficha» (o pulsa «Sugerir con IA») para que el vigilante encuentre más.</p>' : ''}
+    <div class="pestanas" style="margin-top:12px">
+      <button data-filtro="utiles" class="${filtro === 'utiles' ? 'activa' : ''}">${punto('verde')} ${cuenta('verde')} · ${punto('amarillo')} ${cuenta('amarillo')} · sin evaluar ${cuenta(null)}</button>
+      <button data-filtro="todas" class="${filtro === 'todas' ? 'activa' : ''}">Todas (incluye rojas)</button>
+      <button data-filtro="descartadas" class="${filtro === 'descartadas' ? 'activa' : ''}">Descartadas</button>
+    </div>
+    ${ops.length ? `<div class="tabla-scroll"><table>
+      <tr><th></th><th>Convocatoria</th><th>Plazo</th><th>Importe</th><th>Por qué</th><th>Estado</th></tr>
+      ${ops.map((o) => `<tr>
+        <td>${punto(o.semaforo)}<div class="meta">${o.encaje ?? ''}</div></td>
+        <td><a href="#" data-abrir="${o.convocatoria_id}">${esc(o.titulo)}</a>
+          <div class="meta">${esc(o.organismo_texto || '')} · ${esc(o.fuente)}${o.url_original ? ` · ${enlace(o.url_original, 'oficial')}` : ''}</div></td>
+        <td>${o.fecha_limite ? `${esc(fecha(o.fecha_limite, false))}<div class="meta">${o.dias_restantes} días</div>` : (o.ventanilla_permanente ? 'Permanente' : '<span class="meta">sin plazo</span>')}</td>
+        <td>${esc(o.importe_orientativo || importe(o.presupuesto_sin_impuestos ?? o.importe_max_ayuda ?? o.valor_estimado, o.moneda))}</td>
+        <td>${esc(o.motivo || `Coincide por ${o.origen === 'territorio' ? 'territorio' : 'palabras clave'}: ${(o.coincidencias || []).join(', ')}`)}
+          ${o.requisito_critico ? `<div class="meta">Verificar: ${esc(o.requisito_critico)}</div>` : ''}</td>
+        <td><select data-op="${o.convocatoria_id}">${ESTADOS_OP.map(([v, n]) => `<option value="${v}" ${o.estado === v ? 'selected' : ''}>${n}</option>`).join('')}</select></td>
+      </tr>`).join('')}</table></div>` : `<div class="vacio">Nada por aquí todavía. Si acabas de crear el cliente, pulsa «Buscar en las fuentes» para revisar los últimos ${estado.config.dias_rastreo || 90} días.</div>`}
+    <dialog id="dlg-islaris"><form method="dialog">
+      <strong>Pasar a Claude con la skill islaris-subvenciones</strong>
+      <p class="meta">Copia este texto y pégalo en una conversación nueva de Claude. Lleva la ficha (paso 1) y las convocatorias abiertas verdes, amarillas y sin evaluar como punto de partida del informe del paso 2.</p>
+      <textarea id="txt-islaris" rows="16" readonly></textarea>
+      <div class="fila"><button value="cerrar">Cerrar</button><button type="button" id="btn-descargar">Descargar .md</button><button type="button" class="primario" id="btn-copiar">Copiar</button></div>
+    </form></dialog>`;
+  $('#btn-volver').addEventListener('click', () => { estado.clienteAbierto = null; history.replaceState(null, '', '#'); verClientes(c); });
+  $('#btn-editar').addEventListener('click', () => formCliente(c, k));
+  c.querySelector('.pestanas').addEventListener('click', (e) => {
+    const b = e.target.closest('[data-filtro]');
+    if (b) { estado.filtroSemaforo = b.dataset.filtro; verCliente(c, id); }
+  });
+  c.querySelectorAll('[data-op]').forEach((s) => s.addEventListener('change', async () => {
+    await api(`/api/clientes/${id}/oportunidades/${s.dataset.op}`, { method: 'PATCH', body: { estado: s.value } });
+    avisar('Guardado'); verCliente(c, id);
+  }));
+  const lanzar = async (ruta, msg) => {
+    try { await api(ruta, { method: 'POST' }); avisar(msg); vigilarEjecucion(); }
+    catch (err) { avisar(err.message); }
+  };
+  $('#btn-rastrear').addEventListener('click', () => lanzar(`/api/clientes/${id}/rastrear`, 'Buscando en las fuentes: puede tardar varios minutos. Vuelve a abrir el cliente al terminar.'));
+  $('#btn-evaluar')?.addEventListener('click', () => lanzar(`/api/clientes/${id}/evaluar`, 'Evaluando el encaje con Claude…'));
+  $('#btn-islaris').addEventListener('click', async () => {
+    const { markdown } = await api(`/api/clientes/${id}/islaris`);
+    const d = $('#dlg-islaris');
+    $('#txt-islaris').value = markdown;
+    d.showModal();
+    $('#btn-copiar').onclick = () => navigator.clipboard.writeText(markdown).then(() => avisar('Copiado: pégalo en Claude'));
+    $('#btn-descargar').onclick = () => {
+      const a = document.createElement('a');
+      a.href = URL.createObjectURL(new Blob([markdown], { type: 'text/markdown' }));
+      a.download = `islaris-${k.razon_social.replace(/[^\p{L}\p{N}]+/gu, '-').toLowerCase()}.md`;
+      a.click();
+    };
+  });
+}
+
 // ---------- ejecución manual ----------
 $('#btn-vigilar').addEventListener('click', async () => {
   try {
@@ -578,7 +775,11 @@ async function vigilarEjecucion() {
   $('#estado-ejecucion').textContent = e?.enMarcha ? 'Vigilando…' : '';
   $('#btn-vigilar').disabled = Boolean(e?.enMarcha);
   if (e?.enMarcha) setTimeout(vigilarEjecucion, 4000);
-  else if (e?.ultimo && estado.seccion === 'feed') verFeed($('#contenido'));
+  else if (e?.ultimo && vigilarEjecucion.enMarcha) {
+    if (estado.seccion === 'feed') verFeed($('#contenido'));
+    if (estado.seccion === 'clientes') verClientes($('#contenido'));
+  }
+  vigilarEjecucion.enMarcha = Boolean(e?.enMarcha);
 }
 
 // ---------- usuario ----------
@@ -606,6 +807,9 @@ async function iniciar() {
   cargarSeccion();
   vigilarEjecucion();
 }
+// Enlace directo desde los correos de aviso: #cliente=ID
+const enlaceCliente = location.hash.match(/cliente=(\d+)/);
+if (enlaceCliente) { estado.seccion = 'clientes'; estado.clienteAbierto = Number(enlaceCliente[1]); }
 pintarUsuario();
 iniciar();
 </script>

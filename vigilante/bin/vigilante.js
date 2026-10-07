@@ -10,7 +10,8 @@ const { vigilar } = require('../src/vigilante');
 const { triarPendientes } = require('../src/triaje');
 const { analizar } = require('../src/analisis');
 const { procesarBusquedas } = require('../src/busquedas');
-const { ciclo, mantenimiento } = require('../src/tareas');
+const { ciclo, mantenimiento, trabajarClientes, rastrearCliente } = require('../src/tareas');
+const { paqueteIslaris } = require('../src/clientes');
 const { arrancar } = require('../src/servidor');
 
 const AYUDA = `Vigilante de subvenciones y licitaciones
@@ -25,6 +26,9 @@ const AYUDA = `Vigilante de subvenciones y licitaciones
                               vigilar + triaje + avisos (para cron)
   mantenimiento               Caduca lo vencido y recalcula urgencias (diario, 07:15)
   analizar <id>               Análisis en profundidad de una convocatoria
+  clientes                    Cruza los clientes con lo abierto, evalúa el encaje y avisa
+  rastrear <cliente_id>       Relee las fuentes los últimos VIGILANTE_DIAS_RASTREO días para un cliente
+  islaris <cliente_id>        Imprime el paquete para la skill islaris-subvenciones
   servidor [--sin-planificador]
                               Interfaz web + planificador según fuente.cron
 `;
@@ -67,6 +71,19 @@ async function main() {
                 const id = parseInt(o._[0], 10);
                 if (!id) throw new Error('Indica el id de la convocatoria');
                 console.log(JSON.stringify(await analizar(db, config, id), null, 2));
+                break;
+            }
+            case 'clientes': await trabajarClientes(db, config); break;
+            case 'rastrear': {
+                const id = parseInt(o._[0], 10);
+                if (!id) throw new Error('Indica el id del cliente');
+                await rastrearCliente(db, config, id);
+                break;
+            }
+            case 'islaris': {
+                const id = parseInt(o._[0], 10);
+                if (!id) throw new Error('Indica el id del cliente');
+                console.log(await paqueteIslaris(db, id));
                 break;
             }
             case 'servidor':

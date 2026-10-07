@@ -8,6 +8,7 @@ const { compilarPalabras, clasificar, bajarRelevancia, ORDEN_RELEVANCIA } = requ
 const { detectarSubtipo, SUBTIPOS_IGNORADOS } = require('./subtipo');
 const { hoyYmd, sumarDias, normalizar } = require('./texto');
 const { pedir } = require('./http');
+const { clientesActivos, compilarClienteBusqueda, coincideCliente } = require('./clientes');
 
 /**
  * Corrige importes que violarían los CHECK del esquema en lugar de perder la convocatoria:
@@ -24,6 +25,7 @@ function sanear(c) {
         c.valor_estimado = null;
     }
     c.ventanilla_permanente = Boolean(c.ventanilla_permanente);
+    c.solo_clientes = Boolean(c.solo_clientes);
     if (c.ventanilla_permanente) c.fecha_limite = null;
     if (!c.ambito && c.pais) c.ambito = c.pais === 'ES' ? 'nacional' : 'extranjero';
     c.moneda = c.moneda || 'EUR';
@@ -53,15 +55,32 @@ async function vigilar(db, config, { fuentes = config.fuentes, dias = config.dia
     const desde = sumarDias(hasta, -Math.max(0, dias));
     const resumen = {};
 
+    // Lo que buscan los clientes activos también se guarda (marcado solo_clientes si al
+    // grupo no le interesa) para poder cruzarlo después con sus fichas.
+    const clientes = (await clientesActivos(db)).map(compilarClienteBusqueda);
+    const palabrasTed = [...palabras, ...clientes.filter((k) => k.intereses.has('licitacion')).flatMap((k) => k.palabras)];
+
     /** Clasifica y decide si la convocatoria merece guardarse. Muta c. */
     const interesa = (c) => {
         const cl = clasificar(c, palabras);
-        if (!cl) return false;
-        let relevancia = cl.relevancia;
-        if (c.organismo_texto && vetados.has(normalizar(c.organismo_texto))) relevancia = bajarRelevancia(relevancia);
-        c.relevancia = relevancia;
-        c.keywords_coincidentes = cl.coincidencias;
-        return ORDEN_RELEVANCIA[relevancia] >= minimo;
+        let relevancia = cl?.relevancia;
+        if (relevancia && c.organismo_texto && vetados.has(normalizar(c.organismo_texto))) {
+            relevancia = bajarRelevancia(relevancia);
+        }
+        const paraGrupo = Boolean(relevancia) && ORDEN_RELEVANCIA[relevancia] >= minimo;
+        if (paraGrupo) {
+            c.relevancia = relevancia;
+            c.keywords_coincidentes = cl.coincidencias;
+            c.solo_clientes = false;
+            return true;
+        }
+        if (c.clase === 'adjudicacion') return false;
+        const deClientes = clientes.map((k) => coincideCliente(k, c)).filter(Boolean);
+        if (!deClientes.length) return false;
+        c.relevancia = relevancia || 'baja';
+        c.keywords_coincidentes = [...new Set([...(cl?.coincidencias || []), ...deClientes.flatMap((m) => m.coincidencias)])];
+        c.solo_clientes = true;
+        return true;
     };
 
     for (const codigo of fuentes) {
@@ -78,7 +97,7 @@ async function vigilar(db, config, { fuentes = config.fuentes, dias = config.dia
         const r = { leidas: 0, nuevas: 0, actualizadas: 0, adjudicaciones: 0, errores: 0 };
         resumen[codigo] = r;
         const ctx = {
-            desde, hasta, config, palabras, log,
+            desde, hasta, config, palabras: palabrasTed, log,
             interesa: (c) => interesa({ ...c }),
             pedir: (url, op) => pedirFn(url, { userAgent: config.userAgent, ...op }),
         };

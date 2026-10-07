@@ -7,7 +7,8 @@ const fs = require('fs');
 const path = require('path');
 const crypto = require('crypto');
 const lectores = require('./fuentes');
-const { iniciarPlanificador, ciclo } = require('./tareas');
+const { iniciarPlanificador, ciclo, trabajarClientes, rastrearCliente } = require('./tareas');
+const clientesMod = require('./clientes');
 const { analizar } = require('./analisis');
 const { triarUna, guardarTriaje, crearCliente } = require('./triaje');
 const { detectarSubtipo } = require('./subtipo');
@@ -24,6 +25,62 @@ const CORREGIBLES = ['titulo', 'tipo', 'subtipo', 'resumen', 'organismo_texto', 
     'url_pliego_administrativo', 'url_pliego_tecnico', 'url_bases', 'relevancia', 'cpv'];
 
 const ESTADOS_REVISION = new Set(['nueva', 'en_seguimiento', 'descartada', 'archivada', 'convertida']);
+
+// Campos de la ficha de cliente que se pueden escribir desde la web
+const CAMPOS_CLIENTE = ['razon_social', 'cif', 'forma_juridica', 'isla', 'municipio', 'actividad', 'cnae',
+    'empleados', 'facturacion', 'fecha_constitucion', 'proyecto', 'proyecto_importe', 'proyecto_plazo',
+    'intereses', 'minimis_3_anios', 'al_corriente', 'servicios_licitacion', 'certificaciones',
+    'palabras_clave', 'territorios', 'incluir_territorio', 'umbral_aviso', 'email_contacto', 'notas', 'activo'];
+const LISTAS_CLIENTE = new Set(['cnae', 'intereses', 'palabras_clave', 'territorios']);
+
+function valorCliente(k, v) {
+    if (LISTAS_CLIENTE.has(k)) {
+        const l = Array.isArray(v) ? v : String(v ?? '').split(/[,\n]/);
+        return [...new Set(l.map((s) => String(s).trim()).filter(Boolean))];
+    }
+    if (v === '' || v === undefined) return null;
+    if (k === 'cif' && v) return String(v).toUpperCase().replace(/[^0-9A-Z]/g, '');
+    return v;
+}
+
+async function guardarFichaCliente(db, id, cuerpo) {
+    const campos = CAMPOS_CLIENTE.filter((k) => k in cuerpo);
+    if (!id && !cuerpo.razon_social) throw new ErrorPeticion(400, 'Falta la razón social');
+    if (!campos.length) throw new ErrorPeticion(400, 'No hay datos que guardar');
+    const valores = campos.map((k) => valorCliente(k, cuerpo[k]));
+    if (id) {
+        const { rows } = await db.query(
+            `UPDATE cliente SET ${campos.map((k, i) => `${k} = $${i + 2}`).join(', ')} WHERE id = $1 RETURNING *`,
+            [id, ...valores]);
+        if (!rows.length) throw new ErrorPeticion(404, 'No existe ese cliente');
+        return rows[0];
+    }
+    const { rows } = await db.query(
+        `INSERT INTO cliente (${campos.join(', ')}) VALUES (${campos.map((_, i) => `$${i + 1}`).join(', ')}) RETURNING *`,
+        valores);
+    return rows[0];
+}
+
+async function listarClientes(db) {
+    const { rows } = await db.query(`
+        SELECT k.*,
+               count(o.convocatoria_id) FILTER (WHERE o.semaforo = 'verde' AND o.estado <> 'descartada')::int    AS verdes,
+               count(o.convocatoria_id) FILTER (WHERE o.semaforo = 'amarillo' AND o.estado <> 'descartada')::int AS amarillas,
+               count(o.convocatoria_id) FILTER (WHERE o.evaluado_at IS NULL AND o.estado <> 'descartada')::int   AS sin_evaluar,
+               min(o.fecha_limite) FILTER (WHERE o.semaforo IN ('verde','amarillo') AND o.estado <> 'descartada') AS proximo_plazo
+          FROM cliente k
+          LEFT JOIN v_oportunidades_cliente o ON o.cliente_id = k.id
+         GROUP BY k.id
+         ORDER BY k.activo DESC, k.razon_social`);
+    return rows;
+}
+
+async function fichaClienteCompleta(db, id) {
+    const cliente = (await db.query('SELECT * FROM cliente WHERE id = $1', [id])).rows[0];
+    if (!cliente) throw new ErrorPeticion(404, 'No existe ese cliente');
+    const ops = await clientesMod.oportunidades(db, id, { incluirRojas: true, incluirDescartadas: true });
+    return { ...cliente, territorios_efectivos: clientesMod.territoriosDe(cliente), oportunidades: ops };
+}
 
 class ErrorPeticion extends Error {
     constructor(status, mensaje) {
@@ -216,7 +273,64 @@ function crearServidor(db, config, { log = console.log, planificador = null } = 
         if (ejecuciones.registro.length > 200) ejecuciones.registro.shift();
     };
 
+    /** Lanza un trabajo largo sin bloquear la respuesta (uno cada vez). */
+    function enSegundoPlano(nombre, fn) {
+        if (ejecuciones.enMarcha || planificador?.ocupado) throw new ErrorPeticion(409, 'Ya hay una vigilancia en marcha');
+        ejecuciones.enMarcha = true;
+        anotar(`Inicio: ${nombre}`);
+        fn()
+            .then((r) => { ejecuciones.ultimo = { fin: new Date(), resumen: r }; anotar(`Fin: ${nombre}`); })
+            .catch((e) => anotar(`Error en ${nombre}: ${e.message}`))
+            .finally(() => { ejecuciones.enMarcha = false; });
+        return { iniciada: true };
+    }
+
     const rutas = [
+        ['GET', /^\/api\/clientes$/, () => listarClientes(db)],
+        ['POST', /^\/api\/clientes$/, async (req) => {
+            const k = await guardarFichaCliente(db, null, await leerCuerpo(req));
+            await clientesMod.cruzarClientes(db, { clienteId: k.id, log: anotar });
+            return fichaClienteCompleta(db, k.id);
+        }],
+        ['GET', /^\/api\/clientes\/(\d+)$/, (req, q, m) => fichaClienteCompleta(db, Number(m[1]))],
+        ['PATCH', /^\/api\/clientes\/(\d+)$/, async (req, q, m) => {
+            const id = Number(m[1]);
+            const cuerpo = await leerCuerpo(req);
+            await guardarFichaCliente(db, id, cuerpo);
+            // Si cambia lo que se busca, los cruces sin evaluar se rehacen
+            if (['palabras_clave', 'territorios', 'incluir_territorio', 'intereses'].some((k) => k in cuerpo)) {
+                await db.query(`DELETE FROM cliente_convocatoria
+                                 WHERE cliente_id = $1 AND evaluado_at IS NULL AND estado = 'sugerida'`, [id]);
+            }
+            await clientesMod.cruzarClientes(db, { clienteId: id, log: anotar });
+            return fichaClienteCompleta(db, id);
+        }],
+        ['DELETE', /^\/api\/clientes\/(\d+)$/, async (req, q, m) => {
+            await db.query('DELETE FROM cliente WHERE id = $1', [Number(m[1])]);
+            return { ok: true };
+        }],
+        ['POST', /^\/api\/clientes\/(\d+)\/sugerir-palabras$/, async (req, q, m) => {
+            const k = (await db.query('SELECT * FROM cliente WHERE id = $1', [Number(m[1])])).rows[0];
+            if (!k) throw new ErrorPeticion(404, 'No existe ese cliente');
+            if (!config.anthropicApiKey) throw new ErrorPeticion(400, 'Falta ANTHROPIC_API_KEY para sugerir palabras clave');
+            return clientesMod.sugerirPalabras(config, k);
+        }],
+        ['POST', /^\/api\/clientes\/(\d+)\/evaluar$/, (req, q, m) =>
+            enSegundoPlano('evaluar encaje del cliente', () => trabajarClientes(db, config, { clienteId: Number(m[1]), log: anotar }))],
+        ['POST', /^\/api\/clientes\/(\d+)\/rastrear$/, (req, q, m) =>
+            enSegundoPlano(`rastreo de ${config.diasRastreo} días para el cliente`, () => rastrearCliente(db, config, Number(m[1]), { log: anotar }))],
+        ['PATCH', /^\/api\/clientes\/(\d+)\/oportunidades\/(\d+)$/, async (req, q, m) => {
+            const { estado } = await leerCuerpo(req);
+            if (!['sugerida', 'en_estudio', 'propuesta', 'descartada'].includes(estado)) throw new ErrorPeticion(400, 'Estado no válido');
+            const { rows } = await db.query(`UPDATE cliente_convocatoria SET estado = $3
+                                              WHERE cliente_id = $1 AND convocatoria_id = $2 RETURNING *`,
+            [Number(m[1]), Number(m[2]), estado]);
+            if (!rows.length) throw new ErrorPeticion(404, 'No existe esa oportunidad');
+            return rows[0];
+        }],
+        ['GET', /^\/api\/clientes\/(\d+)\/islaris$/, async (req, q, m) => ({
+            markdown: await clientesMod.paqueteIslaris(db, Number(m[1]), { incluirRojas: q.get('rojas') === '1' }),
+        })],
         ['GET', /^\/api\/feed$/, (req, q) => listarFeed(db, q)],
         ['GET', /^\/api\/contadores$/, () => contarVistas(db)],
         ['GET', /^\/api\/convocatorias\/(\d+)$/, (req, q, m) => ficha(db, Number(m[1]))],
@@ -289,17 +403,13 @@ function crearServidor(db, config, { log = console.log, planificador = null } = 
         ['GET', /^\/api\/ejecucion$/, () => ({ ...ejecuciones, registro: ejecuciones.registro.slice(-50) })],
         ['POST', /^\/api\/ejecucion$/, async (req) => {
             const b = await leerCuerpo(req);
-            if (ejecuciones.enMarcha || planificador?.ocupado) throw new ErrorPeticion(409, 'Ya hay una vigilancia en marcha');
             const fuentes = Array.isArray(b.fuentes) && b.fuentes.length ? b.fuentes : config.fuentes;
-            ejecuciones.enMarcha = true;
-            ciclo(db, config, { fuentes, dias: b.dias ?? config.diasAtras, log: anotar })
-                .then((r) => { ejecuciones.ultimo = { fin: new Date(), resumen: r }; })
-                .catch((e) => anotar(`Error: ${e.message}`))
-                .finally(() => { ejecuciones.enMarcha = false; });
+            enSegundoPlano('vigilancia', () => ciclo(db, config, { fuentes, dias: b.dias ?? config.diasAtras, log: anotar }));
             return { iniciada: true, fuentes };
         }],
         ['GET', /^\/api\/config$/, () => ({
             triaje: Boolean(config.anthropicApiKey), modelo: config.modeloTriaje, email: Boolean(config.smtp?.host),
+            email_avisos: config.emailAvisos || null, dias_rastreo: config.diasRastreo,
             fuentes_con_lector: Object.keys(lectores), token: Boolean(config.token),
         })],
     ];

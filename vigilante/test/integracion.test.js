@@ -18,6 +18,8 @@ const { vigilar } = require('../src/vigilante');
 const { triarPendientes } = require('../src/triaje');
 const { procesarBusquedas } = require('../src/busquedas');
 const { crearServidor } = require('../src/servidor');
+const clientes = require('../src/clientes');
+const { trabajarClientes } = require('../src/tareas');
 
 let db;
 const silencio = () => {};
@@ -39,6 +41,7 @@ async function pedirFalso(url, { como } = {}) {
     if (url.includes('boe.es')) cuerpo = fixture('boe-sumario.json');
     else if (url.includes('convocatorias/busqueda')) cuerpo = fixture('bdns-listado.json');
     else if (url.includes('numConv=812345')) cuerpo = fixture('bdns-detalle-812345.json');
+    else if (url.includes('numConv=812347')) cuerpo = fixture('bdns-detalle-812347.json');
     else if (url.includes('ted.europa.eu')) cuerpo = fixture('ted.json');
     else if (url.includes('_20261005_120000')) cuerpo = '<feed xmlns="http://www.w3.org/2005/Atom"></feed>';
     else if (url.includes('contrataciondelestado.es')) cuerpo = fixture('placsp.atom');
@@ -289,4 +292,112 @@ test('mantenimiento diario: caduca lo vencido', opciones, async () => {
     // Si la fuente amplía el plazo, vuelve al feed
     await vigilar(db, { ...CONFIG, fuentes: ['TED'] }, { log: silencio, pedirFn: pedirFalso });
     assert.equal((await conv('TED', '612345-2026')).estado, 'nueva');
+});
+
+test('clientes: captura lo que solo les interesa a ellos, semáforo, paquete para Islaris y aviso', opciones, async () => {
+    const k = (await db.query(`
+        INSERT INTO cliente (razon_social, isla, municipio, actividad, proyecto, palabras_clave, intereses, umbral_aviso)
+        VALUES ('Comercial Teide SL', 'Tenerife', 'La Laguna', 'Tienda de electrodomésticos',
+                'Tienda online y TPV nuevo', '{digitalización del pequeño comercio,comercio electrónico}', '{subvencion}', 50)
+        RETURNING *`)).rows[0];
+
+    // La ayuda del Cabildo no interesa al grupo: entra marcada solo para clientes
+    const r = await vigilar(db, { ...CONFIG, fuentes: ['BDNS'] }, { log: silencio, pedirFn: pedirFalso });
+    assert.equal(r.BDNS.nuevas, 1);
+    const cabildo = await conv('BDNS', '812347');
+    assert.equal(cabildo.solo_clientes, true);
+    assert.equal((await db.query('SELECT count(*)::int AS n FROM v_feed WHERE id = $1', [cabildo.id])).rows[0].n, 0);
+    assert.equal((await db.query('SELECT count(*)::int AS n FROM v_pendientes_triaje WHERE id = $1', [cabildo.id])).rows[0].n, 0);
+
+    // Cruce: por palabra clave (Cabildo) y por territorio (Canarias Aporta, de PROEXCA)
+    const cruces = await clientes.cruzarClientes(db, { log: silencio });
+    assert.ok(cruces[k.id] >= 2, JSON.stringify(cruces));
+    const filas = (await db.query('SELECT * FROM cliente_convocatoria WHERE cliente_id = $1', [k.id])).rows;
+    assert.equal(filas.find((f) => f.convocatoria_id === cabildo.id).origen, 'palabra_clave');
+    const aporta = await conv('BDNS', '812345');
+    assert.equal(filas.find((f) => f.convocatoria_id === aporta.id).origen, 'territorio');
+    // Las licitaciones no, porque solo le interesan subvenciones
+    const place = await conv('PLACE', '15550004');
+    assert.ok(!filas.some((f) => f.convocatoria_id === place.id));
+
+    // Semáforo con un cliente de Claude simulado
+    const peticiones = [];
+    const ia = { beta: { messages: { create: async (p) => {
+        peticiones.push(p);
+        const verde = p.messages[0].content.includes('pequeño comercio');
+        return { stop_reason: 'end_turn', model: 'modelo-de-prueba', content: [{ type: 'text', text: JSON.stringify(verde
+            ? { semaforo: 'verde', encaje: 85, motivo: 'Comercio minorista de Tenerife que se digitaliza', requisito_critico: 'Ser pyme comercial', importe_orientativo: 'hasta el 70 %' }
+            : { semaforo: 'rojo', encaje: 10, motivo: 'Es para internacionalización', requisito_critico: null, importe_orientativo: null }) }] };
+    } } } };
+    const e = await clientes.evaluarEncajes(db, { ...CONFIG, anthropicApiKey: 'x' }, { log: silencio, cliente: ia });
+    assert.equal(e.errores, 0);
+    assert.ok(e.evaluadas >= 2);
+    assert.match(peticiones[0].messages[0].content, /Comercial Teide SL/);
+    assert.equal(peticiones[0].output_config.format.schema.properties.semaforo.enum.length, 3);
+
+    // Paquete para la skill: incluye la verde, no la roja
+    const md = await clientes.paqueteIslaris(db, k.id);
+    assert.match(md, /skill islaris-subvenciones/);
+    assert.match(md, /Razón social: Comercial Teide SL/);
+    assert.match(md, /modernización y digitalización del pequeño comercio/);
+    assert.match(md, /🟢 Verde \(85\/100\)/);
+    assert.match(md, /tenerife\.es\/bases-comercio-2026/);
+    assert.doesNotMatch(md, /Canarias Aporta 2026/);
+
+    // Aviso por correo: solo la verde (encaje ≥ 50), con el paquete dentro, una sola vez
+    const enviados = [];
+    const transporte = { sendMail: async (m) => { enviados.push(m); } };
+    const cfg = { ...CONFIG, anthropicApiKey: 'x', emailAvisos: 'jorge@prueba', host: '127.0.0.1', puerto: 3080 };
+    const a1 = await clientes.avisarClientes(db, cfg, { log: silencio, transporte });
+    assert.equal(a1.avisadas, 1);
+    assert.equal(enviados[0].to, 'jorge@prueba');
+    assert.match(enviados[0].subject, /Comercial Teide SL/);
+    assert.match(enviados[0].text, /PARA PEGAR EN CLAUDE/);
+    assert.match(enviados[0].text, /#cliente=/);
+    const a2 = await clientes.avisarClientes(db, cfg, { log: silencio, transporte });
+    assert.equal(a2.avisadas, 0);
+
+    // Sin clave de Claude, trabajarClientes cruza pero no evalúa ni falla
+    const t = await trabajarClientes(db, { ...CONFIG, anthropicApiKey: null, emailAvisos: null }, { log: silencio });
+    assert.equal(t.encaje.evaluadas, 0);
+});
+
+test('API de clientes: alta, cruce inmediato, cambio de estado y paquete', opciones, async () => {
+    const servidor = crearServidor(db, CONFIG, { log: silencio });
+    await new Promise((ok) => servidor.listen(0, '127.0.0.1', ok));
+    const base = `http://127.0.0.1:${servidor.address().port}`;
+    const api = (ruta, op = {}) => fetch(base + ruta, {
+        ...op, headers: { Authorization: 'Bearer secreto', 'Content-Type': 'application/json' },
+    });
+    try {
+        assert.equal((await api('/api/clientes', { method: 'POST', body: JSON.stringify({ isla: 'Tenerife' }) })).status, 400);
+        const alta = await (await api('/api/clientes', { method: 'POST', body: JSON.stringify({
+            razon_social: 'Naviera Pruebas SL', cif: 'b-12345678', isla: 'Gran Canaria', intereses: ['licitacion'],
+            palabras_clave: 'gemelo digital, mantenimiento evolutivo', incluir_territorio: false,
+        }) })).json();
+        assert.equal(alta.cif, 'B12345678');
+        assert.deepEqual(alta.palabras_clave, ['gemelo digital', 'mantenimiento evolutivo']);
+        assert.ok(alta.oportunidades.length >= 1, 'el alta cruza en el momento');
+        assert.ok(alta.oportunidades.every((o) => o.tipo === 'licitacion'));
+
+        const op = alta.oportunidades[0];
+        const est = await api(`/api/clientes/${alta.id}/oportunidades/${op.convocatoria_id}`, { method: 'PATCH', body: JSON.stringify({ estado: 'en_estudio' }) });
+        assert.equal((await est.json()).estado, 'en_estudio');
+
+        const lista = await (await api('/api/clientes')).json();
+        assert.ok(lista.some((k) => k.razon_social === 'Naviera Pruebas SL'));
+
+        const { markdown } = await (await api(`/api/clientes/${alta.id}/islaris`)).json();
+        assert.match(markdown, /Naviera Pruebas SL/);
+        assert.match(markdown, /Estado en Islaris: en estudio/);
+
+        // Sin clave no se puede sugerir con IA
+        assert.equal((await api(`/api/clientes/${alta.id}/sugerir-palabras`, { method: 'POST' })).status, 400);
+
+        const editado = await (await api(`/api/clientes/${alta.id}`, { method: 'PATCH', body: JSON.stringify({ empleados: 12 }) })).json();
+        assert.equal(editado.empleados, 12);
+        assert.equal((await api(`/api/clientes/${alta.id}`, { method: 'DELETE' })).status, 200);
+    } finally {
+        servidor.close();
+    }
 });

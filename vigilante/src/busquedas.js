@@ -100,4 +100,4 @@ async function procesarBusquedas(db, config, { log = console.log, transporte } =
     return { busquedas: busquedas.length, avisadas };
 }
 
-module.exports = { procesarBusquedas, coincidencias, componerEmail };
+module.exports = { procesarBusquedas, coincidencias, componerEmail, crearTransporte, escapar, fmtFecha, fmtImporte };

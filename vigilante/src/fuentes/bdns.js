@@ -43,7 +43,10 @@ function aConvocatoria(item, detalle, zona) {
     const plazo = [d.textInicio && `Inicio: ${limpiarHtml(d.textInicio)}`, d.textFin && `Fin: ${limpiarHtml(d.textFin)}`]
         .filter(Boolean).join(' · ');
     const beneficiarios = arr(d.tiposBeneficiarios).map((b) => b.descripcion).filter(Boolean).join(', ');
+    const o = d.organo || item;
+    const organoCompleto = [o?.nivel1, o?.nivel2, o?.nivel3].filter((x) => x && String(x).trim()).join(' > ');
     const resumen = [
+        organoCompleto ? `Órgano: ${organoCompleto}` : null,
         d.descripcionLeng && d.descripcionLeng !== item.descripcion ? d.descripcionLeng : null,
         finalidad,
         beneficiarios && `Beneficiarios: ${beneficiarios}`,

@@ -1,0 +1,22 @@
+{
+  "id": 3,
+  "codigoBDNS": "812347",
+  "organo": {
+    "nivel1": "CANARIAS",
+    "nivel2": "CABILDO INSULAR DE TENERIFE",
+    "nivel3": "ÁREA DE DESARROLLO ECONÓMICO"
+  },
+  "fechaRecepcion": "2026-10-05",
+  "presupuestoTotal": 400000,
+  "descripcion": "Subvenciones para la modernización y digitalización del pequeño comercio minorista 2026",
+  "tiposBeneficiarios": [
+    {
+      "descripcion": "PYME Y PERSONAS FÍSICAS QUE DESARROLLAN ACTIVIDAD ECONÓMICA"
+    }
+  ],
+  "descripcionFinalidad": "Comercio, Turismo y Pymes",
+  "urlBasesReguladoras": "https://www.tenerife.es/bases-comercio-2026",
+  "abierto": true,
+  "fechaInicioSolicitud": "2026-10-06",
+  "fechaFinSolicitud": "2026-11-06"
+}

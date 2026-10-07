@@ -14,6 +14,7 @@ const bdns = require('../src/fuentes/bdns');
 const placsp = require('../src/fuentes/placsp');
 const ted = require('../src/fuentes/ted');
 const { sanear, estadoInicial } = require('../src/vigilante');
+const clientes = require('../src/clientes');
 
 const fixture = (f) => fs.readFileSync(path.join(__dirname, 'fixtures', f), 'utf8');
 const ZONA = 'Europe/Madrid';
@@ -153,4 +154,29 @@ test('sanear deja vacíos los importes incoherentes y deduce el ámbito', () => 
     assert.equal(estadoInicial({ subtipo: 'resolucion' }), 'ignorada');
     assert.equal(estadoInicial({ subtipo: 'convocatoria', fecha_limite: '2000-01-01T00:00:00Z' }), 'vencida');
     assert.equal(estadoInicial({ subtipo: 'convocatoria', fecha_limite: null }), 'nueva');
+});
+
+test('clientes: territorio por defecto y coincidencia por palabra clave o territorio', () => {
+    assert.deepEqual(clientes.territoriosDe({ isla: 'Tenerife', municipio: 'La Laguna', territorios: [] }), ['Canarias', 'Tenerife', 'La Laguna']);
+    assert.deepEqual(clientes.territoriosDe({ territorios: ['Lanzarote'] }), ['Lanzarote']);
+    const k = clientes.compilarClienteBusqueda({ id: 1, intereses: ['subvencion'], palabras_clave: ['eficiencia energética'],
+        isla: 'Tenerife', incluir_territorio: true, territorios: [] });
+    assert.deepEqual(clientes.coincideCliente(k, { tipo: 'subvencion', titulo: 'Ayudas a la EFICIENCIA ENERGETICA en hoteles' }),
+        { origen: 'palabra_clave', coincidencias: ['eficiencia energética'] });
+    assert.equal(clientes.coincideCliente(k, { tipo: 'subvencion', titulo: 'Becas', organismo_texto: 'CABILDO INSULAR DE TENERIFE' }).origen, 'territorio');
+    assert.equal(clientes.coincideCliente(k, { tipo: 'subvencion', titulo: 'Becas', organismo_texto: 'Ayuntamiento de Madrid' }), null);
+    assert.equal(clientes.coincideCliente(k, { tipo: 'licitacion', titulo: 'Eficiencia energética' }), null);
+});
+
+test('paquete para Islaris: ficha, convocatorias y lo que no cubre', () => {
+    const md = clientes.componerPaqueteIslaris(
+        { razon_social: 'ACME SL', isla: 'Tenerife', proyecto: 'Placas solares', intereses: ['subvencion'] },
+        [{ titulo: 'Autoconsumo', organismo_texto: 'IDAE', tipo: 'subvencion', fuente: 'BDNS', external_id: '1',
+            fecha_limite: null, ventanilla_permanente: true, semaforo: 'amarillo', encaje: 60, motivo: 'Encaja', estado: 'sugerida',
+            url_original: 'https://x', origen: 'palabra_clave', coincidencias: ['autoconsumo'] }],
+        { fecha: new Date('2026-10-07T10:00:00Z') });
+    assert.match(md, /Proyecto a financiar: Placas solares/);
+    assert.match(md, /Plazo: ventanilla permanente/);
+    assert.match(md, /🟡 Amarillo \(60\/100\)/);
+    assert.match(md, /REF/);
 });

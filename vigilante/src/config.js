@@ -55,6 +55,12 @@ function leerConfig() {
         host: process.env.VIGILANTE_HOST || '127.0.0.1',
         puerto: entero('VIGILANTE_PUERTO', 3080),
         token: process.env.VIGILANTE_TOKEN || null,
+        // Clientes: cruces evaluados por pasada, días que se rastrean al dar de alta un cliente
+        // y a dónde se mandan los avisos de oportunidades
+        encajeLote: entero('VIGILANTE_ENCAJE_LOTE', 60),
+        diasRastreo: entero('VIGILANTE_DIAS_RASTREO', 90),
+        rastreoMaxPaginas: entero('VIGILANTE_RASTREO_MAX_PAGINAS', 1000),
+        emailAvisos: process.env.VIGILANTE_EMAIL_AVISOS || process.env.SMTP_USER || null,
         // Email de las búsquedas guardadas (opcional)
         smtp: {
             host: process.env.SMTP_HOST || null,

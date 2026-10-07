@@ -117,7 +117,7 @@ const COLUMNAS = [
     'organismo_texto', 'numero_expediente_organo', 'pais', 'ambito', 'cpv', 'fecha_publicacion',
     'fecha_limite', 'ventanilla_permanente', 'presupuesto_sin_impuestos', 'presupuesto_con_impuestos',
     'valor_estimado', 'importe_max_ayuda', 'moneda', 'url_original', 'url_pliego_administrativo',
-    'url_pliego_tecnico', 'url_bases', 'keywords_coincidentes', 'relevancia',
+    'url_pliego_tecnico', 'url_bases', 'keywords_coincidentes', 'relevancia', 'solo_clientes',
 ];
 
 // Cuando el mismo anuncio llega por varias fuentes, la original debe ser la más completa:

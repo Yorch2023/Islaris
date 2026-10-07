@@ -46,6 +46,31 @@ un expediente es la referencia de texto `expediente_ref`.
 10. **Nada pisa una corrección humana**: lo corregido a mano queda marcado y el vigilante deja
     de actualizarlo. Los cambios que trae la fuente (plazo, presupuesto) quedan en el historial.
 
+## Clientes: oportunidades para cada empresa
+
+En la pestaña **Clientes** se da de alta la ficha de una empresa (actividad, isla, tamaño,
+proyecto que quiere financiar, minimis recibido, si busca subvenciones o licitaciones…) y
+las palabras clave que la describen (el botón «Sugerir con IA» las propone a partir de la ficha).
+
+- El vigilante guarda también lo que solo interesa a los clientes (marcado `solo_clientes`,
+  fuera del feed del grupo) y lo cruza con cada ficha: por palabra clave o, en subvenciones,
+  porque la convoca un organismo de su territorio (Canarias, su isla, su municipio). La BDNS
+  recoge todas las subvenciones públicas españolas, incluidas las de cabildos y ayuntamientos.
+- **Buscar en las fuentes** relee los últimos 90 días para un cliente nuevo, porque lo que
+  antes no coincidía con nada no estaba guardado.
+- Claude pone a cada cruce un **semáforo** (verde, amarillo o rojo) con el motivo, el
+  requisito crítico a verificar y el importe orientativo, con los mismos criterios que la
+  skill `islaris-subvenciones`.
+- **Pasar a Claude (skill Islaris)** genera un texto con la ficha del cliente (paso 1 de la
+  skill) y las convocatorias verdes, amarillas y sin evaluar (punto de partida del paso 2). Se
+  pega en Claude y la skill completa lo que el vigilante no cubre: fondos europeos de gestión
+  directa, préstamos y REF Canarias. También sale por línea de comandos:
+  `node bin/vigilante.js islaris <id_cliente>`.
+- **Avisos por correo**: cuando aparece una oportunidad verde o amarilla con encaje igual o
+  superior al umbral del cliente, llega un correo con el resumen, el enlace a la ficha y el
+  bloque listo para pegar en Claude. Se configura con `SMTP_*` y `VIGILANTE_EMAIL_AVISOS` en
+  el `.env` (con Gmail hace falta una contraseña de aplicación).
+
 ## Puesta en marcha
 
 Requisitos: Node.js 20 o superior y PostgreSQL 15 o superior (con las extensiones `pg_trgm`
