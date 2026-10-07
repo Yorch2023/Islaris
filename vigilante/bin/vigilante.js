@@ -14,7 +14,7 @@ const { ciclo, mantenimiento, trabajarClientes, rastrearCliente } = require('../
 const { paqueteIslaris } = require('../src/clientes');
 const { arrancar } = require('../src/servidor');
 
-const AYUDA = `Vigilante de subvenciones y licitaciones
+const AYUDA = `Radar Financiación - Islaris (vigilante de subvenciones y licitaciones)
 
 Órdenes:
   migrar                      Crea o actualiza el esquema "vigilante" en la base de datos

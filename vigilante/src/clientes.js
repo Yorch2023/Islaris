@@ -310,19 +310,19 @@ function componerPaqueteIslaris(cliente, ops, { fecha = new Date() } = {}) {
         '',
         '> Pega este texto en Claude y escribe: «Usa la skill islaris-subvenciones con este cliente. '
         + 'La ficha del paso 1 está completa. Haz el informe exhaustivo del paso 2 partiendo de las '
-        + 'convocatorias abiertas que ha detectado el vigilante y completa los niveles que el vigilante no cubre '
+        + 'convocatorias abiertas que ha detectado el Radar y completa los niveles que el Radar no cubre '
         + '(fondos europeos de gestión directa, préstamos ENISA/ICO/SODECAN, REF Canarias y bonificaciones).»',
         '',
-        `Generado por el vigilante el ${fecha.toLocaleDateString('es-ES', { timeZone: 'Europe/Madrid', dateStyle: 'long' })}.`,
+        `Generado por Radar Financiación - Islaris el ${fecha.toLocaleDateString('es-ES', { timeZone: 'Europe/Madrid', dateStyle: 'long' })}.`,
         '',
         '## Ficha del cliente (paso 1)',
         '',
         fichaCliente(cliente).split('\n').map((l) => `- ${l}`).join('\n'),
         '',
-        '## Convocatorias abiertas detectadas por el vigilante (punto de partida del paso 2)',
+        '## Convocatorias abiertas detectadas por el Radar (punto de partida del paso 2)',
         '',
     ];
-    if (!ops.length) lineas.push('El vigilante no ha encontrado convocatorias abiertas que encajen todavía.', '');
+    if (!ops.length) lineas.push('El Radar no ha encontrado convocatorias abiertas que encajen todavía.', '');
     ops.forEach((o, i) => {
         lineas.push(
             `### ${i + 1}. ${o.titulo}`,
@@ -331,7 +331,7 @@ function componerPaqueteIslaris(cliente, ops, { fecha = new Date() } = {}) {
             `- Plazo: ${plazoTexto(o)}`,
             `- Importe: ${importeTexto(o)}`,
             o.semaforo
-                ? `- Encaje según el vigilante: ${SEMAFORO[o.semaforo]} (${o.encaje}/100). ${o.motivo || ''}`
+                ? `- Encaje según el Radar: ${SEMAFORO[o.semaforo]} (${o.encaje}/100). ${o.motivo || ''}`
                 : `- Encaje: sin evaluar (coincide por ${o.origen === 'territorio' ? 'territorio' : 'palabras clave'}: ${(o.coincidencias || []).join(', ')})`,
             o.requisito_critico ? `- Requisito crítico a verificar: ${o.requisito_critico}` : null,
             o.estado !== 'sugerida' ? `- Estado en Islaris: ${o.estado.replace('_', ' ')}` : null,
@@ -343,7 +343,7 @@ function componerPaqueteIslaris(cliente, ops, { fecha = new Date() } = {}) {
         );
     });
     lineas.push(
-        '## Qué no cubre el vigilante',
+        '## Qué no cubre el Radar',
         '',
         '- Lee la BDNS (todas las subvenciones públicas españolas: Estado, Canarias, cabildos y ayuntamientos), '
         + 'el BOE, la Plataforma de Contratación del Sector Público y TED.',
@@ -405,9 +405,9 @@ async function avisarClientes(db, config, { log = console.log, transporte } = {}
         await trans.sendMail({
             from: config.smtp.from,
             to: destino,
-            subject: `[Vigilante] ${ops.length} oportunidad${ops.length === 1 ? '' : 'es'} para ${cliente.razon_social}`,
-            text: `${resumen}\n\nVer en el vigilante: ${url}\n\n----- PARA PEGAR EN CLAUDE -----\n\n${paquete}`,
-            html: `<p>Oportunidades nuevas para <b>${escapar(cliente.razon_social)}</b> (<a href="${escapar(url)}">ver en el vigilante</a>):</p>
+            subject: `[Radar Financiación] ${ops.length} oportunidad${ops.length === 1 ? '' : 'es'} para ${cliente.razon_social}`,
+            text: `${resumen}\n\nVer en el Radar: ${url}\n\n----- PARA PEGAR EN CLAUDE -----\n\n${paquete}`,
+            html: `<p>Oportunidades nuevas para <b>${escapar(cliente.razon_social)}</b> (<a href="${escapar(url)}">ver en el Radar</a>):</p>
                 <ul>${ops.map((o) => `<li style="margin-bottom:10px">${o.semaforo ? `${SEMAFORO[o.semaforo]} ${o.encaje}/100 · ` : ''}
                 <a href="${escapar(o.url_original)}">${escapar(o.titulo)}</a><br>
                 <small>${escapar(o.organismo_texto || '')} · plazo: ${escapar(plazoTexto(o))}</small>

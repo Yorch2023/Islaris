@@ -56,7 +56,7 @@ function fmtImporte(v, moneda = 'EUR') {
 }
 
 function componerEmail(b, filas) {
-    const asunto = `[Vigilante] ${filas.length} nueva${filas.length === 1 ? '' : 's'} en "${b.nombre}"`;
+    const asunto = `[Radar Financiación] ${filas.length} nueva${filas.length === 1 ? '' : 's'} en "${b.nombre}"`;
     const texto = filas.map((c) => [
         `• ${c.titulo}`,
         `  ${[c.organismo_texto, c.fuente, `plazo: ${fmtFecha(c.fecha_limite)}`, fmtImporte(c.importe, c.moneda)].filter(Boolean).join(' · ')}`,

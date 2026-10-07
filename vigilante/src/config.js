@@ -67,9 +67,9 @@ function leerConfig() {
             port: entero('SMTP_PORT', 587),
             user: process.env.SMTP_USER || null,
             pass: process.env.SMTP_PASS || null,
-            from: process.env.SMTP_FROM || 'Vigilante de convocatorias <no-responder@localhost>',
+            from: process.env.SMTP_FROM || 'Radar Financiación - Islaris <no-responder@localhost>',
         },
-        userAgent: process.env.VIGILANTE_USER_AGENT || 'Vigilante-Convocatorias/0.1 (+contacto en README)',
+        userAgent: process.env.VIGILANTE_USER_AGENT || 'Radar-Financiacion-Islaris/0.2 (+info@islaris.es)',
     };
 }
 

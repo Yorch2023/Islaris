@@ -18,7 +18,7 @@ async function pedir(url, { metodo = 'GET', cabeceras = {}, cuerpo, tiempo = 300
         try {
             const res = await fetch(url, {
                 method: metodo,
-                headers: { 'User-Agent': userAgent || 'Vigilante-Convocatorias/0.1', ...cabeceras },
+                headers: { 'User-Agent': userAgent || 'Radar-Financiacion-Islaris/0.2', ...cabeceras },
                 body: cuerpo,
                 signal: AbortSignal.timeout(tiempo),
             });

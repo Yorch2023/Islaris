@@ -1,5 +1,5 @@
 #!/bin/bash
-# Instala el vigilante en un Mac para que funcione solo:
+# Instala Radar Financiación - Islaris (el vigilante) en un Mac para que funcione solo:
 #  1. Lo arranca al iniciar sesión y lo reinicia si se cae (LaunchAgent).
 #  2. Conecta el conector MCP a la app de escritorio de Claude, para que la skill
 #     islaris-subvenciones pueda usarlo.
@@ -26,7 +26,7 @@ if [ "${1:-}" = "--quitar" ]; then
       if (c.mcpServers) delete c.mcpServers.vigilante;
       fs.writeFileSync(f, JSON.stringify(c, null, 2));' "$CLAUDE_CFG"
   fi
-  echo "Vigilante desinstalado (la base de datos y el .env se conservan)."
+  echo "Radar Financiación desinstalado (la base de datos y el .env se conservan)."
   exit 0
 fi
 
@@ -61,7 +61,7 @@ PLIST
 launchctl bootout "gui/$(id -u)/$ETIQUETA" 2>/dev/null || true
 launchctl bootstrap "gui/$(id -u)" "$PLIST"
 
-echo "· Conectando el vigilante a la app de Claude…"
+echo "· Conectando el Radar a la app de Claude…"
 mkdir -p "$(dirname "$CLAUDE_CFG")"
 [ -f "$CLAUDE_CFG" ] && cp "$CLAUDE_CFG" "$CLAUDE_CFG.copia-$(date +%Y%m%d%H%M%S)"
 "$NODE" -e '
@@ -75,11 +75,11 @@ mkdir -p "$(dirname "$CLAUDE_CFG")"
 sleep 3
 if curl -s -o /dev/null "http://127.0.0.1:${VIGILANTE_PUERTO:-3080}/api/config"; then
   echo ""
-  echo "Listo. El vigilante está en marcha en http://127.0.0.1:${VIGILANTE_PUERTO:-3080} y arrancará solo al encender el Mac."
+  echo "Listo. Radar Financiación - Islaris está en marcha en http://127.0.0.1:${VIGILANTE_PUERTO:-3080} y arrancará solo al encender el Mac."
 else
   echo ""
-  echo "El vigilante no responde todavía. Mira el registro: tail -50 \"$LOG\""
+  echo "El Radar no responde todavía. Mira el registro: tail -50 \"$LOG\""
   echo "(Si tenías el servidor abierto en una terminal, ciérralo con Control + C: ocupan el mismo puerto.)"
 fi
-echo "Cierra del todo la app de Claude (Cmd + Q) y vuelve a abrirla para que cargue el conector del vigilante."
+echo "Cierra del todo la app de Claude (Cmd + Q) y vuelve a abrirla para que cargue el conector del Radar."
 echo "Postgres.app debe arrancar al iniciar sesión: en Postgres.app > Settings, marca «Automatically start at login»."

@@ -24,7 +24,7 @@ const ESQUEMA = {
     },
 };
 
-const INSTRUCCIONES = `Eres el analista que hace el triaje del vigilante de convocatorias (subvenciones y licitaciones) de un grupo de empresas.
+const INSTRUCCIONES = `Eres el analista que hace el triaje del Radar Financiación de Islaris (subvenciones y licitaciones) de un grupo de empresas.
 Para cada convocatoria decides si el equipo debe mirarla, siguiendo el perfil y los criterios de abajo.
 Responde solo con el JSON pedido. El motivo es una frase en español, concreta (qué encaja o qué no).
 "ambito" es "nacional" si el comprador o convocante es español y "extranjero" en otro caso.

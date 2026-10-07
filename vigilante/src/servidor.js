@@ -505,7 +505,7 @@ function arrancar(db, config, { log = console.log } = {}) {
     const planificador = config.planificador === false ? null : iniciarPlanificador(db, config, { log });
     const servidor = crearServidor(db, config, { log, planificador });
     servidor.listen(config.puerto, config.host, () => {
-        log(`Vigilante en http://${config.host}:${config.puerto}${config.token ? ' (con token)' : ''}`);
+        log(`Radar Financiación - Islaris en http://${config.host}:${config.puerto}${config.token ? ' (con token)' : ''}`);
     });
     return { servidor, planificador };
 }

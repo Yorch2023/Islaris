@@ -1,4 +1,7 @@
-# Vigilante de subvenciones y licitaciones
+# Radar Financiación - Islaris
+
+Vigilante de subvenciones y licitaciones de Islaris Consulting. En el código, la carpeta, la
+base de datos y las órdenes se siguen llamando `vigilante`.
 
 Vigila cada día las fuentes oficiales, se queda con lo que encaja con las palabras clave del
 grupo, lo clasifica con Claude y lo presenta en un feed para que el equipo lo siga, lo

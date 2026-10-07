@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Vigilante de convocatorias</title>
+<title>Radar Financiación - Islaris</title>
 <style>
 :root {
   --fondo: #f6f7f9; --panel: #ffffff; --texto: #1d2330; --suave: #5d6677; --borde: #dfe3ea;
@@ -100,7 +100,7 @@ dialog form { display: flex; flex-direction: column; gap: 10px; }
 </head>
 <body>
 <header>
-  <h1>Vigilante de convocatorias</h1>
+  <h1>Radar Financiación - Islaris</h1>
   <nav class="secciones" id="secciones"></nav>
   <div class="derecha">
     <span id="estado-ejecucion" class="meta"></span>
@@ -389,7 +389,7 @@ async function abrirFicha(id) {
       ${c.duplicados.length ? `<div class="bloque"><h4>También publicada en</h4><ul>${c.duplicados.map((d) => `<li>${esc(d.fuente)} · ${enlace(d.url_original, d.titulo)} <span class="meta">#${d.id}</span></li>`).join('')}</ul></div>` : ''}
       ${c.competencia.length ? `<div class="bloque"><h4>Quién gana en este organismo</h4><table><tr><th>Adjudicatario</th><th>Contratos</th><th>Importe</th><th>Licitadores medios</th><th>Ratio baja</th></tr>${c.competencia.map((x) => `<tr><td>${esc(x.adjudicatario_nombre)}</td><td class="num">${x.adjudicaciones}</td><td class="num">${esc(importe(x.importe_total))}</td><td class="num">${esc(x.licitadores_medios ?? '')}</td><td class="num">${esc(x.ratio_baja_medio ?? '')}</td></tr>`).join('')}</table></div>` : ''}
       <div class="bloque"><h4>Corregir datos</h4>
-        <p class="meta">Al corregir, el vigilante deja de actualizar esta convocatoria con lo que traiga la fuente.</p>
+        <p class="meta">Al corregir, el Radar deja de actualizar esta convocatoria con lo que traiga la fuente.</p>
         <form id="form-corregir" class="formulario">
           ${CAMPOS_EDITABLES.map(([k, n]) => `<label>${n}<input name="${k}" value="${esc(c[k] ?? '')}"></label>`).join('')}
           <div class="ancho"><button class="primario">Guardar correcciones</button></div>
@@ -576,7 +576,7 @@ async function verSalud(c) {
     ['nuevas_30_dias', 'Nuevas 30 días'], ['estancada', 'Estado', (v) => (v ? '<span class="etiqueta descartada">estancada</span>' : '<span class="etiqueta relevante">bien</span>')]]) +
     `<h2>Acierto del triaje IA</h2>` + tabla(acierto, [['triage_clasificacion', 'IA dijo'], ['total', 'Total'], ['seguidas', 'Seguidas por el equipo'], ['descartadas_a_mano', 'Descartadas a mano']]) +
     `<h2>Registro de la última ejecución manual</h2><div class="registro">${esc((ejec.registro || []).join('\n') || 'Sin ejecuciones desde que arrancó el servidor.')}</div>` +
-    `<h2>Fuentes sin lector todavía (${sinLector.length})</h2><p class="meta">Están en el catálogo pero el vigilante aún no sabe leerlas: ${esc(sinLector.map((f) => f.codigo).join(', '))}.</p>`;
+    `<h2>Fuentes sin lector todavía (${sinLector.length})</h2><p class="meta">Están en el catálogo pero el Radar aún no sabe leerlas: ${esc(sinLector.map((f) => f.codigo).join(', '))}.</p>`;
 }
 
 // ---------- clientes ----------
@@ -612,7 +612,7 @@ async function verClientes(c) {
       <h2 style="margin:0">Clientes</h2>
       <button class="primario" id="btn-nuevo-cliente">Nuevo cliente</button>
     </div>
-    <p class="meta">Cada cliente se cruza con todas las convocatorias abiertas que el vigilante conoce. Con la clave de Claude, cada cruce recibe un semáforo de encaje y las verdes y amarillas te llegan por correo${estado.config.email_avisos ? ` a ${esc(estado.config.email_avisos)}` : ' (configura SMTP y VIGILANTE_EMAIL_AVISOS en el .env)'}.</p>
+    <p class="meta">Cada cliente se cruza con todas las convocatorias abiertas que el Radar conoce. Con la clave de Claude, cada cruce recibe un semáforo de encaje y las verdes y amarillas te llegan por correo${estado.config.email_avisos ? ` a ${esc(estado.config.email_avisos)}` : ' (configura SMTP y VIGILANTE_EMAIL_AVISOS en el .env)'}.</p>
     <div class="lista">${filas.length ? filas.map((k) => `
       <article class="tarjeta">
         <div>
@@ -664,7 +664,7 @@ function formCliente(c, k) {
       <label>Al corriente AEAT / SS / ATC<select name="al_corriente"><option value="">No lo sé</option><option value="true" ${k?.al_corriente === true ? 'selected' : ''}>Sí</option><option value="false" ${k?.al_corriente === false ? 'selected' : ''}>No</option></select></label>
       <label class="ancho">Servicios que vende a la Administración (si busca licitaciones)<textarea name="servicios_licitacion" rows="2">${v(k?.servicios_licitacion)}</textarea></label>
       <label class="ancho">Certificaciones y contratos públicos anteriores<textarea name="certificaciones" rows="2">${v(k?.certificaciones)}</textarea></label>
-      <h4 class="ancho">Qué busca el vigilante para este cliente</h4>
+      <h4 class="ancho">Qué busca el Radar para este cliente</h4>
       <label class="ancho">Palabras clave (separadas por comas; aparecen en el título de las convocatorias)<textarea name="palabras_clave" rows="3">${v(k?.palabras_clave)}</textarea>
         ${estado.config.triaje && k ? '<button type="button" id="btn-sugerir">Sugerir con IA</button>' : ''}</label>
       <label>Territorios (comas; vacío = Canarias + isla + municipio)<input name="territorios" value="${v(k?.territorios)}"></label>
@@ -798,7 +798,7 @@ async function verCliente(c, id) {
       ${k.cif ? '<button id="btn-ayudas">Consultar ayudas recibidas en la BDNS</button>' : '<p class="meta">Añade el NIF para consultarlas.</p>'}
     </details>
     <p class="meta">Busca: ${esc((k.palabras_clave || []).join(', ') || 'sin palabras clave')}${k.incluir_territorio ? ` · territorio: ${esc(k.territorios_efectivos.join(', ') || 'no indicado')}` : ''}</p>
-    ${!k.palabras_clave?.length ? '<p class="etiqueta dudosa">Añade palabras clave en «Editar ficha» (o pulsa «Sugerir con IA») para que el vigilante encuentre más.</p>' : ''}
+    ${!k.palabras_clave?.length ? '<p class="etiqueta dudosa">Añade palabras clave en «Editar ficha» (o pulsa «Sugerir con IA») para que el Radar encuentre más.</p>' : ''}
     <div class="pestanas" style="margin-top:12px">
       <button data-filtro="utiles" class="${filtro === 'utiles' ? 'activa' : ''}">${punto('verde')} ${cuenta('verde')} · ${punto('amarillo')} ${cuenta('amarillo')} · sin evaluar ${cuenta(null)}</button>
       <button data-filtro="todas" class="${filtro === 'todas' ? 'activa' : ''}">Todas (incluye rojas)</button>

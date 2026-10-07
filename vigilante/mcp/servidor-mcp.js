@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 'use strict';
 
-// Conector MCP del vigilante: da a Claude (app de escritorio) herramientas para dar de alta
+// Conector MCP de Radar Financiación - Islaris (el vigilante): da a Claude (app de escritorio) herramientas para dar de alta
 // clientes, buscar sus datos por NIF, lanzar la búsqueda de convocatorias, seguir el
 // progreso y leer las oportunidades. Lo usa la skill islaris-subvenciones.
 //
@@ -36,7 +36,7 @@ async function api(ruta, { metodo = 'GET', cuerpo } = {}, fetchFn = fetch) {
             signal: AbortSignal.timeout(180000),
         });
     } catch (e) {
-        throw new Error(`El vigilante no responde en ${URL_BASE} (${e.message}). `
+        throw new Error(`Radar Financiación - Islaris no responde en ${URL_BASE} (${e.message}). `
             + 'Comprueba que está arrancado: en la terminal, node bin/vigilante.js servidor.');
     }
     const datos = await res.json().catch(() => ({}));
@@ -100,11 +100,11 @@ const CAMPOS_CLIENTE = {
 
 function crearServidorMcp({ fetchFn = fetch } = {}) {
     const llamar = (ruta, op) => api(ruta, op, fetchFn);
-    const servidor = new McpServer({ name: 'vigilante-convocatorias', version: '0.2.0' });
+    const servidor = new McpServer({ name: 'radar-financiacion-islaris', version: '0.2.0' });
 
     servidor.registerTool('estado_vigilante', {
-        title: 'Estado del vigilante',
-        description: 'Comprueba que el vigilante está en marcha y si hay una búsqueda en curso, con su porcentaje de avance. '
+        title: 'Estado del Radar Financiación',
+        description: 'Comprueba que el Radar Financiación está en marcha y si hay una búsqueda en curso, con su porcentaje de avance. '
             + 'Para seguir una búsqueda lanzada con buscar_convocatorias_cliente, llámala con esperar_segundos=45: espera '
             + 'hasta que el avance cambie al menos 10 puntos o termine, y así se puede informar al usuario sin repetir llamadas.',
         inputSchema: { esperar_segundos: z.number().int().min(0).max(50).optional() },
@@ -138,7 +138,7 @@ function crearServidorMcp({ fetchFn = fetch } = {}) {
 
     servidor.registerTool('listar_clientes', {
         title: 'Listar clientes',
-        description: 'Clientes dados de alta en el vigilante, con el número de oportunidades verdes y amarillas.',
+        description: 'Clientes dados de alta en el Radar, con el número de oportunidades verdes y amarillas.',
         inputSchema: {},
     }, envolver(async () => (await llamar('/api/clientes')).map((k) => ({
         cliente_id: k.id, razon_social: k.razon_social, cif: k.cif, activo: k.activo,
@@ -158,8 +158,8 @@ function crearServidorMcp({ fetchFn = fetch } = {}) {
 
     servidor.registerTool('guardar_cliente', {
         title: 'Crear o actualizar un cliente',
-        description: 'Crea la ficha del cliente en el vigilante (sin cliente_id) o actualiza la existente (con cliente_id). '
-            + 'Al crearla, el vigilante la cruza en el momento con las convocatorias que ya conoce. '
+        description: 'Crea la ficha del cliente en el Radar (sin cliente_id) o actualiza la existente (con cliente_id). '
+            + 'Al crearla, el Radar la cruza en el momento con las convocatorias que ya conoce. '
             + 'Antes de crear, comprueba con listar_clientes que no exista ya.',
         inputSchema: { cliente_id: z.number().int().optional(), ...CAMPOS_CLIENTE },
     }, envolver(async ({ cliente_id: id, ...campos }) => {
@@ -200,13 +200,13 @@ function crearServidorMcp({ fetchFn = fetch } = {}) {
     servidor.registerTool('paquete_islaris', {
         title: 'Paquete para el informe de ayudas',
         description: 'Texto con la ficha del cliente y las convocatorias abiertas verdes, amarillas y sin evaluar, más lo que '
-            + 'el vigilante no cubre. Es el punto de partida del paso 2 (informe exhaustivo de ayudas).',
+            + 'el Radar no cubre. Es el punto de partida del paso 2 (informe exhaustivo de ayudas).',
         inputSchema: { cliente_id: z.number().int(), incluir_rojas: z.boolean().optional() },
     }, envolver(async ({ cliente_id: id, incluir_rojas: rojas }) => (await llamar(`/api/clientes/${id}/islaris${rojas ? '?rojas=1' : ''}`)).markdown));
 
     servidor.registerTool('ver_convocatoria', {
         title: 'Ver una convocatoria',
-        description: 'Ficha completa de una convocatoria del vigilante: importes, plazo, enlaces a anuncio, bases y pliegos, lotes.',
+        description: 'Ficha completa de una convocatoria del Radar: importes, plazo, enlaces a anuncio, bases y pliegos, lotes.',
         inputSchema: { convocatoria_id: z.number().int() },
     }, envolver(async ({ convocatoria_id: id }) => {
         const c = await llamar(`/api/convocatorias/${id}`);
